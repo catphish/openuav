@@ -3,11 +3,17 @@
 This project aims to develop an open source hardware flight controller for multirotor aircraft using modern components while keeping construction cost to a minimum.
 
 ## Components
+The primary components will be as follows.
 * STM32G4 - 170MHz microcontroller
 * LSM6DSR - Gyro and accelerometer
 * LPS22HH - Barometric pressure sensor
 * W25N01GVZEIG - 128MB flash
+* L78L05 - 5V linear regulator
+* L78L33 - 3.3V linear regulator
+
+If possible, the following will be added. Space constraints are likely to make this challenging.
 * AT7456E - Video overlay
+* L78L09 - 9V linear regulator
 
 
 ## Goals
