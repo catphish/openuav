@@ -105,17 +105,27 @@ void SystemInit(void) {
   TIM2->CR1 = TIM_CR1_CEN;
 }
 
-int main(void) {
-  while (1) {
-    // Copy data from USART3 to USART1
-    if (USART3->ISR & USART_ISR_RXNE) {
-      USART1->TDR = USART3->RDR;
-    }
-  }
-  return 0;
-}
-
 #define CRSF_ADDRESS_FLIGHT_CONTROLLER 0xC8
+#define CRSF_FRAMETYPE_RC_CHANNELS_PACKED 0x16
+
+struct crsf_channels_s {
+  unsigned ch0 : 11;
+  unsigned ch1 : 11;
+  unsigned ch2 : 11;
+  unsigned ch3 : 11;
+  unsigned ch4 : 11;
+  unsigned ch5 : 11;
+  unsigned ch6 : 11;
+  unsigned ch7 : 11;
+  unsigned ch8 : 11;
+  unsigned ch9 : 11;
+  unsigned ch10 : 11;
+  unsigned ch11 : 11;
+  unsigned ch12 : 11;
+  unsigned ch13 : 11;
+  unsigned ch14 : 11;
+  unsigned ch15 : 11;
+} __attribute__((packed));
 
 void process_elrs_char(uint8_t received) {
   static uint8_t buffer[64];
@@ -134,8 +144,24 @@ void process_elrs_char(uint8_t received) {
   } else if (buffer_index < buffer[1] + 1) {
     buffer[buffer_index++] = received;
   } else {
+    if (buffer[2] == CRSF_FRAMETYPE_RC_CHANNELS_PACKED) {
+      struct crsf_channels_s *channels = (struct crsf_channels_s *)&buffer[3];
+      TIM2->CCR1 = 16000 + channels->ch0 * 10;
+      TIM2->CCR2 = 16000 + channels->ch1 * 10;
+      TIM2->CCR3 = 16000 + channels->ch2 * 10;
+      TIM2->CCR4 = 16000 + channels->ch3 * 10;
+    }
     // Process the packet
-    uint8_t crc8 = received;
+    // uint8_t crc8 = received;
     buffer_index = 0;
   }
+}
+
+int main(void) {
+  while (1) {
+    if (USART3->ISR & USART_ISR_RXNE) {
+      process_elrs_char(USART3->RDR);
+    }
+  }
+  return 0;
 }
