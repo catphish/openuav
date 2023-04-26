@@ -13,6 +13,8 @@ void SystemInit(void) {
   RCC->APB1ENR1 |= RCC_APB1ENR1_USART3EN;
   // Enable TIM2 clock
   RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+  // Enable I2C1 clock
+  RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN;
 
   // Enable GPIOA clock
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
@@ -47,6 +49,15 @@ void SystemInit(void) {
   // Set PC10 and PC11 to AF7 (USART3)
   GPIOC->AFR[1] |= GPIO_AFRH_AFSEL10_0 | GPIO_AFRH_AFSEL10_1 | GPIO_AFRH_AFSEL10_2;
   GPIOC->AFR[1] |= GPIO_AFRH_AFSEL11_0 | GPIO_AFRH_AFSEL11_1 | GPIO_AFRH_AFSEL11_2;
+
+  // Set PA8 and PA9 to alternate function mode
+  GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk;
+  GPIOA->MODER |= GPIO_MODER_MODE8_1;
+  GPIOA->MODER &= ~GPIO_MODER_MODE9_Msk;
+  GPIOA->MODER |= GPIO_MODER_MODE9_1;
+  // Set PA8 and PA9 to AF4 (I2C1)
+  GPIOA->AFR[1] |= GPIO_AFRH_AFSEL8_0 | GPIO_AFRH_AFSEL8_1;
+  GPIOA->AFR[1] |= GPIO_AFRH_AFSEL9_0 | GPIO_AFRH_AFSEL9_1;
 
   // Disable USART1
   USART1->CR1 = USART_CR1_UE;
@@ -103,6 +114,19 @@ void SystemInit(void) {
   TIM2->CCER |= TIM_CCER_CC4E;
   // Enable TIM2
   TIM2->CR1 = TIM_CR1_CEN;
+
+  // Reset I2C1 Configuration to default values
+  I2C1->CR1 = 0x00000000;
+
+  // Set I2C timing to 400kHz
+  I2C1->TIMINGR = (1 << I2C_TIMINGR_PRESC_Pos) | (9 << I2C_TIMINGR_SCLL_Pos) | (3 << I2C_TIMINGR_SCLH_Pos) | (2 << I2C_TIMINGR_SDADEL_Pos) | (3 << I2C_TIMINGR_SCLDEL_Pos);
+  // Enable I2C1
+  I2C1->CR1 |= I2C_CR1_PE;
+
+  // Set I2C slave address to 0b1101010
+  I2C1->CR2 = (0b1101010 << I2C_CR2_SADD_Pos);
+  // Start I2C
+  I2C1->CR2 |= I2C_CR2_START;
 }
 
 #define CRSF_ADDRESS_FLIGHT_CONTROLLER 0xC8
