@@ -174,7 +174,8 @@
       "track_widths": [
         0.0,
         0.2,
-        0.8
+        0.6,
+        1.0
       ],
       "via_dimensions": [
         {
@@ -428,7 +429,7 @@
         "name": "Default",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2,
+        "track_width": 0.25,
         "via_diameter": 0.4,
         "via_drill": 0.2,
         "wire_width": 6
