@@ -82,6 +82,10 @@ void SystemInit(void) {
   USART3->CR1 = USART_CR1_UE;
   // Enable USART3 receiver
   USART3->CR1 = USART_CR1_UE | USART_CR1_RE;
+  // Enable USART3 interrupt
+  USART3->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE;
+  // Enable USART3 interrupt in NVIC
+  NVIC_EnableIRQ(USART3_IRQn);
 
   // Set A0, A1, A2, A3 to alternate function mode
   GPIOA->MODER &= ~GPIO_MODER_MODE0_Msk;
@@ -113,16 +117,8 @@ void SystemInit(void) {
   TIM2->CCER |= TIM_CCER_CC3E;
   // Enable TIM2 output compare 4
   TIM2->CCER |= TIM_CCER_CC4E;
-  // Set TIM2 to one pulse mode
-  TIM2->CR1 |= TIM_CR1_OPM;
-
-  // Set TIM2 output compare registers to 1000us (1us = 16, 1000us = 16000)
-  TIM2->CCR1 = 16000;
-  TIM2->CCR2 = 16000;
-  TIM2->CCR3 = 16000;
-  TIM2->CCR4 = 16000;
-  // Enable TIM2
-  TIM2->CR1 = TIM_CR1_CEN;
+  //  Enable TIM2
+  // TIM2->CR1 = TIM_CR1_OPM;
 
   // Make sure I2C2 is disabled
   I2C2->CR1 &= ~I2C_CR1_PE;
@@ -132,6 +128,9 @@ void SystemInit(void) {
   I2C2->TIMINGR = (1 << I2C_TIMINGR_PRESC_Pos) | (9 << I2C_TIMINGR_SCLL_Pos) | (3 << I2C_TIMINGR_SCLH_Pos) | (2 << I2C_TIMINGR_SDADEL_Pos) | (3 << I2C_TIMINGR_SCLDEL_Pos);
   // Enable I2C2
   I2C2->CR1 |= I2C_CR1_PE;
+
+  // Enable interrupts
+  __enable_irq();
 }
 
 #define CRSF_ADDRESS_FLIGHT_CONTROLLER 0xC8
@@ -156,8 +155,7 @@ struct crsf_channels_s {
   unsigned ch15 : 11;
 } __attribute__((packed));
 
-// int channel[4];
-
+int channel[4];
 void process_elrs_char(uint8_t received) {
   static uint8_t buffer[64];
   static uint8_t buffer_index = 0;
@@ -177,20 +175,27 @@ void process_elrs_char(uint8_t received) {
   } else {
     if (buffer[2] == CRSF_FRAMETYPE_RC_CHANNELS_PACKED) {
       struct crsf_channels_s *channels = (struct crsf_channels_s *)&buffer[3];
-      // channel[0] = (int)channels->ch0 - 992;
-      // channel[1] = (int)channels->ch1 - 992;
-      // channel[2] = (int)channels->ch2 - 992;
-      // channel[3] = (int)channels->ch3 - 992;
-      // USART1->TDR = 'A';
-      TIM2->CCR1 = 16000 + channels->ch0 * 10;
-      TIM2->CCR2 = 16000 + channels->ch1 * 10;
-      TIM2->CCR3 = 16000 + channels->ch2 * 10;
-      TIM2->CCR4 = 16000 + channels->ch3 * 10;
-      // TIM2->CR1 = TIM_CR1_CEN;
+      channel[0] = (int)channels->ch0 - 992;
+      channel[1] = (int)channels->ch1 - 992;
+      channel[2] = (int)channels->ch2 - 992;
+      channel[3] = (int)channels->ch3 - 992;
     }
     // uint8_t crc8 = received;
     buffer_index = 0;
   }
+}
+
+// UART3 interrupt handler
+void USART3_IRQHandler(void) {
+  // If the interrupt was triggered by a received byte
+  if (USART3->ISR & USART_ISR_RXNE) {
+    // Read the received byte
+    volatile uint8_t received = USART3->RDR;
+    // Process the received byte
+    process_elrs_char(received);
+  }
+  // Clear the ORE interrupt flag
+  USART3->ICR = USART_ICR_ORECF;
 }
 
 uint8_t I2C2_Read(uint8_t device_address, uint8_t register_address, uint8_t *buffer, uint8_t nbytes) {
@@ -335,30 +340,27 @@ uint8_t I2C2_Write(uint8_t device_address, uint8_t register_address, uint8_t *bu
 
 int main(void) {
   uint8_t rx_data[6];
-  //  Set gyro to 416Hz
-  I2C2_Write(0b1101010, CTRL2_G, (uint8_t[]){0x60}, 1);
-  // Enable USART3 receiver
-  USART3->CR1 = USART_CR1_UE | USART_CR1_RE;
   while (1) {
-    //   // // Fetch status register
-    //   I2C2_Read(0b1101010, STATUS_REG, rx_data, 1);
-    //   // If gyro data is ready
-    //   if (rx_data[0] & 0x02) {
-    //     // Read gyro Z axis and send to USART3
-    //     I2C2_Read(0b1101010, OUTX_L_G, rx_data, 6);
-    //     int16_t gyro_x = rx_data[1] << 8 | rx_data[0];
-    //     int16_t gyro_y = rx_data[3] << 8 | rx_data[2];
-    //     int16_t gyro_z = rx_data[5] << 8 | rx_data[4];
-    //     // Set motor 1 speed
-    //     TIM2->CCR1 = 16000 + gyro_x + gyro_y + gyro_z;
-    //     // Enable TIM2
-    //     TIM2->CR1 = TIM_CR1_CEN;
-    //     // USART1->TDR = rx_data[0];
-    //   }
-    // USART1->TDR = 'A';
-
-    if (USART3->ISR & USART_ISR_RXNE) {
-      process_elrs_char(USART3->RDR);
+    // Set gyro to 416Hz
+    I2C2_Write(0b1101010, CTRL2_G, (uint8_t[]){0x60}, 1);
+    // Fetch status register
+    I2C2_Read(0b1101010, STATUS_REG, rx_data, 1);
+    // If gyro data is ready
+    if (rx_data[0] & 0x02) {
+      // Read all gyro data
+      I2C2_Read(0b1101010, OUTX_L_G, rx_data, 6);
+      int16_t gyro_x = rx_data[1] << 8 | rx_data[0];
+      int16_t gyro_y = rx_data[3] << 8 | rx_data[2];
+      int16_t gyro_z = rx_data[5] << 8 | rx_data[4];
+      TIM2->CCR1 = 16000 + channel[2] * 10 + gyro_x + gyro_y + gyro_z;
+      TIM2->CCR2 = 16000 + gyro_x + gyro_y + gyro_z;
+      TIM2->CCR3 = 16000 + gyro_x + gyro_y + gyro_z;
+      TIM2->CCR4 = 16000 + gyro_x + gyro_y + gyro_z;
+      // USART1->TDR = 'B';
+      //   Enable TIM2
+      TIM2->CNT = 0;
+      TIM2->CR1 = TIM_CR1_OPM;
+      TIM2->CR1 = TIM_CR1_OPM | TIM_CR1_CEN;
     }
   }
   return 0;
