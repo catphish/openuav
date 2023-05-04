@@ -1,6 +1,8 @@
 # OpenUAV
 This project aims to develop an open source hardware flight controller for multirotor aircraft using modern components and keeping construction cost to a minimum.
 
+**Warning: this project is still a work in progress and is awaiting testing**
+
 ## Components
 The primary components will be as follows.
 * STM32G4 - 170MHz microcontroller
