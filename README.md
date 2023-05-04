@@ -9,14 +9,12 @@ The primary components will be as follows.
 * W25N01GVZEIG - 128MB flash
 * TPS54202DDC - 5V SMPS
 
-I also hope to integrate 2.5GHz ELRS RX.
-
 ## Goals
-* Free open source hardware design. It is hoped that both hobbyists and mass producers will be able to produce this hardware at minimal cost and with no obligation with no expectation to pay for either the hardware or software design.
+* Free open source hardware design. It is hoped that everyone will be able to benefit from the published design.
 * Low cost production. The goal is to limit production cost by design, for example by limiting the design to 4 layer PCB, single sided assembly.
 
 ## Software
 The initial goal will be to run Betaflight.
 
 ## Form Factor
-Form factor will initially be 30x30. If possible I will shrink to 20x20 or dual 20/30 form factor.
+Form factor will initially be 30x30.
