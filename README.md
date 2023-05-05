@@ -6,8 +6,8 @@ This project aims to develop an open source hardware flight controller for multi
 ## Components
 The primary components will be as follows.
 * STM32G4 - 170MHz microcontroller
-* LSM6DSR - Gyro and accelerometer
-* LPS22HH - Barometric pressure sensor
+* BMI270 - Gyro and accelerometer
+* BMP280 - Barometric pressure sensor
 * W25N01GVZEIG - 128MB flash
 * TPS54202DDC - 5V SMPS
 
