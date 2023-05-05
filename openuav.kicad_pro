@@ -34,9 +34,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 8.0,
-          "height": 3.2,
-          "width": 8.0
+          "drill": 1.0,
+          "height": 1.7,
+          "width": 1.7
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -45,7 +45,7 @@
         "silk_text_thickness": 0.15,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.6
+          "min_clearance": 0.0
         }
       },
       "diff_pair_dimensions": [
@@ -55,7 +55,12 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "lib_footprint_mismatch|139505000|64850000|71f2f3bb-2d48-4bfa-b01c-c2794097c84f|00000000-0000-0000-0000-000000000000",
+        "lib_footprint_mismatch|140762500|76794999|124c8fe6-7167-4382-bbb0-ec5d2e405219|00000000-0000-0000-0000-000000000000",
+        "lib_footprint_mismatch|147975000|55587500|f0cda0d4-9948-42f3-ab46-92766c832e0b|00000000-0000-0000-0000-000000000000",
+        "lib_footprint_mismatch|154267500|60299999|5b727f87-b1f0-401a-b5a9-036b9fed3deb|00000000-0000-0000-0000-000000000000"
+      ],
       "meta": {
         "version": 2
       },
@@ -118,7 +123,7 @@
         "min_hole_to_hole": 0.25,
         "min_microvia_diameter": 0.19999999999999998,
         "min_microvia_drill": 0.09999999999999999,
-        "min_resolved_spokes": 2,
+        "min_resolved_spokes": 1,
         "min_silk_clearance": 0.0,
         "min_text_height": 0.7999999999999999,
         "min_text_thickness": 0.08,
@@ -193,7 +198,7 @@
           "drill": 0.381
         }
       ],
-      "zones_allow_external_fillets": false
+      "zones_allow_external_fillets": true
     },
     "layer_presets": [],
     "viewports": []
