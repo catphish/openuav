@@ -2,4 +2,5 @@
   (version 7)
   (lib (name "ST_Sensors")(type "KiCad")(uri "${KIPRJMOD}/ST_Sensors.kicad_sym")(options "")(descr ""))
   (lib (name "MCU_ST_STM32G4")(type "KiCad")(uri "${KIPRJMOD}/MCU_ST_STM32G4.kicad_sym")(options "")(descr ""))
+  (lib (name "ncv8460a")(type "KiCad")(uri "${KIPRJMOD}/ncv8460a.kicad_sym")(options "")(descr ""))
 )
