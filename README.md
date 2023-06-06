@@ -2,6 +2,7 @@
 This project aims to develop an open source hardware flight controller for multirotor aircraft using modern components and keeping construction cost to a minimum.
 
 **Warning: this project is still a work in progress and is awaiting testing**
+**Warning: this design currently required simultaneous use of ADC1 and ADC2 which is not supported by betaflight**
 
 ## Components
 The primary components will be as follows.
