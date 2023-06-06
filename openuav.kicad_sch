@@ -2399,12 +2399,10 @@
   (no_connect (at 44.45 44.45) (uuid 1ac9e1fb-6d7e-431c-afac-4dabd8d21863))
   (no_connect (at 142.24 55.88) (uuid 3b9dec3c-c824-461a-b34d-3fea6bb91f93))
   (no_connect (at 195.58 143.51) (uuid 3ed0e2dd-cae5-4ce3-b192-9244a07e21cc))
-  (no_connect (at 179.07 114.3) (uuid 3f033ee7-6d44-4485-92b7-368d5eb0e502))
   (no_connect (at 121.92 99.06) (uuid 4eeaedcd-04fd-4b81-822e-75ea23d50b0a))
   (no_connect (at 142.24 53.34) (uuid 53655f85-032d-4b06-b05a-c5aa299ca967))
   (no_connect (at 121.92 101.6) (uuid b0dfd2bd-d209-406c-af5c-fb0d3aae1776))
   (no_connect (at 119.38 58.42) (uuid de2909ff-957e-4883-93c5-8d348c332d97))
-  (no_connect (at 179.07 111.76) (uuid e13da3eb-ac8c-4fcd-863d-6d21bf3feb3d))
   (no_connect (at 33.02 170.18) (uuid e45b7a4b-828f-4705-8df7-99708bcecfb0))
 
   (wire (pts (xy 36.83 49.53) (xy 44.45 49.53))
@@ -4794,6 +4792,31 @@
     )
   )
 
+  (symbol (lib_id "power:+3.3V") (at 179.07 111.76 90) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 6d2708d7-a093-4c86-b639-3affe3117700)
+    (property "Reference" "#PWR046" (at 182.88 111.76 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+3.3V" (at 175.26 111.76 90)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "" (at 179.07 111.76 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 179.07 111.76 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid abd5babf-61a8-4edc-96af-915d9b58e0f7))
+    (instances
+      (project "openuav"
+        (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+          (reference "#PWR046") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "Device:C_Small") (at 194.31 171.45 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 6db930c2-00d5-492e-b430-b6044267e10d)
@@ -4943,6 +4966,31 @@
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR09") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "power:+3.3V") (at 179.07 114.3 90) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 74c5fe6a-52ba-49b7-a8c3-dee9122b49ab)
+    (property "Reference" "#PWR047" (at 182.88 114.3 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+3.3V" (at 175.26 114.3 90)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "" (at 179.07 114.3 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 179.07 114.3 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 0816f541-0c71-45ea-b5b7-f7c3fef8a670))
+    (instances
+      (project "openuav"
+        (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+          (reference "#PWR047") (unit 1)
         )
       )
     )
