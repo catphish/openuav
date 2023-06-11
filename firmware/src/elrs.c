@@ -56,15 +56,15 @@ void process_elrs_char(uint8_t received) {
   }
 }
 
-// UART3 interrupt handler
-void USART3_IRQHandler(void) {
+// UART2 interrupt handler
+void USART2_IRQHandler(void) {
   // If the interrupt was triggered by a received byte
-  if (USART3->ISR & USART_ISR_RXNE) {
+  if (USART2->ISR & USART_ISR_RXNE) {
     // Read the received byte
-    volatile uint8_t received = USART3->RDR;
+    volatile uint8_t received = USART2->RDR;
     // Process the received byte
     process_elrs_char(received);
   }
   // Clear the ORE interrupt flag
-  USART3->ICR = USART_ICR_ORECF;
+  USART2->ICR = USART_ICR_ORECF;
 }
