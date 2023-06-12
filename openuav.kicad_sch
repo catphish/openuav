@@ -2020,7 +2020,6 @@
     (uuid ff75f369-26af-4a66-95bd-e2426a909390)
   )
 
-  (no_connect (at 161.29 100.33) (uuid 3f033ee7-6d44-4485-92b7-368d5eb0e502))
   (no_connect (at 127 36.83) (uuid 42739f0f-ccbd-4056-bba7-24fb20cd31ad))
   (no_connect (at 119.38 114.3) (uuid 4eeaedcd-04fd-4b81-822e-75ea23d50b0a))
   (no_connect (at 33.02 60.96) (uuid 5f93919f-d713-4eab-87f0-3edee605ee91))
@@ -2030,7 +2029,6 @@
   (no_connect (at 33.02 58.42) (uuid abb9fd85-56d7-40f3-b7a4-9c50b75ad675))
   (no_connect (at 119.38 111.76) (uuid b0dfd2bd-d209-406c-af5c-fb0d3aae1776))
   (no_connect (at 104.14 41.91) (uuid cc444e11-a847-46ce-b6fd-3e4b4dbfecfc))
-  (no_connect (at 161.29 97.79) (uuid e13da3eb-ac8c-4fcd-863d-6d21bf3feb3d))
 
   (wire (pts (xy 104.14 121.92) (xy 107.95 121.92))
     (stroke (width 0) (type default))
@@ -2622,10 +2620,10 @@
       (effects (font (size 1.27 1.27)) (justify right) hide)
     )
   )
-  (global_label "I2C_SCL" (shape output) (at 66.04 53.34 0) (fields_autoplaced)
+  (global_label "I2C_CLK" (shape output) (at 66.04 53.34 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify left))
     (uuid 3abb74e1-98ea-4511-9bbe-7d6107867d62)
-    (property "Intersheetrefs" "${INTERSHEET_REFS}" (at 76.5053 53.34 0)
+    (property "Intersheetrefs" "${INTERSHEET_REFS}" (at 76.5658 53.34 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
   )
@@ -3031,7 +3029,7 @@
     (property "Value" "Conn_01x01" (at 220.98 46.355 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 44.45 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 44.45 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 44.45 0)
@@ -3085,7 +3083,7 @@
     (property "Value" "MountingHole" (at 250.19 189.357 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "" (at 250.19 192.532 0)
+    (property "Footprint" "MountingHole:MountingHole_4mm" (at 250.19 192.532 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 250.19 192.532 0)
@@ -3167,7 +3165,7 @@
     (property "Value" "Conn_01x01" (at 220.98 28.575 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 26.67 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 26.67 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 26.67 0)
@@ -3246,13 +3244,13 @@
     (property "Value" "Conn_01x01" (at 220.98 107.315 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 105.41 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 105.41 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 105.41 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 8416af9f-e8b1-4bfd-bad3-27d81511abd8))
+    (pin "1" (uuid 15399567-043c-4eb5-9b29-d025b35016fc))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -3300,7 +3298,7 @@
     (property "Value" "Conn_01x01" (at 220.98 33.655 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 31.75 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 31.75 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 31.75 0)
@@ -3495,13 +3493,13 @@
     (property "Value" "Conn_01x01" (at 220.98 104.775 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 102.87 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 102.87 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 102.87 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 3a4acdac-6c5d-4ee0-b2b1-10c8883f3c4e))
+    (pin "1" (uuid 442a130d-1478-4271-bf0c-34cd12e61840))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -3599,7 +3597,7 @@
     (property "Value" "Conn_01x01" (at 220.98 64.135 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 62.23 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 62.23 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 62.23 0)
@@ -3630,7 +3628,7 @@
     (property "Datasheet" "" (at 213.36 69.85 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 5040b368-8796-46e2-8d55-47cabdc23eaa))
+    (pin "1" (uuid 727f14c7-619d-4233-bbaf-eed8827a20ec))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -3757,7 +3755,7 @@
     (property "Value" "Conn_01x01" (at 220.98 41.275 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 39.37 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 39.37 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 39.37 0)
@@ -3840,7 +3838,7 @@
     (property "Value" "Conn_01x01" (at 220.98 59.055 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 57.15 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 57.15 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 57.15 0)
@@ -4004,7 +4002,7 @@
     (property "Datasheet" "" (at 213.36 100.33 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 8f7e0d0e-2d2c-4219-a2cd-d107124ccde6))
+    (pin "1" (uuid 6298a60f-a7e7-468e-a7a5-4b1a7992132d))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -4132,6 +4130,31 @@
     )
   )
 
+  (symbol (lib_id "power:+3.3V") (at 161.29 100.33 90) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 40eaaba5-5f26-4627-97a2-19022644d179)
+    (property "Reference" "#PWR026" (at 165.1 100.33 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+3.3V" (at 158.75 100.33 90)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "" (at 161.29 100.33 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 161.29 100.33 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 48babf9e-0091-4a7c-8c8b-11b99d958dc8))
+    (instances
+      (project "openuav"
+        (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+          (reference "#PWR026") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "power:GND") (at 162.56 119.38 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 41febb4b-2b8b-4cad-af0d-4545bfc6e1a3)
@@ -4186,6 +4209,31 @@
     )
   )
 
+  (symbol (lib_id "power:+3.3V") (at 161.29 97.79 90) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 4a8c39bb-a156-4986-9d8b-e5b228b881d0)
+    (property "Reference" "#PWR024" (at 165.1 97.79 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+3.3V" (at 158.75 97.79 90)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "" (at 161.29 97.79 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 161.29 97.79 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 2b37a84a-9634-49e2-8b41-36b3fd71f21b))
+    (instances
+      (project "openuav"
+        (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+          (reference "#PWR024") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "Connector_Generic:Conn_01x01") (at 218.44 87.63 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 4b7556e7-1894-4e13-a622-6f4a75c389f9)
@@ -4195,13 +4243,13 @@
     (property "Value" "Conn_01x01" (at 220.98 89.535 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 87.63 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 87.63 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 87.63 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 9b7117b1-2a12-4dc1-8dbe-5344b1aa1a11))
+    (pin "1" (uuid 8d8e417d-fd41-4502-9965-2f8d23659710))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -4245,13 +4293,13 @@
     (property "Value" "Conn_01x01" (at 220.98 109.855 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 107.95 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 107.95 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 107.95 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 2f1091de-3900-4248-8684-bd1e98ee6f53))
+    (pin "1" (uuid 74ebe5f7-a0a3-4119-b146-6b22ce8c13e5))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -4565,7 +4613,7 @@
     (property "Value" "Conn_01x01" (at 220.98 51.435 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 49.53 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 49.53 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 49.53 0)
@@ -4590,7 +4638,7 @@
     (property "Value" "Conn_01x01" (at 220.98 43.815 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 41.91 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 41.91 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 41.91 0)
@@ -4615,13 +4663,13 @@
     (property "Value" "Conn_01x01" (at 220.98 74.295 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 72.39 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 72.39 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 72.39 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 3b3edf61-1638-4a58-a0b4-2d55b62aeb9b))
+    (pin "1" (uuid d5d1b1f9-e727-4d56-9400-62c4cdf70cac))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -4690,7 +4738,7 @@
     (property "Value" "MountingHole" (at 262.89 189.357 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "" (at 262.89 192.532 0)
+    (property "Footprint" "MountingHole:MountingHole_4mm" (at 262.89 192.532 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 262.89 192.532 0)
@@ -4743,7 +4791,7 @@
     (property "Value" "Conn_01x01" (at 220.98 66.675 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 64.77 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 64.77 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 64.77 0)
@@ -4768,13 +4816,13 @@
     (property "Value" "Conn_01x01" (at 220.98 97.155 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 95.25 0)
+    (property "Footprint" "footprints:largepad" (at 218.44 95.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 95.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 18e04918-2698-4e43-b739-320b31c59d27))
+    (pin "1" (uuid 3ddf5b0a-b36b-4803-998d-ebfd519b2046))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -4907,7 +4955,7 @@
     (property "Datasheet" "" (at 213.36 92.71 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 798482ec-6fa9-4b74-b9d1-dd9f7333713f))
+    (pin "1" (uuid f94f84d4-3773-4419-874d-a5f716a777e3))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -4926,13 +4974,13 @@
     (property "Value" "Conn_01x01" (at 220.98 71.755 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 69.85 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 69.85 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 69.85 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 475fbbe1-425b-44aa-88d3-31b6dd0c90b5))
+    (pin "1" (uuid d39d56a0-c284-45f4-8008-8fd2757664a0))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5049,7 +5097,7 @@
     (property "Value" "MountingHole" (at 269.24 189.357 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "" (at 269.24 192.532 0)
+    (property "Footprint" "MountingHole:MountingHole_4mm" (at 269.24 192.532 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 269.24 192.532 0)
@@ -5073,7 +5121,7 @@
     (property "Value" "Conn_01x01" (at 220.98 53.975 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 52.07 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 52.07 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 52.07 0)
@@ -5127,13 +5175,13 @@
     (property "Value" "Conn_01x01" (at 220.98 112.395 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 110.49 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 110.49 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 110.49 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 564a43c6-bed1-478e-977e-a62b6c8ced89))
+    (pin "1" (uuid ddc9d339-9150-4db7-9558-c503faa645ef))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5152,13 +5200,13 @@
     (property "Value" "Conn_01x01" (at 220.98 86.995 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 85.09 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 85.09 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 85.09 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid a0431f46-c629-4ccc-8a00-b62c7fe2812f))
+    (pin "1" (uuid 38710b70-096e-4a89-839d-a8de0fa525e7))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5177,7 +5225,7 @@
     (property "Value" "Conn_01x01" (at 220.98 26.035 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 24.13 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 24.13 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 24.13 0)
@@ -5231,13 +5279,13 @@
     (property "Value" "Conn_01x01" (at 220.98 94.615 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 92.71 0)
+    (property "Footprint" "footprints:largepad" (at 218.44 92.71 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 92.71 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 21e815c5-2ea5-4f85-b9f8-381c5569d308))
+    (pin "1" (uuid 343d688f-6c1e-4161-bb61-58ee15e0482d))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5256,7 +5304,7 @@
     (property "Value" "Conn_01x01" (at 220.98 31.115 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 29.21 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 29.21 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 29.21 0)
@@ -5417,7 +5465,7 @@
     (property "Value" "MountingHole" (at 256.54 189.357 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "" (at 256.54 192.532 0)
+    (property "Footprint" "MountingHole:MountingHole_4mm" (at 256.54 192.532 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 256.54 192.532 0)
@@ -5441,13 +5489,13 @@
     (property "Value" "Conn_01x01" (at 220.98 81.915 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 80.01 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 80.01 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 80.01 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid a1b68372-c6ad-4cbd-9b5f-96916840977c))
+    (pin "1" (uuid af1db525-71b7-430a-92b2-99d939b37571))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5495,7 +5543,7 @@
     (property "Value" "Conn_01x01" (at 220.98 56.515 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 54.61 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 54.61 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 54.61 0)
@@ -5696,13 +5744,13 @@
     (property "Value" "Conn_01x01" (at 220.98 102.235 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 100.33 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 100.33 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 100.33 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 12efc33f-2ab7-448b-b727-ccffbce87eb4))
+    (pin "1" (uuid 2c8bb722-7626-4f37-ba6b-1dfebeb9c81d))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5796,13 +5844,13 @@
     (property "Value" "Conn_01x01" (at 220.98 76.835 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 74.93 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 74.93 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 74.93 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 50562baf-3962-4b09-81b8-7dfb57d00df2))
+    (pin "1" (uuid 7294818a-5063-43fc-aa54-0e6689ec5c36))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5900,13 +5948,13 @@
     (property "Value" "Conn_01x01" (at 220.98 79.375 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 77.47 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 77.47 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 77.47 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 51095eab-c593-4965-97e2-189bdfa04f7f))
+    (pin "1" (uuid d33501be-e1f8-459a-8ac4-05311bf82277))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5931,7 +5979,7 @@
     (property "Datasheet" "" (at 213.36 95.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid de6e45f5-43a7-4cc2-a993-cd566c25f567))
+    (pin "1" (uuid fbf9f765-1f91-4026-8872-d2a50a8e39ab))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -5956,7 +6004,7 @@
     (property "Datasheet" "" (at 213.36 110.49 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid c2eecd62-1021-4efb-af49-255cb2fbef87))
+    (pin "1" (uuid d4adaa06-cb4e-44da-b53f-2eeb312f4850))
     (instances
       (project "openuav"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
@@ -6149,7 +6197,7 @@
     (property "Value" "Conn_01x01" (at 220.98 38.735 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "Footprint" "" (at 218.44 36.83 0)
+    (property "Footprint" "footprints:smallpad" (at 218.44 36.83 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 218.44 36.83 0)
