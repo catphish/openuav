@@ -10,8 +10,8 @@ uint8_t rx_rdy;
 uint32_t buffer_pointer;
 
 void usb_init() {
-  gpio_port_mode(GPIOA, 11, GPIO_MODE_ANALOG, 10, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
-  gpio_port_mode(GPIOA, 12, GPIO_MODE_ANALOG, 10, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  gpio_pin_mode(GPIOA, 11, GPIO_MODE_ANALOG, 10, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  gpio_pin_mode(GPIOA, 12, GPIO_MODE_ANALOG, 10, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
 
   // Enable Power control clock
   RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;
@@ -93,7 +93,7 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len) {
   ep &= 0x7f;
   while(!ep_tx_ready(ep));
   uint32_t txBufferAddr = USBBUFTABLE->ep_desc[ep].txBufferAddr;
-  for(int n=0; n<len; n+=2) {
+  for(uint32_t n=0; n<len; n+=2) {
     *(uint16_t *)(USBBUFRAW+txBufferAddr+n) = *(uint16_t *)(buffer + n);
   }
   USBBUFTABLE->ep_desc[ep].txBufferCount = len;

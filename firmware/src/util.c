@@ -8,7 +8,7 @@ void usleep(unsigned int delay) {
 }
 
 void msleep(unsigned int delay) {
-	for(int n=0; n<delay; n++) {
+	for(unsigned int n=0; n<delay; n++) {
 		usleep(1000);
 	}
 }

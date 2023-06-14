@@ -8,7 +8,7 @@ void gpio_init() {
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
 }
 
-void gpio_port_mode(GPIO_TypeDef * port, uint32_t pin, uint32_t mode, uint32_t af, uint32_t pupdr, uint32_t otyper) {
+void gpio_pin_mode(GPIO_TypeDef * port, uint32_t pin, uint32_t mode, uint32_t af, uint32_t pupdr, uint32_t otyper) {
   port->MODER &= ~( 3 << (pin * 2));
   port->MODER |= (mode << (pin * 2));
   if(pin > 8) {

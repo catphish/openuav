@@ -13,5 +13,5 @@
 #define GPIO_OTYPE_OD 1
 
 void gpio_init();
-void gpio_port_mode(GPIO_TypeDef * port, uint32_t pin, uint32_t mode, uint32_t af, uint32_t pupdr, uint32_t otyper);
+void gpio_pin_mode(GPIO_TypeDef * port, uint32_t pin, uint32_t mode, uint32_t af, uint32_t pupdr, uint32_t otyper);
 void gpio_set_pin(GPIO_TypeDef * port, uint32_t pin, uint32_t value);
