@@ -1,3 +1,17 @@
+struct USBBufTable {
+  struct USBBufDesc {
+    uint16_t txBufferAddr ;
+    uint16_t txBufferCount ;
+    uint16_t rxBufferAddr ;
+    uint16_t rxBufferCount ;
+  }
+  ep_desc[8];
+};
+
+#define USBBUFTABLE ((volatile struct USBBufTable *)0x40006000)
+#define USBBUFRAW ((volatile uint8_t *)0x40006000)
+#define USB_EPR(n) (*(volatile uint16_t *)(USB_BASE + 4 * n))
+
 // Totally generic device descriptor
 char device_descriptor[] = {
   0x12,      /* bLength: Device Descriptor size */

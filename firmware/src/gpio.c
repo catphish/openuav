@@ -6,6 +6,10 @@ void gpio_init() {
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
   // Enable GPIOB clock
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+  // Enable GPIOC clock
+  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+  // Enable GPIOF clock
+  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOFEN;
 }
 
 void gpio_pin_mode(GPIO_TypeDef * port, uint32_t pin, uint32_t mode, uint32_t af, uint32_t pupdr, uint32_t otyper) {
@@ -33,4 +37,7 @@ void gpio_set_pin(GPIO_TypeDef * port, uint32_t pin, uint32_t value) {
   } else {
     port->BSRR |= (1<<(pin+16));
   }
+}
+uint8_t gpio_get_pin(GPIO_TypeDef * port, uint32_t pin) {
+  return (port->IDR & (1<<pin)) ? 1 : 0;
 }

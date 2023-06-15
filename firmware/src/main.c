@@ -5,32 +5,25 @@
 #include "dshot.h"
 #include <string.h>
 #include <stdio.h>
-
-void dfu() {
-  void (*SysMemBootJump)(void);
-  SysMemBootJump = (void (*)(void)) (*((uint32_t *) 0x1FFF0004));
-  SysMemBootJump();
-}
+#include "led.h"
+#include "util.h"
+#include "dfu.h"
 
 void SystemInit(void) {
   gpio_init();
-  // Set up LED
-  gpio_set_pin(GPIOA, 10, 1);
-  gpio_pin_mode(GPIOA, 10, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
-  // Set up button
-  gpio_pin_mode(GPIOB, 8, GPIO_MODE_INPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
-
-  // Initialize USB
+  led_init();
   usb_init();
+  dshot_init();
+  dfu_init();
 }
 
 int main(void) {
   while(1) {
-    if(GPIOB->IDR & (1<<8)) {
-     dfu();
-    }
     usb_main();
+    dfu_main();
     usb_printf("Hello World: %d!\n", 1234);
+    msleep(100);
+    led0_toggle();
   }
   return 0;
 }

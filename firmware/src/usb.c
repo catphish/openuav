@@ -9,7 +9,6 @@
 #include <string.h>
 
 uint8_t pending_addr = 0;
-uint8_t rx_rdy;
 uint32_t buffer_pointer;
 
 void usb_init() {
