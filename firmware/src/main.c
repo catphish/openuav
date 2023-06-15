@@ -3,6 +3,8 @@
 #include "gpio.h"
 #include "usb.h"
 #include "dshot.h"
+#include <string.h>
+#include <stdio.h>
 
 void dfu() {
   void (*SysMemBootJump)(void);
@@ -28,9 +30,7 @@ int main(void) {
      dfu();
     }
     usb_main();
-    if(ep_tx_ready(1)) {
-      usb_write(1, "Hello World!\n", 13);
-    }
+    usb_printf("Hello World: %d!\n", 1234);
   }
   return 0;
 }

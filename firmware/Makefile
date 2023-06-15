@@ -40,7 +40,7 @@ CFLAGS += -DSTM32G474xx
 CFLAGS += $(INCLUDES)
 
 # Linker Flags
-LFLAGS = -Wl,--gc-sections -Wl,-T$(LD_SCRIPT)
+LFLAGS = -Wl,--gc-sections -Wl,-T$(LD_SCRIPT) -specs=nano.specs -specs=nosys.specs
 
 ###############################################################################
 

@@ -4,6 +4,9 @@
 #include "usb.h"
 #include "gpio.h"
 #include "util.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
 
 uint8_t pending_addr = 0;
 uint8_t rx_rdy;
@@ -193,5 +196,16 @@ void usb_main() {
     }
     // Clear pending state
     USB_EPR(0) &= 0x870f;
+  }
+}
+
+void usb_printf(const char* format, ...) {
+  if(ep_tx_ready(1)) {
+    va_list args;
+    va_start(args, format);
+    char buffer[64];
+    vsprintf(buffer, format, args);
+    usb_write(1, buffer, strlen(buffer));
+    va_end( args );
   }
 }

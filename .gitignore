@@ -28,6 +28,7 @@ fp-info-cache
 # Compiled firmware
 *.bin
 *.elf
+*.dfu
 *.o
 
 # Production files
