@@ -10,6 +10,9 @@ uint8_t rx_rdy;
 uint32_t buffer_pointer;
 
 void usb_init() {
+  // Enable GPIOA clock
+  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+  // Set PA11 and PA12 to analog mode
   gpio_pin_mode(GPIOA, 11, GPIO_MODE_ANALOG, 10, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
   gpio_pin_mode(GPIOA, 12, GPIO_MODE_ANALOG, 10, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
 
@@ -17,26 +20,29 @@ void usb_init() {
   RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;
   // Enable USB clock
   RCC->APB1ENR1 |= RCC_APB1ENR1_USBEN;
-  // CRS Clock eneble
+  // Enable clock recovery system clock
   RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
 
   // Enable HSI48
   RCC->CRRCR |= RCC_CRRCR_HSI48ON;
+  // Wait for HSI48 to be ready
   while ((RCC->CRRCR & RCC_CRRCR_HSI48RDY) != RCC_CRRCR_HSI48RDY);
 
   // Enable USB Power
   PWR->CR2 |= (1<<10);
+  // Wait for USB Power to be ready
   usleep(10);
 
   // Enable USB and reset
   USB->CNTR = USB_CNTR_FRES;
+  // Hold reset for 10us
   usleep(10);
   // Deassert reset
   USB->CNTR = 0;
+  // Wait for reset to complete
   usleep(10);
   // Activate DP pullup
   USB->BCDR |= USB_BCDR_DPPU;
-  rx_rdy = 0;
 }
 
 // Types: 0=Bulk,1=Control,2=Iso,3=Interrupt
@@ -66,16 +72,19 @@ void usb_configure_ep(uint8_t ep, uint32_t type) {
   USB_EPR(ep) = new_epr;
 }
 
+// Check the endpoint is in a NACK TX state waiting for data.
 uint32_t ep_tx_ready(uint32_t ep) {
   ep &= 0x7f;
   return((USB_EPR(ep) & 0x30) == 0x20);
 }
 
+// Check the endpoint CTR_RX, indicating that a packet has been received.
 uint32_t ep_rx_ready(uint32_t ep) {
   ep &= 0x7f;
-  return((USB_EPR(ep) & 0x3000) == 0x2000);
+  return(USB_EPR(ep) & (1<<15));
 }
 
+// Read 64 bytes from an endpoint buffer.
 void usb_read(uint8_t ep, char * buffer) {
   ep &= 0x7f;
   while(!ep_rx_ready(ep));
@@ -85,10 +94,13 @@ void usb_read(uint8_t ep, char * buffer) {
       *(uint16_t *)(buffer + n) = *(uint16_t *)(USBBUFRAW+rxBufferAddr+n);
     }
   }
+  // Clear pending state
+  USB_EPR(0) &= 0x078f;
   // RX NAK->VALID, Clear CTR
   USB_EPR(ep) = (USB_EPR(ep) & 0x370f) ^ 0x3000;
 }
 
+// Write data to an endpoint buffer.
 void usb_write(uint8_t ep, char * buffer, uint32_t len) {
   ep &= 0x7f;
   while(!ep_tx_ready(ep));
@@ -102,11 +114,16 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len) {
   USB_EPR(ep) = (USB_EPR(ep) & 0x87bf) ^ 0x30;
 }
 
+void usb_stall_tx(uint8_t ep) {
+  ep &= 0x7f;
+  USB_EPR(ep) = (USB_EPR(ep) & 0x87bf) ^ 0x10;
+}
+
 void usb_reset() {
   USB->ISTR &= ~USB_ISTR_RESET;
 
   buffer_pointer = 64;
-  usb_configure_ep(0, 1);
+  usb_configure_ep(0x00, 0x01);
   usb_configure_ep(0x81, 0x10);
   USB->BTABLE = 0;
 
@@ -114,7 +131,6 @@ void usb_reset() {
   USB->DADDR = USB_DADDR_EF;
 }
 
-int usb_ok = 0;
 void usb_handle_ep0() {
   char packet[64];
   usb_read(0, packet);
@@ -137,6 +153,14 @@ void usb_handle_ep0() {
       if(len > packet[6]) len = packet[6];
       usb_write(0, config_descriptor, len);
     }
+    if(descriptor_type == 3 && descriptor_idx == 0) {
+      uint32_t len = string_descriptor[0];
+      if(len > packet[6]) len = packet[6];
+      usb_write(0, string_descriptor, len);
+    } else if (descriptor_type == 3){
+      usb_write(0,0,0);
+    }
+    
   }
   // Set address
   if(bmRequestType == 0x00 && bRequest == 0x05) {
@@ -146,14 +170,10 @@ void usb_handle_ep0() {
   // Set configuration
   if(bmRequestType == 0x00 && bRequest == 0x09) {
     usb_write(0,0,0);
-    usb_ok = 1;
   }
 }
 
-void usb_main_loop() {
-  if (usb_ok)
-    usb_write(0x81, "Hello World!\n", 13);
-  
+void usb_main() {
   // USB reset
   if(USB->ISTR & USB_ISTR_RESET) {
     usb_reset();
@@ -161,19 +181,13 @@ void usb_main_loop() {
 
   if(USB_EPR(0) & (1<<15)) {
     // EP0 RX
-    USB_EPR(0) &= 0x078f;
     usb_handle_ep0();
-  }
-
-  if(USB_EPR(1) & (1<<15)) {
-    // EP1 RX
-    USB_EPR(0) &= 0x078f;
-    //usb_storage_handle_ep1();
   }
 
   if(USB_EPR(0) & (1<<7)) {
     // EP0 TX
     if(pending_addr) {
+      // If we're waiting to set an address, do it now.
       USB->DADDR = USB_DADDR_EF | pending_addr;
       pending_addr = 0;
     }
