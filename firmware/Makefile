@@ -19,14 +19,14 @@ DB = $(TOOLCHAIN_ROOT)arm-none-eabi-gdb
 # Project sources
 SRC_FILES = $(wildcard $(SRC_DIR)*.c) $(wildcard $(SRC_DIR)*/*.c)
 ASM_FILES = $(wildcard $(SRC_DIR)*.s) $(wildcard $(SRC_DIR)*/*.s)
-LD_SCRIPT = STM32G474CETX_FLASH.ld
+LD_SCRIPT = STM32G431CB.ld
 
 # Project includes
 INCLUDES = -I$(INC_DIR)
 
 # Vendor sources: Note that files in "Templates" are normally copied into project for customization,
 # but that is not necessary for this simple project.
-ASM_FILES += $(VENDOR_ROOT)Drivers/CMSIS/Device/ST/STM32G4xx/Source/Templates/gcc/startup_stm32g474xx.s
+ASM_FILES += $(VENDOR_ROOT)Drivers/CMSIS/Device/ST/STM32G4xx/Source/Templates/gcc/startup_stm32g431xx.s
 
 # Vendor includes
 INCLUDES += -I$(VENDOR_ROOT)Drivers/CMSIS/Core/Include
@@ -36,7 +36,7 @@ INCLUDES += -I$(VENDOR_ROOT)Drivers/CMSIS/Device/ST/STM32G4xx/Include
 CFLAGS  = -g -O0 -Wall -Wextra -Warray-bounds -Wno-unused-parameter -Werror
 CFLAGS += -mfloat-abi=soft
 CFLAGS += -mcpu=cortex-m4
-CFLAGS += -DSTM32G474xx
+CFLAGS += -DSTM32G431xx
 CFLAGS += $(INCLUDES)
 
 # Linker Flags

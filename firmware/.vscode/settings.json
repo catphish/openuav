@@ -13,6 +13,12 @@
         "functional": "c",
         "tuple": "c",
         "type_traits": "c",
-        "utility": "c"
+        "utility": "c",
+        "stdio.h": "c",
+        "string.h": "c",
+        "dshot.h": "c",
+        "usb.h": "c",
+        "led.h": "c",
+        "util.h": "c"
     }
 }

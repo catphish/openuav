@@ -11,6 +11,12 @@
 uint8_t pending_addr = 0;
 uint32_t buffer_pointer;
 
+struct usb_ring_buffer {
+  char data[256];
+  uint8_t head;
+  uint8_t tail;
+} usb_ring_buffer[2];
+
 void usb_init() {
   // Enable GPIOA clock
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
@@ -116,9 +122,14 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len) {
   USB_EPR(ep) = (USB_EPR(ep) & 0x87bf) ^ 0x30;
 }
 
-void usb_stall_tx(uint8_t ep) {
-  ep &= 0x7f;
-  USB_EPR(ep) = (USB_EPR(ep) & 0x87bf) ^ 0x10;
+void usb_write_string(uint8_t ep, char * data, uint32_t len) {
+  // Copy data into the ring buffer. If there is not enough space, stop copying.
+  uint32_t n;
+  for(n=0; n<len; n++) {
+    if(usb_ring_buffer[ep].head + 1 == usb_ring_buffer[ep].tail) break;
+    usb_ring_buffer[ep].data[usb_ring_buffer[ep].head] = data[n];
+    usb_ring_buffer[ep].head++;
+  }
 }
 
 void usb_reset() {
@@ -148,21 +159,20 @@ void usb_handle_ep0() {
     if(descriptor_type == 1 && descriptor_idx == 0) {
       uint32_t len = 18;
       if(len > packet[6]) len = packet[6];
-      usb_write(0, device_descriptor, len);
+      usb_write_string(0, device_descriptor, len);
     }
     if(descriptor_type == 2 && descriptor_idx == 0) {
       uint32_t len = config_descriptor[2];
       if(len > packet[6]) len = packet[6];
-      usb_write(0, config_descriptor, len);
+      usb_write_string(0, config_descriptor, len);
     }
     if(descriptor_type == 3 && descriptor_idx == 0) {
       uint32_t len = string_descriptor[0];
       if(len > packet[6]) len = packet[6];
-      usb_write(0, string_descriptor, len);
+      usb_write_string(0, string_descriptor, len);
     } else if (descriptor_type == 3){
       usb_write(0,0,0);
     }
-    
   }
   // Set address
   if(bmRequestType == 0x00 && bRequest == 0x05) {
@@ -195,6 +205,16 @@ void usb_main() {
     }
     // Clear pending state
     USB_EPR(0) &= 0x870f;
+  }
+
+  if(ep_tx_ready(0)) {
+    // Copy data from the ring buffer into the endpoint buffer.
+    uint32_t len = usb_ring_buffer[0].head - usb_ring_buffer[0].tail;
+    if(len > 0) {
+      if(len > 64) len = 64;
+      usb_write(0, usb_ring_buffer[0].data + usb_ring_buffer[0].tail, len);
+      usb_ring_buffer[0].tail += len;
+    }
   }
 }
 
