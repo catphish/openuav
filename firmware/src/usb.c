@@ -7,12 +7,18 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include "led.h"
 
 uint8_t pending_addr = 0;
 uint32_t buffer_pointer;
 
+struct usb_packet {
+  char data[64];
+  uint8_t len;
+};
+
 struct usb_ring_buffer {
-  char data[256];
+  struct usb_packet packet[4];
   uint8_t head;
   uint8_t tail;
 } usb_ring_buffer[2];
@@ -122,13 +128,22 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len) {
   USB_EPR(ep) = (USB_EPR(ep) & 0x87bf) ^ 0x30;
 }
 
+// Copy data into the ring buffer in 64 byte chunks. If the buffer is full,
+// retun immediately.
 void usb_write_string(uint8_t ep, char * data, uint32_t len) {
-  // Copy data into the ring buffer. If there is not enough space, stop copying.
-  uint32_t n;
-  for(n=0; n<len; n++) {
-    if(usb_ring_buffer[ep].head + 1 == usb_ring_buffer[ep].tail) break;
-    usb_ring_buffer[ep].data[usb_ring_buffer[ep].head] = data[n];
-    usb_ring_buffer[ep].head++;
+  while(len) {
+    if((usb_ring_buffer[ep].head + 1) % 4 == usb_ring_buffer[ep].tail) {
+      return;
+    }
+    uint32_t chunk = len;
+    if(chunk > 64) chunk = 64;
+    for(uint32_t n=0; n<chunk; n++) {
+      usb_ring_buffer[ep].packet[usb_ring_buffer[ep].head].data[n] = data[n];
+    }
+    usb_ring_buffer[ep].packet[usb_ring_buffer[ep].head].len = chunk;
+    usb_ring_buffer[ep].head = (usb_ring_buffer[ep].head + 1) % 4;
+    data += chunk;
+    len -= chunk;
   }
 }
 
@@ -174,6 +189,9 @@ void usb_handle_ep0() {
       usb_write(0,0,0);
     }
   }
+  if(bmRequestType == 0x21) {
+    usb_write(0,0,0);
+  }
   // Set address
   if(bmRequestType == 0x00 && bRequest == 0x05) {
     pending_addr = packet[2];
@@ -209,22 +227,25 @@ void usb_main() {
 
   if(ep_tx_ready(0)) {
     // Copy data from the ring buffer into the endpoint buffer.
-    uint32_t len = usb_ring_buffer[0].head - usb_ring_buffer[0].tail;
-    if(len > 0) {
-      if(len > 64) len = 64;
-      usb_write(0, usb_ring_buffer[0].data + usb_ring_buffer[0].tail, len);
-      usb_ring_buffer[0].tail += len;
+    if(usb_ring_buffer[0].head != usb_ring_buffer[0].tail) {
+      usb_write(0, usb_ring_buffer[0].packet[usb_ring_buffer[0].tail].data, usb_ring_buffer[0].packet[usb_ring_buffer[0].tail].len);
+      usb_ring_buffer[0].tail = (usb_ring_buffer[0].tail + 1) % 4;
+    }
+  }
+  if(ep_tx_ready(1)) {
+    // Copy data from the ring buffer into the endpoint buffer.
+    if(usb_ring_buffer[1].head != usb_ring_buffer[1].tail) {
+      usb_write(1, usb_ring_buffer[1].packet[usb_ring_buffer[1].tail].data, usb_ring_buffer[1].packet[usb_ring_buffer[1].tail].len);
+      usb_ring_buffer[1].tail = (usb_ring_buffer[1].tail + 1) % 4;
     }
   }
 }
 
 void usb_printf(const char* format, ...) {
-  if(ep_tx_ready(1)) {
-    va_list args;
-    va_start(args, format);
-    char buffer[64];
-    vsprintf(buffer, format, args);
-    usb_write(1, buffer, strlen(buffer));
-    va_end( args );
-  }
+  va_list args;
+  va_start(args, format);
+  char buffer[64];
+  vsprintf(buffer, format, args);
+  usb_write_string(1, buffer, strlen(buffer));
+  va_end( args );
 }

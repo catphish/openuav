@@ -18,9 +18,13 @@ void SystemInit(void) {
 int main(void) {
   while(1) {
     usb_main();
-    usb_printf("Hello World: %d!\n", 1234);
-    led0_toggle();
-    led1_toggle();
+    static uint16_t n = 0;
+    if(!n++) {
+      led1_toggle();
+      usb_printf("Hello World: %d!\n", 1234);
+    }
+    //led0_toggle();
+    //led1_toggle();
   }
   return 0;
 }

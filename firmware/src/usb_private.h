@@ -79,10 +79,10 @@ char config_descriptor[] = {
   0x00,   /* bmCapabilities: D0+D1 */
   0x01,   /* bDataInterface: 1 */
 
-  /* Endpoint 1 Descriptor*/
+  /* Endpoint 2 Descriptor*/
   0x07,   /* bLength: Endpoint Descriptor size */
   0x05,   /* bDescriptorType: Endpoint */
-  0x81,   /* bEndpointAddress: (IN1) */
+  0x82,   /* bEndpointAddress: (IN1) */
   0x03,   /* bmAttributes: Interrupt */
   0x10,0, /* wMaxPacketSize: 64 bytes */
   0x02,   /* bInterval: 2ms */
@@ -98,17 +98,17 @@ char config_descriptor[] = {
   0x00,   /* bInterfaceProtocol */
   0x00,   /* iInterface: NULL */
 
-  /* Endpoint 2 Descriptor*/
+  /* Endpoint 1 Descriptor*/
   0x07,   /* bLength: Endpoint Descriptor size */
   0x05,   /* bDescriptorType: Endpoint */
-  0x02,   /* bEndpointAddress: (OUT2) */
+  0x01,   /* bEndpointAddress: (OUT2) */
   0x02,   /* bmAttributes: Bulk */
   0x40,0, /* wMaxPacketSize: 64 bytes */
   0x00,   /* bInterval: Ignored */
-  /* Endpoint 2 Descriptor*/
+  /* Endpoint 1 Descriptor*/
   0x07,   /* bLength: Endpoint Descriptor size */
   0x05,   /* bDescriptorType: Endpoint */
-  0x82,   /* bEndpointAddress: (IN2) */
+  0x81,   /* bEndpointAddress: (IN2) */
   0x02,   /* bmAttributes: Bulk */
   0x40,0, /* wMaxPacketSize: 64 bytes */
   0x00    /* bInterval: Ignored */
