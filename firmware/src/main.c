@@ -25,21 +25,40 @@ void SystemInit(void) {
 }
 
 int main(void) {
+  struct dshot_data dshot;
+  struct gyro_data gyro;
+  int32_t x_integral = 0;
+  int32_t y_integral = 0;
+  int32_t z_integral = 0;
   while(1) {
     usb_main();
-    struct dshot_data dshot;
-    struct gyro_data gyro;
     if(elrs_valid() && elrs_channel(4) > 0)
       dshot.armed = 1;
-    else
+    else {
       dshot.armed = 0;
+      x_integral = 0;
+      y_integral = 0;
+      z_integral = 0;
+    }
     if(gyro_ready()) {
       elrs_tick();
       gyro_read(&gyro);
-      dshot.motor1 = elrs_channel(2) + 820 - gyro.x/4 - gyro.y/4 - gyro.z/2 + elrs_channel(0)/2 - elrs_channel(1)/2 - elrs_channel(3);
-      dshot.motor2 = elrs_channel(2) + 820 - gyro.x/4 + gyro.y/4 + gyro.z/2 - elrs_channel(0)/2 - elrs_channel(1)/2 + elrs_channel(3);
-      dshot.motor3 = elrs_channel(2) + 820 + gyro.x/4 - gyro.y/4 + gyro.z/2 + elrs_channel(0)/2 + elrs_channel(1)/2 + elrs_channel(3);
-      dshot.motor4 = elrs_channel(2) + 820 + gyro.x/4 + gyro.y/4 - gyro.z/2 - elrs_channel(0)/2 + elrs_channel(1)/2 - elrs_channel(3);
+      // Calculate the error for each axis
+      int32_t error_x = gyro.x/4 + elrs_channel(1);
+      int32_t error_y = gyro.y/4 - elrs_channel(0);
+      int32_t error_z = gyro.z/1 + elrs_channel(3)*4;
+
+      // Integrate the error in each axis
+      x_integral += error_x;
+      y_integral += error_y;
+      z_integral += error_z;
+
+      // Add the P and I terms to calculate the final motor outputs
+      dshot.motor1 = elrs_channel(2) + 820 - error_x - error_y - error_z - x_integral/512 - y_integral/512 - z_integral/512;
+      dshot.motor2 = elrs_channel(2) + 820 - error_x + error_y + error_z - x_integral/512 + y_integral/512 + z_integral/512;
+      dshot.motor3 = elrs_channel(2) + 820 + error_x - error_y + error_z + x_integral/512 - y_integral/512 + z_integral/512;
+      dshot.motor4 = elrs_channel(2) + 820 + error_x + error_y - error_z + x_integral/512 + y_integral/512 - z_integral/512;
+
       dshot_write(&dshot);
     }
   }
