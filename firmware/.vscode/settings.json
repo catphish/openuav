@@ -19,6 +19,7 @@
         "dshot.h": "c",
         "usb.h": "c",
         "led.h": "c",
-        "util.h": "c"
+        "util.h": "c",
+        "gyro.h": "c"
     }
 }

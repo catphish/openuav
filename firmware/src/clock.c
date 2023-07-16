@@ -2,6 +2,9 @@
 #include "led.h"
 
 void clock_init(void) {
+    // Enable FPU
+    SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
+
     // Configure PLL to 160MHz using HSI as source
     // Enable HSI
     RCC->CR |= RCC_CR_HSION;

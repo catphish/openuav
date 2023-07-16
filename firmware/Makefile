@@ -66,7 +66,7 @@ $(ALL_OBJS):
 # Link
 %.elf: $(ALL_OBJS)
 	@echo "[LD] $@"
-	@$(CC) $(CFLAGS) $(LFLAGS) $(ALL_OBJS) -o $@
+	@$(CC) $(CFLAGS) $(LFLAGS) $(ALL_OBJS) -lm -lc -u _printf_float -o $@
 
 # Clean
 clean:
