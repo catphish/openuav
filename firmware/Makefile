@@ -34,7 +34,7 @@ INCLUDES += -I$(VENDOR_ROOT)Drivers/CMSIS/Device/ST/STM32G4xx/Include
 
 # Compiler Flags
 CFLAGS  = -g -O0 -Wall -Wextra -Warray-bounds -Wno-unused-parameter -Werror
-CFLAGS += -mfloat-abi=soft
+CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -DSTM32G431xx
 CFLAGS += $(INCLUDES)

@@ -271,3 +271,26 @@ void Quaternion_slerp(Quaternion* q1, Quaternion* q2, double t, Quaternion* outp
     }
     *output = result;
 }
+#define ONE_MINUS_EPS (1.0 - QUATERNION_EPS)
+
+void Quaternion_from_unit_vecs(double v0[3], double v1[3], Quaternion* output)
+{
+    let dot = v0.dot(v1);
+    if dot > ONE_MINUS_EPS {
+        return Self::new_identity();
+    } else if dot < -ONE_MINUS_EPS {
+        // Rotate along any orthonormal vec to vec1 or vec2 as the axis.
+        return Self::from_axis_angle(Vec3::new(1., 0., 0.).cross(v0), TAU / 2.);
+    }
+
+    let w = 1. + dot;
+    let v = v0.cross(v1);
+
+    (Self {
+        w,
+        x: v.x,
+        y: v.y,
+        z: v.z,
+    })
+    .to_normalized()
+}

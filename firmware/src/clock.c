@@ -18,10 +18,8 @@ void clock_init(void) {
     RCC->PLLCFGR = RCC_PLLCFGR_PLLSRC_HSI | RCC_PLLCFGR_PLLM_0 | (40 << RCC_PLLCFGR_PLLN_Pos) | RCC_PLLCFGR_PLLREN;
     // Enable PLL
     RCC->CR |= RCC_CR_PLLON;
-    led1_toggle();
     // Wait for PLL to be ready
     while(!(RCC->CR & RCC_CR_PLLRDY));
-    led0_toggle();
     // Set flash latency to 4 wait states
     FLASH->ACR = (FLASH->ACR & ~FLASH_ACR_LATENCY) | FLASH_ACR_LATENCY_4WS;
     // Set SYSCLK to PLL

@@ -1,3 +1,4 @@
+#include <stm32g4xx.h>
 #include "gyro.h"
 #include "quaternion.h"
 
@@ -13,12 +14,9 @@ void imu_init(void)
 void imu_update_from_gyro(struct gyro_data *gyro)
 {
     // Convert the gyro readings to radians
-    // Divide by 32768 and multiply by 2000 to get degrees per second
-    // Divide by 360 and multiply by 2 pi to get radians per second
-    // Divide by 416 to get radians per tick
-    float gyro_x = (float)gyro->x * 2000.0f / 360.0f * 3.14159265358979323846f * 2.0f / 32768.0f / 833.0f;
-    float gyro_y = (float)gyro->y * 2000.0f / 360.0f * 3.14159265358979323846f * 2.0f / 32768.0f / 833.0f;
-    float gyro_z = (float)gyro->z * 2000.0f / 360.0f * 3.14159265358979323846f * 2.0f / 32768.0f / 833.0f;
+    float gyro_x = (float)gyro->x * 0.00122173 / 416.0f;
+    float gyro_y = (float)gyro->y * 0.00122173 / 416.0f;
+    float gyro_z = (float)gyro->z * 0.00122173 / 416.0f;
 
     Quaternion q_x, q_y, q_z;
 

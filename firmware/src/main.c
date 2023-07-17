@@ -59,7 +59,7 @@ int main(void) {
 
       // Calculate the error for each axis
       int32_t error_x = gyro.x/4 + requested_x;
-      int32_t error_y = gyro.y/4 - requested_y;
+      int32_t error_y = gyro.y/4 + requested_y;
       int32_t error_z = gyro.z/1 + requested_z;
 
       // Integrate the error in each axis
@@ -68,19 +68,29 @@ int main(void) {
       z_integral += error_z;
 
       // Add the P and I terms to calculate the final motor outputs
-      dshot.motor1 = elrs_channel(2) + 820 - error_x - error_y - error_z - x_integral/512 - y_integral/512 - z_integral/512;
-      dshot.motor2 = elrs_channel(2) + 820 - error_x + error_y + error_z - x_integral/512 + y_integral/512 + z_integral/512;
-      dshot.motor3 = elrs_channel(2) + 820 + error_x - error_y + error_z + x_integral/512 - y_integral/512 + z_integral/512;
-      dshot.motor4 = elrs_channel(2) + 820 + error_x + error_y - error_z + x_integral/512 + y_integral/512 - z_integral/512;
+      dshot.motor1 = elrs_channel(2) + 820 - error_x + error_y - error_z - x_integral/512 + y_integral/512 - z_integral/512;
+      dshot.motor2 = elrs_channel(2) + 820 - error_x - error_y + error_z - x_integral/512 - y_integral/512 + z_integral/512;
+      dshot.motor3 = elrs_channel(2) + 820 + error_x + error_y + error_z + x_integral/512 + y_integral/512 + z_integral/512;
+      dshot.motor4 = elrs_channel(2) + 820 + error_x - error_y - error_z + x_integral/512 - y_integral/512 - z_integral/512;
 
       dshot_write(&dshot);
 
       // Update the IMU
       imu_update_from_gyro(&gyro);
       // Print the current orientation
-      double orientation[3];
-      Quaternion_toEulerZYX(&q, orientation);
-      usb_printf("-3.14159,3.14159.2,%f,%f,%f\n", orientation[0], orientation[1], orientation[2]);
+      //double orientation[3];
+      //Quaternion_toEulerZYX(&q, orientation);
+      usb_printf("-1,1,%f,%f,%f\n", q.v[0], q.v[1], q.v[2]);
+
+      // Quaternion accel_quat;
+      // double accel_double[3] = {accel.z, accel.y, accel.x};
+      // Quaternion_fromEulerZYX(accel_double, &accel_quat);
+      // Quaternion_normalize(&accel_quat, &accel_quat);
+      // Quaternion_toEulerZYX(&accel_quat, orientation);
+      // usb_printf("-3.14159,3.14159.2,%f,%f,%f\n", orientation[0], orientation[1], orientation[2]);
+
+      // Print raw gyro data
+      //usb_printf("-33000,33000,%d,%d,%d\n", gyro.x, gyro.y, gyro.z);
     }
   }
   return 0;
