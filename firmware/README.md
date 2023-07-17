@@ -5,22 +5,22 @@ firmware. It is not yet finished or useful, just a concept.
 # Progress
 
 # Hardware Drivers
-* LED   - One LED working, other TODO
-* USB   - DFU working, basic printf output working
-* DSHOT - One motor working, others TODO
-* Servo - TODO
-* UART  - TODO
-* I2C   - TODO
-* SPI   - TODO
-* Gyro  - TODO
-* Accel - TODO
-* Baro  - TODO
-* Flash - TODO
-* GPS   - TODO
-* ELRS  - TODO
+* LED   - DONE
+* USB   - DONE - printf only
+* DSHOT - DONE
+* UART  - DONE - ELRS only
+* ELRS  - DONE - needs checksum
+* SPI   - DONE - gyro only
+* Gyro  - DONE
+* Accel - DONE
+* Servo -
+* I2C   -
+* Baro  -
+* Flash -
+* GPS   -
 
 # Software
-* Gyro flight          - TODO
-* Accelerometer flight - TODO
-* Baro flight          - TODO
-* GPS flight           - TODO
+* Gyro flight          - DONE
+* Accelerometer flight - Proof of concept
+* Baro flight          -
+* GPS flight           -
