@@ -151,3 +151,5 @@ void Quaternion_rotate(Quaternion* q, double v[3], double output[3]);
  *      0 is equal with q1, 1 is equal with q2, 0.5 is the middle between q1 and q2.
  */
 void Quaternion_slerp(Quaternion* q1, Quaternion* q2, double t, Quaternion* output);
+
+void Quaternion_from_unit_vecs(double v0[3], double v1[3], Quaternion* output);

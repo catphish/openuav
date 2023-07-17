@@ -10,7 +10,7 @@ void gyro_init(void)
     // Set PA4 as input
     gpio_pin_mode(GPIOA, 4, GPIO_MODE_INPUT, 0, GPIO_PUPD_NONE, 0);
     spi_write_register(GYRO_REG_CTRL2_G, (6<<4)|(3<<2)); // Enable gyro, 2000 dps, 416Hz
-    //spi_write_register(GYRO_REG_CTRL1_XL, (6<<4)); // Enable accelerometer, 416 Hz
+    spi_write_register(GYRO_REG_CTRL1_XL, (6<<4)); // Enable accelerometer, 416 Hz
     spi_write_register(GYRO_REG_INT1_CTRL, (1<<1)); // Enable Gyro data ready interrupt
 }
 

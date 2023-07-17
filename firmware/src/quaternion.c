@@ -271,26 +271,44 @@ void Quaternion_slerp(Quaternion* q1, Quaternion* q2, double t, Quaternion* outp
     }
     *output = result;
 }
+
+
+// Calculate the dot product of two 3D vectors
+void Vector_dot(double v1[3], double v2[3], double* output)
+{
+    *output = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+}
+
+// Calculate the cross product of two 3D vectors
+void Vector_cross(double v1[3], double v2[3], double output[3])
+{
+    output[0] = v1[1]*v2[2] - v1[2]*v2[1];
+    output[1] = v1[2]*v2[0] - v1[0]*v2[2];
+    output[2] = v1[0]*v2[1] - v1[1]*v2[0];
+}
+
 #define ONE_MINUS_EPS (1.0 - QUATERNION_EPS)
 
 void Quaternion_from_unit_vecs(double v0[3], double v1[3], Quaternion* output)
 {
-    let dot = v0.dot(v1);
-    if dot > ONE_MINUS_EPS {
-        return Self::new_identity();
-    } else if dot < -ONE_MINUS_EPS {
+    double dot;
+    Vector_dot(v0, v1, &dot);
+
+    if(dot > ONE_MINUS_EPS) {
+        Quaternion_setIdentity(output);
+        return;
+    } else if(dot < -ONE_MINUS_EPS) {
         // Rotate along any orthonormal vec to vec1 or vec2 as the axis.
-        return Self::from_axis_angle(Vec3::new(1., 0., 0.).cross(v0), TAU / 2.);
+        double cross[3];
+        Vector_cross((double[]){1.0,0.0,0.0}, v0, cross);
+        Quaternion_fromAxisAngle(cross, M_PI, output);
+        return;
     }
 
-    let w = 1. + dot;
-    let v = v0.cross(v1);
+    double w = 1. + dot;
+    double v[3];
+    Vector_cross(v0, v1, v);
 
-    (Self {
-        w,
-        x: v.x,
-        y: v.y,
-        z: v.z,
-    })
-    .to_normalized()
+    Quaternion_set(w, v[0], v[1], v[2], output);
+    Quaternion_normalize(output, output);
 }

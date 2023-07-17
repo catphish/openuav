@@ -24,7 +24,7 @@ void SystemInit(void) {
   spi_init();
   uart_init();
   gyro_init();
-  imu_init();
+  imu_init_zero();
 }
 
 extern Quaternion q;
@@ -46,16 +46,47 @@ int main(void) {
       x_integral = 0;
       y_integral = 0;
       z_integral = 0;
+      imu_init(&gyro);
     }
     if(gyro_ready()) {
       elrs_tick();
       gyro_read(&gyro);
       accel_read(&accel);
 
+      // Update the IMU
+      imu_update_from_gyro(&gyro);
+      imu_update_from_accel(&accel);
+
       // Get the requested angles from the transmitter
       int32_t requested_x = elrs_channel(1);
       int32_t requested_y = elrs_channel(0);
       int32_t requested_z = elrs_channel(3) * 4;
+
+      // Create a vector to hold the current orientation
+      double orientation_vector[3];
+      // Rotate the up vector by the current orientation to get the orientation vector
+      Quaternion_rotate(&q, (double[]){0, 0, 1}, orientation_vector);
+
+      // Calculate the shortest path from the orientation vector back to the up vector
+      Quaternion shortest_path;
+      Quaternion_from_unit_vecs(orientation_vector, (double[]){0, 0, 1}, &shortest_path);
+
+      // Fetch the rotation axis for the shortest path
+      double orientation_correction_axes[3];
+      double angle = Quaternion_toAxisAngle(&shortest_path, orientation_correction_axes);
+
+      // Multiply the components of the rotation axis by the angle to get the magnitude for corrction in each axis
+      double x_angle_correction = orientation_correction_axes[0] * angle;
+      double y_angle_correction = orientation_correction_axes[1] * angle;
+
+      // Add the angle corrections to the requested angles
+      requested_x -= x_angle_correction * 1000.0;
+      requested_y -= y_angle_correction * 1000.0;
+
+      // Print final requested angles
+      //usb_printf("-1000,1000,%d,%d,%d\n", requested_x, requested_y, requested_z);
+      // Print accelerometer data
+      //usb_printf("-1000,1000,%d,%d,%d\n", accel.x, accel.y, accel.z);
 
       // Calculate the error for each axis
       int32_t error_x = gyro.x/4 + requested_x;
@@ -74,23 +105,6 @@ int main(void) {
       dshot.motor4 = elrs_channel(2) + 820 + error_x - error_y - error_z + x_integral/512 - y_integral/512 - z_integral/512;
 
       dshot_write(&dshot);
-
-      // Update the IMU
-      imu_update_from_gyro(&gyro);
-      // Print the current orientation
-      //double orientation[3];
-      //Quaternion_toEulerZYX(&q, orientation);
-      usb_printf("-1,1,%f,%f,%f\n", q.v[0], q.v[1], q.v[2]);
-
-      // Quaternion accel_quat;
-      // double accel_double[3] = {accel.z, accel.y, accel.x};
-      // Quaternion_fromEulerZYX(accel_double, &accel_quat);
-      // Quaternion_normalize(&accel_quat, &accel_quat);
-      // Quaternion_toEulerZYX(&accel_quat, orientation);
-      // usb_printf("-3.14159,3.14159.2,%f,%f,%f\n", orientation[0], orientation[1], orientation[2]);
-
-      // Print raw gyro data
-      //usb_printf("-33000,33000,%d,%d,%d\n", gyro.x, gyro.y, gyro.z);
     }
   }
   return 0;
