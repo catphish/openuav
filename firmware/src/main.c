@@ -80,15 +80,8 @@ int main(void) {
       double y_angle_correction = orientation_correction_axes[1] * angle;
 
       // Add the angle corrections to the requested angles
-      requested_x -= x_angle_correction * 500.0;
-      requested_y -= y_angle_correction * 500.0;
-
-      // // Print final requested angles on every 10th cycle
-      // static int i = 0;
-      // if(i++ == 10) {
-      //   usb_printf("-1000,1000,%d,%d\n", requested_x, requested_y);
-      //   i = 0;
-      // }
+      requested_x -= x_angle_correction * 800.0;
+      requested_y -= y_angle_correction * 800.0;
 
       // Calculate the error for each axis
       int32_t error_x = gyro.x/4 + requested_x;

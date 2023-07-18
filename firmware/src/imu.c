@@ -70,7 +70,7 @@ void imu_update_from_accel(struct gyro_data *accel)
     // Convert the path to a single axis rotation
     double axis[3];
     double angle = Quaternion_toAxisAngle(&shortest_path, axis);
-    angle = 0.0001;
+    if(angle > 0.0001) angle = 0.0001;
     // Generate a quaternion for the rotation
     Quaternion q_accel;
     Quaternion_fromAxisAngle(axis, angle, &q_accel);
