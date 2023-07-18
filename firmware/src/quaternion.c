@@ -18,17 +18,14 @@
  * @date    2022-05-16
  */
 #include "quaternion.h"
-#include <stdlib.h>
-#include <assert.h>
 #include <math.h>
 
 #ifndef M_PI
     #define M_PI (3.14159265358979323846)
 #endif
 
-void Quaternion_set(double w, double v1, double v2, double v3, Quaternion* output)
+void Quaternion_set(float w, float v1, float v2, float v3, Quaternion* output)
 {
-    assert(output != NULL);
     output->w = w;
     output->v[0] = v1;
     output->v[1] = v2;
@@ -37,50 +34,26 @@ void Quaternion_set(double w, double v1, double v2, double v3, Quaternion* outpu
 
 void Quaternion_setIdentity(Quaternion* q)
 {
-    assert(q != NULL);
     Quaternion_set(1, 0, 0, 0, q);
 }
 
-void Quaternion_copy(Quaternion* q, Quaternion* output)
+void Quaternion_fromAxisAngle(float axis[3], float angle, Quaternion* output)
 {
-    Quaternion_set(q->w, q->v[0], q->v[1], q->v[2], output);
-}
-
-bool Quaternion_equal(Quaternion* q1, Quaternion* q2)
-{
-    bool equalW  = fabs(q1->w - q2->w) <= QUATERNION_EPS;
-    bool equalV0 = fabs(q1->v[0] - q2->v[0]) <= QUATERNION_EPS;
-    bool equalV1 = fabs(q1->v[1] - q2->v[1]) <= QUATERNION_EPS;
-    bool equalV2 = fabs(q1->v[2] - q2->v[2]) <= QUATERNION_EPS;
-    return equalW && equalV0 && equalV1 && equalV2;
-}
-
-void Quaternion_fprint(FILE* file, Quaternion* q)
-{
-    fprintf(file, "(%.3f, %.3f, %.3f, %.3f)",
-        q->w, q->v[0], q->v[1], q->v[2]);
-}
-
-
-void Quaternion_fromAxisAngle(double axis[3], double angle, Quaternion* output)
-{
-    assert(output != NULL);
     // Formula from http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/
-    output->w = cos(angle / 2.0);
-    double c = sin(angle / 2.0);
+    output->w = cosf(angle / 2.f);
+    float c = sinf(angle / 2.f);
     output->v[0] = c * axis[0];
     output->v[1] = c * axis[1];
     output->v[2] = c * axis[2];
 }
 
-double Quaternion_toAxisAngle(Quaternion* q, double output[3])
+float Quaternion_toAxisAngle(Quaternion* q, float output[3])
 {
-    assert(output != NULL);
     // Formula from http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
-    double angle = 2.0 * acos(q->w);
-    double divider = sqrt(1.0 - q->w * q->w);
+    float angle = 2.f * acosf(q->w);
+    float divider = sqrtf(1.f - q->w * q->w);
 
-    if(divider != 0.0) {
+    if(divider != 0.f) {
         // Calculate the axis
         output[0] = q->v[0] / divider;
         output[1] = q->v[1] / divider;
@@ -94,85 +67,32 @@ double Quaternion_toAxisAngle(Quaternion* q, double output[3])
     return angle;
 }
 
-void Quaternion_fromXRotation(double angle, Quaternion* output)
+void Quaternion_fromXRotation(float angle, Quaternion* output)
 {
-    assert(output != NULL);
-    double axis[3] = {1.0, 0, 0};
+    float axis[3] = {1.f, 0, 0};
     Quaternion_fromAxisAngle(axis, angle, output);
 }
 
-void Quaternion_fromYRotation(double angle, Quaternion* output)
+void Quaternion_fromYRotation(float angle, Quaternion* output)
 {
-    assert(output != NULL);
-    double axis[3] = {0, 1.0, 0};
+    float axis[3] = {0, 1.f, 0};
     Quaternion_fromAxisAngle(axis, angle, output);
 }
 
-void Quaternion_fromZRotation(double angle, Quaternion* output)
+void Quaternion_fromZRotation(float angle, Quaternion* output)
 {
-    assert(output != NULL);
-    double axis[3] = {0, 0, 1.0};
+    float axis[3] = {0, 0, 1.f};
     Quaternion_fromAxisAngle(axis, angle, output);
 }
 
-void Quaternion_fromEulerZYX(double eulerZYX[3], Quaternion* output)
+float Quaternion_norm(Quaternion* q)
 {
-    assert(output != NULL);
-    // Based on https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-    double cy = cos(eulerZYX[2] * 0.5);
-    double sy = sin(eulerZYX[2] * 0.5);
-    double cr = cos(eulerZYX[0] * 0.5);
-    double sr = sin(eulerZYX[0] * 0.5);
-    double cp = cos(eulerZYX[1] * 0.5);
-    double sp = sin(eulerZYX[1] * 0.5);
-
-    output->w = cy * cr * cp + sy * sr * sp;
-    output->v[0] = cy * sr * cp - sy * cr * sp;
-    output->v[1] = cy * cr * sp + sy * sr * cp;
-    output->v[2] = sy * cr * cp - cy * sr * sp;
-}
-
-void Quaternion_toEulerZYX(Quaternion* q, double output[3])
-{
-    assert(output != NULL);
-
-    // Roll (x-axis rotation)
-    double sinr_cosp = +2.0 * (q->w * q->v[0] + q->v[1] * q->v[2]);
-    double cosr_cosp = +1.0 - 2.0 * (q->v[0] * q->v[0] + q->v[1] * q->v[1]);
-    output[0] = atan2(sinr_cosp, cosr_cosp);
-
-    // Pitch (y-axis rotation)
-    double sinp = +2.0 * (q->w * q->v[1] - q->v[2] * q->v[0]);
-    if (fabs(sinp) >= 1)
-        output[1] = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
-    else
-        output[1] = asin(sinp);
-
-    // Yaw (z-axis rotation)
-    double siny_cosp = +2.0 * (q->w * q->v[2] + q->v[0] * q->v[1]);
-    double cosy_cosp = +1.0 - 2.0 * (q->v[1] * q->v[1] + q->v[2] * q->v[2]);
-    output[2] = atan2(siny_cosp, cosy_cosp);
-}
-
-void Quaternion_conjugate(Quaternion* q, Quaternion* output)
-{
-    assert(output != NULL);
-    output->w = q->w;
-    output->v[0] = -q->v[0];
-    output->v[1] = -q->v[1];
-    output->v[2] = -q->v[2];
-}
-
-double Quaternion_norm(Quaternion* q)
-{
-    assert(q != NULL);
-    return sqrt(q->w*q->w + q->v[0]*q->v[0] + q->v[1]*q->v[1] + q->v[2]*q->v[2]);
+    return sqrtf(q->w*q->w + q->v[0]*q->v[0] + q->v[1]*q->v[1] + q->v[2]*q->v[2]);
 }
 
 void Quaternion_normalize(Quaternion* q, Quaternion* output)
 {
-    assert(output != NULL);
-    double len = Quaternion_norm(q);
+    float len = Quaternion_norm(q);
     Quaternion_set(
         q->w / len,
         q->v[0] / len,
@@ -183,7 +103,6 @@ void Quaternion_normalize(Quaternion* q, Quaternion* output)
 
 void Quaternion_multiply(Quaternion* q1, Quaternion* q2, Quaternion* output)
 {
-    assert(output != NULL);
     Quaternion result;
 
     /*
@@ -201,21 +120,20 @@ void Quaternion_multiply(Quaternion* q1, Quaternion* q2, Quaternion* output)
     *output = result;
 }
 
-void Quaternion_rotate(Quaternion* q, double v[3], double output[3])
+void Quaternion_rotate(Quaternion* q, float v[3], float output[3])
 {
-    assert(output != NULL);
-    double result[3];
+    float result[3];
 
-    double ww = q->w * q->w;
-    double xx = q->v[0] * q->v[0];
-    double yy = q->v[1] * q->v[1];
-    double zz = q->v[2] * q->v[2];
-    double wx = q->w * q->v[0];
-    double wy = q->w * q->v[1];
-    double wz = q->w * q->v[2];
-    double xy = q->v[0] * q->v[1];
-    double xz = q->v[0] * q->v[2];
-    double yz = q->v[1] * q->v[2];
+    float ww = q->w * q->w;
+    float xx = q->v[0] * q->v[0];
+    float yy = q->v[1] * q->v[1];
+    float zz = q->v[2] * q->v[2];
+    float wx = q->w * q->v[0];
+    float wy = q->w * q->v[1];
+    float wz = q->w * q->v[2];
+    float xy = q->v[0] * q->v[1];
+    float xz = q->v[0] * q->v[2];
+    float yz = q->v[1] * q->v[2];
 
     // Formula from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/index.htm
     // p2.x = w*w*p1.x + 2*y*w*p1.z - 2*z*w*p1.y + x*x*p1.x + 2*y*x*p1.y + 2*z*x*p1.z - z*z*p1.x - y*y*p1.x;
@@ -238,60 +156,25 @@ void Quaternion_rotate(Quaternion* q, double v[3], double output[3])
     output[2] = result[2];
 }
 
-void Quaternion_slerp(Quaternion* q1, Quaternion* q2, double t, Quaternion* output)
-{
-    Quaternion result;
-
-    // Based on http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/index.htm
-    double cosHalfTheta = q1->w*q2->w + q1->v[0]*q2->v[0] + q1->v[1]*q2->v[1] + q1->v[2]*q2->v[2];
-
-    // if q1=q2 or qa=-q2 then theta = 0 and we can return qa
-    if (fabs(cosHalfTheta) >= 1.0) {
-        Quaternion_copy(q1, output);
-        return;
-    }
-
-    double halfTheta = acos(cosHalfTheta);
-    double sinHalfTheta = sqrt(1.0 - cosHalfTheta*cosHalfTheta);
-    // If theta = 180 degrees then result is not fully defined
-    // We could rotate around any axis normal to q1 or q2
-    if (fabs(sinHalfTheta) < QUATERNION_EPS) {
-        result.w = (q1->w * 0.5 + q2->w * 0.5);
-        result.v[0] = (q1->v[0] * 0.5 + q2->v[0] * 0.5);
-        result.v[1] = (q1->v[1] * 0.5 + q2->v[1] * 0.5);
-        result.v[2] = (q1->v[2] * 0.5 + q2->v[2] * 0.5);
-    } else {
-        // Default quaternion calculation
-        double ratioA = sin((1 - t) * halfTheta) / sinHalfTheta;
-        double ratioB = sin(t * halfTheta) / sinHalfTheta;
-        result.w = (q1->w * ratioA + q2->w * ratioB);
-        result.v[0] = (q1->v[0] * ratioA + q2->v[0] * ratioB);
-        result.v[1] = (q1->v[1] * ratioA + q2->v[1] * ratioB);
-        result.v[2] = (q1->v[2] * ratioA + q2->v[2] * ratioB);
-    }
-    *output = result;
-}
-
-
 // Calculate the dot product of two 3D vectors
-void Vector_dot(double v1[3], double v2[3], double* output)
+void Vector_dot(float v1[3], float v2[3], float* output)
 {
     *output = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
 }
 
 // Calculate the cross product of two 3D vectors
-void Vector_cross(double v1[3], double v2[3], double output[3])
+void Vector_cross(float v1[3], float v2[3], float output[3])
 {
     output[0] = v1[1]*v2[2] - v1[2]*v2[1];
     output[1] = v1[2]*v2[0] - v1[0]*v2[2];
     output[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
-#define ONE_MINUS_EPS (1.0 - QUATERNION_EPS)
+#define ONE_MINUS_EPS (1.f - QUATERNION_EPS)
 
-void Quaternion_from_unit_vecs(double v0[3], double v1[3], Quaternion* output)
+void Quaternion_from_unit_vecs(float v0[3], float v1[3], Quaternion* output)
 {
-    double dot;
+    float dot;
     Vector_dot(v0, v1, &dot);
 
     if(dot > ONE_MINUS_EPS) {
@@ -299,14 +182,14 @@ void Quaternion_from_unit_vecs(double v0[3], double v1[3], Quaternion* output)
         return;
     } else if(dot < -ONE_MINUS_EPS) {
         // Rotate along any orthonormal vec to vec1 or vec2 as the axis.
-        double cross[3];
-        Vector_cross((double[]){1.0,0.0,0.0}, v0, cross);
+        float cross[3];
+        Vector_cross((float[]){1.f,0,0}, v0, cross);
         Quaternion_fromAxisAngle(cross, M_PI, output);
         return;
     }
 
-    double w = 1. + dot;
-    double v[3];
+    float w = 1. + dot;
+    float v[3];
     Vector_cross(v0, v1, v);
 
     Quaternion_set(w, v[0], v[1], v[2], output);

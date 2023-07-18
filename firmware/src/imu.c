@@ -68,14 +68,14 @@ void imu_update_from_gyro(struct gyro_data *gyro)
 void imu_update_from_accel(struct gyro_data *accel)
 {
     // Create a vector to hold the current orientation.
-    double orientation_vector[3];
+    float orientation_vector[3];
 
     // Rotate the up vector by the orientation quaternion to populate the orientation vector.
-    Quaternion_rotate(&q, (double[]){0, 0, 1}, orientation_vector);
+    Quaternion_rotate(&q, (float[]){0, 0, 1}, orientation_vector);
 
     // Convert accelerometer data to a unit vector.
-    double accel_vector[3] = {accel->x, -accel->y, accel->z};
-    double accel_vector_length = sqrt(accel_vector[0]*accel_vector[0] + accel_vector[1]*accel_vector[1] + accel_vector[2]*accel_vector[2]);
+    float accel_vector[3] = {accel->x, -accel->y, accel->z};
+    float accel_vector_length = sqrtf(accel_vector[0]*accel_vector[0] + accel_vector[1]*accel_vector[1] + accel_vector[2]*accel_vector[2]);
     accel_vector[0] /= accel_vector_length;
     accel_vector[1] /= accel_vector_length;
     accel_vector[2] /= accel_vector_length;
@@ -85,11 +85,11 @@ void imu_update_from_accel(struct gyro_data *accel)
     Quaternion_from_unit_vecs(orientation_vector, accel_vector, &shortest_path);
 
     // Convert the path to a single axis rotation.
-    double axis[3];
-    double angle = Quaternion_toAxisAngle(&shortest_path, axis);
+    float axis[3];
+    float angle = Quaternion_toAxisAngle(&shortest_path, axis);
 
     // Limit the angle to 0.0001 radians to create a very small correction.
-    if(angle > 0.0001) angle = 0.0001;
+    if(angle > 0.001f) angle = 0.001f;
 
     // Generate a quaternion for the correction.
     Quaternion correction;
@@ -102,21 +102,21 @@ void imu_update_from_accel(struct gyro_data *accel)
     Quaternion_normalize(&q, &q);
 }
 
-void imu_get_xy_tilt(double *x, double *y)
+void imu_get_xy_tilt(float *x, float *y)
 {
     // Create a vector to hold the current orientation.
-    double orientation_vector[3];
+    float orientation_vector[3];
 
     // Rotate the up vector by the orientation quaternion to populate the orientation vector.
-    Quaternion_rotate(&q, (double[]){0, 0, 1}, orientation_vector);
+    Quaternion_rotate(&q, (float[]){0, 0, 1}, orientation_vector);
 
     // Calculate the shortest path from the orientation vector back to the up vector.
     Quaternion shortest_path;
-    Quaternion_from_unit_vecs(orientation_vector, (double[]){0, 0, 1}, &shortest_path);
+    Quaternion_from_unit_vecs(orientation_vector, (float[]){0, 0, 1}, &shortest_path);
 
     // Fetch the rotation axis for the shortest path.
-    double orientation_correction_axes[3];
-    double angle = Quaternion_toAxisAngle(&shortest_path, orientation_correction_axes);
+    float orientation_correction_axes[3];
+    float angle = Quaternion_toAxisAngle(&shortest_path, orientation_correction_axes);
 
     // Multiply the x and y components of the rotation axis by the angle
     // to get the magnitude of tilt in each axis.

@@ -34,7 +34,7 @@ INCLUDES += -I$(VENDOR_ROOT)Drivers/CMSIS/Device/ST/STM32G4xx/Include
 
 # Compiler Flags
 CFLAGS  = -g -O0 -Wall -Wextra -Warray-bounds -Wno-unused-parameter -Werror
-CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffunction-sections -fdata-sections
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -DSTM32G431xx
 CFLAGS += $(INCLUDES)
@@ -66,7 +66,7 @@ $(ALL_OBJS):
 # Link
 %.elf: $(ALL_OBJS)
 	@echo "[LD] $@"
-	@$(CC) $(CFLAGS) $(LFLAGS) $(ALL_OBJS) -lm -lc -u _printf_float -o $@
+	@$(CC) $(CFLAGS) $(LFLAGS) $(ALL_OBJS) -lm -o $@
 
 # Clean
 clean:

@@ -67,13 +67,13 @@ int main(void) {
       int32_t angle_request_y = elrs_channel(0);
 
       // Get the current X and Y tilt angles from the IMU.
-      double x_tilt, y_tilt;
+      float x_tilt, y_tilt;
       imu_get_xy_tilt(&x_tilt, &y_tilt);
 
       // Subtract the tilt angle from the requested angle to get the angle error.
       // The units here are arbitrary, but 800 permits a good range of motion.
-      int32_t angle_error_x = angle_request_x - x_tilt * 800.0;
-      int32_t angle_error_y = angle_request_y - y_tilt * 800.0;
+      int32_t angle_error_x = angle_request_x - x_tilt * 800.f;
+      int32_t angle_error_y = angle_request_y - y_tilt * 800.f;
 
       // Calculate requested angular velocity from the attitude error.
       // The requested angular velocity of the Z axix is taken directly from the
