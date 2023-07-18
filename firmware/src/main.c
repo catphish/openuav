@@ -27,78 +27,80 @@ void SystemInit(void) {
   imu_init_zero();
 }
 
-extern Quaternion q;
+struct dshot_data dshot;
+struct gyro_data gyro;
+struct gyro_data accel;
+
+int32_t x_integral = 0;
+int32_t y_integral = 0;
+int32_t z_integral = 0;
 
 int main(void) {
-  struct dshot_data dshot;
-  struct gyro_data gyro;
-  struct gyro_data accel;
-
-  int32_t x_integral = 0;
-  int32_t y_integral = 0;
-  int32_t z_integral = 0;
   while(1) {
+    // Poll the USB peripherand to transmit and receive data.
     usb_main();
+    // If we have valid ELRS data, allow the ESCs to be armed.
     if(elrs_valid() && elrs_channel(4) > 0)
       dshot.armed = 1;
     else {
+      // If we are not armed, reset the integral terms.
       dshot.armed = 0;
       x_integral = 0;
       y_integral = 0;
       z_integral = 0;
+      // Recalibrate the IMU.
       imu_init(&gyro);
     }
     if(gyro_ready()) {
+      // Call elrs_tick() regularly to allow a fialsafe timeout.
       elrs_tick();
+      // Read the raw gyro and accelerometer data.
       gyro_read(&gyro);
       accel_read(&accel);
 
-      // Update the IMU
+      // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
 
-      // Get the requested angles from the transmitter
-      int32_t requested_x = elrs_channel(1);
-      int32_t requested_y = elrs_channel(0);
-      int32_t requested_z = elrs_channel(3) * 4;
+      // Get the requested angles from the transmitter.
+      int32_t angle_request_x = elrs_channel(1);
+      int32_t angle_request_y = elrs_channel(0);
 
-      // Create a vector to hold the current orientation
-      double orientation_vector[3];
-      // Rotate the up vector by the current orientation to get the orientation vector
-      Quaternion_rotate(&q, (double[]){0, 0, 1}, orientation_vector);
+      // Get the current X and Y tilt angles from the IMU.
+      double x_tilt, y_tilt;
+      imu_get_xy_tilt(&x_tilt, &y_tilt);
 
-      // Calculate the shortest path from the orientation vector back to the up vector
-      Quaternion shortest_path;
-      Quaternion_from_unit_vecs(orientation_vector, (double[]){0, 0, 1}, &shortest_path);
+      // Subtract the tilt angle from the requested angle to get the angle error.
+      // The units here are arbitrary, but 800 permits a good range of motion.
+      int32_t angle_error_x = angle_request_x - x_tilt * 800.0;
+      int32_t angle_error_y = angle_request_y - y_tilt * 800.0;
 
-      // Fetch the rotation axis for the shortest path
-      double orientation_correction_axes[3];
-      double angle = Quaternion_toAxisAngle(&shortest_path, orientation_correction_axes);
+      // Calculate requested angular velocity from the attitude error.
+      // The requested angular velocity of the Z axix is taken directly from the
+      // transmitter.
+      int32_t rotation_request_x = angle_error_x;
+      int32_t rotation_request_y = angle_error_y;
+      int32_t rotation_request_z = elrs_channel(3) * 4;
 
-      // Multiply the components of the rotation axis by the angle to get the magnitude for corrction in each axis
-      double x_angle_correction = orientation_correction_axes[0] * angle;
-      double y_angle_correction = orientation_correction_axes[1] * angle;
+      // Calculate the error in angular velocity by adding the (nagative) gyro
+      // readings from the requested angular velocity.
+      int32_t error_x = gyro.x/4 + rotation_request_x;
+      int32_t error_y = gyro.y/4 + rotation_request_y;
+      int32_t error_z = gyro.z/1 + rotation_request_z;
 
-      // Add the angle corrections to the requested angles
-      requested_x -= x_angle_correction * 800.0;
-      requested_y -= y_angle_correction * 800.0;
-
-      // Calculate the error for each axis
-      int32_t error_x = gyro.x/4 + requested_x;
-      int32_t error_y = gyro.y/4 + requested_y;
-      int32_t error_z = gyro.z/1 + requested_z;
-
-      // Integrate the error in each axis
+      // Integrate the error in each axis.
       x_integral += error_x;
       y_integral += error_y;
       z_integral += error_z;
 
-      // Add the P and I terms to calculate the final motor outputs
+      // For each motor, add the appropriate error and integral terms together
+      // to get the final motor output.
       dshot.motor1 = elrs_channel(2) + 820 - error_x + error_y - error_z - x_integral/512 + y_integral/512 - z_integral/512;
       dshot.motor2 = elrs_channel(2) + 820 - error_x - error_y + error_z - x_integral/512 - y_integral/512 + z_integral/512;
       dshot.motor3 = elrs_channel(2) + 820 + error_x + error_y + error_z + x_integral/512 + y_integral/512 + z_integral/512;
       dshot.motor4 = elrs_channel(2) + 820 + error_x - error_y - error_z + x_integral/512 - y_integral/512 - z_integral/512;
 
+      // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
     }
   }
