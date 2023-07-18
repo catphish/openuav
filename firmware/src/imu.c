@@ -25,10 +25,15 @@ void imu_init_zero(void)
 // Rotate the quaternion by the given angular velocity
 void imu_update_from_gyro(struct gyro_data *gyro)
 {
+    int dt = 0x00FFFFFF - SysTick->VAL;
+    SysTick->LOAD = 0x00FFFFFF;
+    SysTick->VAL = 0;
+    SysTick->CTRL = 5;
+
     // Convert the gyro readings to radians
-    float gyro_x = ((float)gyro->x - (float)gyro_offset.x) * 0.00122173 / 416.0f;
-    float gyro_y = ((float)gyro->y - (float)gyro_offset.y) * 0.00122173 / 416.0f;
-    float gyro_z = ((float)gyro->z - (float)gyro_offset.z) * 0.00122173 / 416.0f;
+    float gyro_x = ((float)gyro->x - (float)gyro_offset.x) * 0.00122173 * (float)dt / 160000000;
+    float gyro_y = ((float)gyro->y - (float)gyro_offset.y) * 0.00122173 * (float)dt / 160000000;
+    float gyro_z = ((float)gyro->z - (float)gyro_offset.z) * 0.00122173 * (float)dt / 160000000;
 
     Quaternion q_x, q_y, q_z;
 
