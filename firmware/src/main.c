@@ -12,9 +12,11 @@
 #include "uart.h"
 #include "clock.h"
 #include "gyro.h"
+#include "mag.h"
 #include "imu.h"
 #include "quaternion.h"
 #include "barometer.h"
+#include "i2c.h"
 
 void SystemInit(void) {
   gpio_init();
@@ -27,11 +29,15 @@ void SystemInit(void) {
   gyro_init();
   imu_init_zero();
   baro_init();
+  i2c_init();
+  mag_init();
 }
 
 struct dshot_data dshot;
 struct gyro_data gyro;
 struct gyro_data accel;
+struct mag_data mag;
+uint32_t pressure;
 
 int32_t x_integral = 0;
 int32_t y_integral = 0;
@@ -59,12 +65,16 @@ int main(void) {
       // Read the raw gyro and accelerometer data.
       gyro_read(&gyro);
       accel_read(&accel);
+      // Read the raw magnetometer data.
+      mag_read(&mag);
+
       // Fetch barometer data.
-      uint32_t pressure = baro_read_pressure();
+      pressure = baro_read_pressure();
 
       // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
+      //imu_update_from_mag(&mag);
 
       // Get the requested angles from the transmitter.
       int32_t angle_request_x = elrs_channel(1);

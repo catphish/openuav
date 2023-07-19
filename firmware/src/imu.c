@@ -1,5 +1,6 @@
 #include <stm32g4xx.h>
 #include "gyro.h"
+#include "mag.h"
 #include "quaternion.h"
 
 // A quaternion to represent the orientation of the sensor.
@@ -19,7 +20,6 @@ void imu_init(struct gyro_data *gyro)
     gyro_offset.y = gyro->y;
     gyro_offset.z = gyro->z;
 }
-
 
 // Initialize the IMU without a gyro reading.
 void imu_init_zero(void)
@@ -101,6 +101,42 @@ void imu_update_from_accel(struct gyro_data *accel)
     // Normalize the result.
     Quaternion_normalize(&q, &q);
 }
+
+void imu_update_from_mag(struct mag_data *mag)
+{
+    // Create a vector to hold the current orientation.
+    float orientation_vector[3];
+
+    // Rotate the up vector by the orientation quaternion to populate the orientation vector.
+    Quaternion_rotate(&q, (float[]){0, 0, 1}, orientation_vector);
+
+    // Convert magnetometer data to a unit vector.
+    float mag_vector[3] = {-mag->y+5000, mag->x-5000, -mag->z+5000};
+    float mag_vector_length = sqrtf(mag_vector[0]*mag_vector[0] + mag_vector[1]*mag_vector[1] + mag_vector[2]*mag_vector[2]);
+    mag_vector[0] /= mag_vector_length;
+    mag_vector[1] /= mag_vector_length;
+    mag_vector[2] /= mag_vector_length;
+
+    // Calculate the path from the current orientation vector to accelerometer vector.
+    Quaternion shortest_path;
+    Quaternion_from_unit_vecs(orientation_vector, mag_vector, &shortest_path);
+
+    // Convert the path to a single axis rotation.
+    float axis[3];
+    float angle = Quaternion_toAxisAngle(&shortest_path, axis);
+
+    // Limit the angle to 0.0001 radians to create a very small correction.
+    if(angle > 0.001f) angle = 0.001f;
+
+    // Generate a quaternion for the correction.
+    Quaternion correction;
+    Quaternion_fromAxisAngle(axis, angle, &correction);
+
+    // Rotate the current orientation by the correction.
+    Quaternion_multiply(&correction, &q, &q);
+
+    // Normalize the result.
+    Quaternion_normalize(&q, &q);}
 
 void imu_get_xy_tilt(float *x, float *y)
 {
