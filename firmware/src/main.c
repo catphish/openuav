@@ -14,6 +14,7 @@
 #include "gyro.h"
 #include "imu.h"
 #include "quaternion.h"
+#include "barometer.h"
 
 void SystemInit(void) {
   gpio_init();
@@ -25,6 +26,7 @@ void SystemInit(void) {
   uart_init();
   gyro_init();
   imu_init_zero();
+  baro_init();
 }
 
 struct dshot_data dshot;
@@ -57,6 +59,8 @@ int main(void) {
       // Read the raw gyro and accelerometer data.
       gyro_read(&gyro);
       accel_read(&accel);
+      // Fetch barometer data.
+      uint32_t pressure = baro_read_pressure();
 
       // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
