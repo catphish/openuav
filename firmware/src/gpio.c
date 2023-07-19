@@ -15,7 +15,7 @@ void gpio_init() {
 void gpio_pin_mode(GPIO_TypeDef * port, uint32_t pin, uint32_t mode, uint32_t af, uint32_t pupdr, uint32_t otyper) {
   port->MODER &= ~( 3 << (pin * 2));
   port->MODER |= (mode << (pin * 2));
-  if(pin > 8) {
+  if(pin > 7) {
     port->AFR[1] &= ~(0xF << ((pin-8) * 4));
     port->AFR[1] |= af << ((pin-8) * 4);
   } else {
