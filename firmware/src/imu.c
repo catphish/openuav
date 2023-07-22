@@ -43,9 +43,10 @@ void imu_init_zero(void)
     gyro_offset.y = 0;
     gyro_offset.z = 0;
 
-    mag_offset[0] = 1;
+    // Set the magnetometer offset to North.
+    mag_offset[0] = 0;
     mag_offset[1] = 1;
-    mag_offset[2] = 1;
+    mag_offset[2] = 0;
 }
 
 // Rotate the quaternion by the given angular velocity.
@@ -135,14 +136,14 @@ void imu_update_from_mag(struct mag_data *mag)
 
     // Calculate the path from the current magnetometer vector to the offset vector.
     Quaternion shortest_path;
-    Quaternion_from_unit_vecs(mag_vector, mag_offset, &shortest_path);
+    Quaternion_from_unit_vecs(mag_offset, mag_vector, &shortest_path);
 
     // Convert the path to a single axis rotation.
     float axis[3];
     float angle = Quaternion_toAxisAngle(&shortest_path, axis);
 
     // Limit the angle to 0.0001 radians to create a very small correction.
-    if(angle > 0.001f) angle = 0.001f;
+    if(angle > 0.0005f) angle = 0.0005f;
 
     // Generate a quaternion for the correction.
     Quaternion correction;
@@ -177,10 +178,10 @@ void imu_get_xy_tilt(float *x, float *y, float *z)
     *y = orientation_correction_axes[1] * angle;
 
     // Rotate the north vector by the orientation quaternion to populate the orientation vector.
-    Quaternion_rotate(&q, (float[]){1, 0, 0}, orientation_vector);
+    Quaternion_rotate(&q, (float[]){0, 1, 0}, orientation_vector);
 
     // Calculate the shortest path from the orientation vector back to the north vector.
-    Quaternion_from_unit_vecs(orientation_vector, (float[]){1, 0, 0}, &shortest_path);
+    Quaternion_from_unit_vecs(orientation_vector, (float[]){0, 1, 0}, &shortest_path);
 
     // Fetch the rotation axis for the shortest path.
     angle = Quaternion_toAxisAngle(&shortest_path, orientation_correction_axes);

@@ -57,7 +57,7 @@ int main(void) {
       y_integral = 0;
       z_integral = 0;
       // Recalibrate the IMU.
-      //imu_init(&gyro, &mag);
+      imu_init(&gyro, &mag);
     }
     if(gyro_ready()) {
       // Call elrs_tick() regularly to allow a fialsafe timeout.
@@ -79,26 +79,24 @@ int main(void) {
       // Get the requested angles from the transmitter.
       int32_t angle_request_x = elrs_channel(1);
       int32_t angle_request_y = elrs_channel(0);
+      int32_t angle_request_z = elrs_channel(3);
 
-      // Get the current X and Y tilt angles from the IMU.
+      // Get the current X and Y tilt angles, and the z rotation offset from the IMU.
+      // TODO: This should be broken out into two functions, one for tilt and one for rotation.
       float x_tilt, y_tilt, z_rot;
       imu_get_xy_tilt(&x_tilt, &y_tilt, &z_rot);
-      int x = x_tilt*1000;
-      int y = y_tilt*1000;
-      int z = z_rot*1000;
-      usb_printf("-1000,1000,%d,%d,%d\n", x,y,z);
 
       // Subtract the tilt angle from the requested angle to get the angle error.
       // The units here are arbitrary, but 800 permits a good range of motion.
       int32_t angle_error_x = angle_request_x - x_tilt * 800.f;
       int32_t angle_error_y = angle_request_y - y_tilt * 800.f;
+      // We give the conteoller a bit more authority over the z axis.
+      int32_t angle_error_z = angle_request_z*4 - z_rot * 1000.f;
 
       // Calculate requested angular velocity from the attitude error.
-      // The requested angular velocity of the Z axis is taken directly from the
-      // transmitter.
       int32_t rotation_request_x = angle_error_x;
       int32_t rotation_request_y = angle_error_y;
-      int32_t rotation_request_z = elrs_channel(3) * 4;
+      int32_t rotation_request_z = angle_error_z;
 
       // Calculate the error in angular velocity by adding the (nagative) gyro
       // readings from the requested angular velocity.
