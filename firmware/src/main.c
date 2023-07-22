@@ -37,7 +37,8 @@ struct dshot_data dshot;
 struct gyro_data gyro;
 struct gyro_data accel;
 struct mag_data mag;
-uint32_t pressure;
+int32_t pressure;
+int32_t pressure_zero;
 
 int32_t x_integral = 0;
 int32_t y_integral = 0;
@@ -58,6 +59,8 @@ int main(void) {
       z_integral = 0;
       // Recalibrate the IMU.
       imu_init(&gyro, &mag);
+      // Zero the pressure sensor.
+      pressure_zero = pressure;
     }
     if(gyro_ready()) {
       // Call elrs_tick() regularly to allow a fialsafe timeout.
@@ -70,6 +73,7 @@ int main(void) {
 
       // Fetch barometer data.
       pressure = baro_read_pressure();
+      int32_t height = (pressure_zero - pressure);
 
       // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
@@ -109,12 +113,17 @@ int main(void) {
       y_integral += error_y;
       z_integral += error_z;
 
+      // Set the throttle. This will ultimately use the controller input, altitude, and attitude.
+      // Altitude control is here as an example, and it works to a basic extent but it's not ready to use yet.
+      int32_t throttle = elrs_channel(2) + 820;
+      //throttle -= height / 10;
+
       // For each motor, add the appropriate error and integral terms together
       // to get the final motor output.
-      dshot.motor1 = elrs_channel(2) + 820 - error_x + error_y - error_z - x_integral/512 + y_integral/512 - z_integral/512;
-      dshot.motor2 = elrs_channel(2) + 820 - error_x - error_y + error_z - x_integral/512 - y_integral/512 + z_integral/512;
-      dshot.motor3 = elrs_channel(2) + 820 + error_x + error_y + error_z + x_integral/512 + y_integral/512 + z_integral/512;
-      dshot.motor4 = elrs_channel(2) + 820 + error_x - error_y - error_z + x_integral/512 - y_integral/512 - z_integral/512;
+      dshot.motor1 = throttle - error_x + error_y - error_z - x_integral/512 + y_integral/512 - z_integral/512;
+      dshot.motor2 = throttle - error_x - error_y + error_z - x_integral/512 - y_integral/512 + z_integral/512;
+      dshot.motor3 = throttle + error_x + error_y + error_z + x_integral/512 + y_integral/512 + z_integral/512;
+      dshot.motor4 = throttle + error_x - error_y - error_z + x_integral/512 - y_integral/512 - z_integral/512;
 
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
