@@ -134,7 +134,9 @@ void imu_update_from_mag(struct mag_data *mag)
     Quaternion_conjugate(&q, &con_q);
     Quaternion_rotate(&con_q, mag_vector, mag_vector);
 
-    // Calculate the path from the current magnetometer vector to the offset vector.
+    // Calculate the path from the current magnetometer vector to the offset (takeoff) vector.
+    // This gives us the shortest path back to our starting orientation.
+    // Since we've already rotated by the reverse of the current orientation, this should be zero.
     Quaternion shortest_path;
     Quaternion_from_unit_vecs(mag_offset, mag_vector, &shortest_path);
 
