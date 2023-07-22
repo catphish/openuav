@@ -111,3 +111,8 @@ void Quaternion_multiply(Quaternion* q1, Quaternion* q2, Quaternion* output);
 void Quaternion_rotate(Quaternion* q, float v[3], float output[3]);
 
 void Quaternion_from_unit_vecs(float v0[3], float v1[3], Quaternion* output);
+
+/**
+ * Calculates the conjugate of the quaternion: (w, -v)
+ */
+void Quaternion_conjugate(Quaternion* q, Quaternion* output);

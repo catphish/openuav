@@ -7,10 +7,11 @@
 Quaternion q;
 // A gyro reading to use as the offset after calibration.
 struct gyro_data gyro_offset;
+float mag_offset[3];
 
 // Initialize the IMU and calibrate the gyro.
 // This currently uses only a single gyro reading to calibrate.
-void imu_init(struct gyro_data *gyro)
+void imu_init(struct gyro_data *gyro, struct mag_data *mag)
 {
     // Zero the orientation
     Quaternion_setIdentity(&q);
@@ -19,6 +20,16 @@ void imu_init(struct gyro_data *gyro)
     gyro_offset.x = gyro->x;
     gyro_offset.y = gyro->y;
     gyro_offset.z = gyro->z;
+
+    // Convert magnetometer data to a unit vector.
+    mag_offset[0] = -mag->y+4250;
+    mag_offset[1] = mag->x-5250;
+    mag_offset[2] = -mag->z+2125;
+    float mag_vector_length = sqrtf(mag_offset[0]*mag_offset[0] + mag_offset[1]*mag_offset[1] + mag_offset[2]*mag_offset[2]);
+    if(mag_vector_length == 0) mag_vector_length = 1;
+    mag_offset[0] /= mag_vector_length;
+    mag_offset[1] /= mag_vector_length;
+    mag_offset[2] /= mag_vector_length;
 }
 
 // Initialize the IMU without a gyro reading.
@@ -31,6 +42,10 @@ void imu_init_zero(void)
     gyro_offset.x = 0;
     gyro_offset.y = 0;
     gyro_offset.z = 0;
+
+    mag_offset[0] = 1;
+    mag_offset[1] = 1;
+    mag_offset[2] = 1;
 }
 
 // Rotate the quaternion by the given angular velocity.
@@ -76,6 +91,7 @@ void imu_update_from_accel(struct gyro_data *accel)
     // Convert accelerometer data to a unit vector.
     float accel_vector[3] = {accel->x, -accel->y, accel->z};
     float accel_vector_length = sqrtf(accel_vector[0]*accel_vector[0] + accel_vector[1]*accel_vector[1] + accel_vector[2]*accel_vector[2]);
+    if(accel_vector_length == 0) accel_vector_length = 1;
     accel_vector[0] /= accel_vector_length;
     accel_vector[1] /= accel_vector_length;
     accel_vector[2] /= accel_vector_length;
@@ -104,22 +120,22 @@ void imu_update_from_accel(struct gyro_data *accel)
 
 void imu_update_from_mag(struct mag_data *mag)
 {
-    // Create a vector to hold the current orientation.
-    float orientation_vector[3];
-
-    // Rotate the up vector by the orientation quaternion to populate the orientation vector.
-    Quaternion_rotate(&q, (float[]){0, 0, 1}, orientation_vector);
-
     // Convert magnetometer data to a unit vector.
-    float mag_vector[3] = {-mag->y+5000, mag->x-5000, -mag->z+5000};
+    float mag_vector[3] = {-mag->y+4250, mag->x-5250, -mag->z+2125};
     float mag_vector_length = sqrtf(mag_vector[0]*mag_vector[0] + mag_vector[1]*mag_vector[1] + mag_vector[2]*mag_vector[2]);
+    if(mag_vector_length == 0) mag_vector_length = 1;
     mag_vector[0] /= mag_vector_length;
     mag_vector[1] /= mag_vector_length;
     mag_vector[2] /= mag_vector_length;
 
-    // Calculate the path from the current orientation vector to accelerometer vector.
+    // Rotate the magnetometer vector by the reverse of the current orientation.
+    Quaternion con_q;
+    Quaternion_conjugate(&q, &con_q);
+    Quaternion_rotate(&con_q, mag_vector, mag_vector);
+
+    // Calculate the path from the current magnetometer vector to the offset vector.
     Quaternion shortest_path;
-    Quaternion_from_unit_vecs(orientation_vector, mag_vector, &shortest_path);
+    Quaternion_from_unit_vecs(mag_vector, mag_offset, &shortest_path);
 
     // Convert the path to a single axis rotation.
     float axis[3];
@@ -136,9 +152,10 @@ void imu_update_from_mag(struct mag_data *mag)
     Quaternion_multiply(&correction, &q, &q);
 
     // Normalize the result.
-    Quaternion_normalize(&q, &q);}
+    Quaternion_normalize(&q, &q);
+}
 
-void imu_get_xy_tilt(float *x, float *y)
+void imu_get_xy_tilt(float *x, float *y, float *z)
 {
     // Create a vector to hold the current orientation.
     float orientation_vector[3];
@@ -158,4 +175,14 @@ void imu_get_xy_tilt(float *x, float *y)
     // to get the magnitude of tilt in each axis.
     *x = orientation_correction_axes[0] * angle;
     *y = orientation_correction_axes[1] * angle;
+
+    // Rotate the north vector by the orientation quaternion to populate the orientation vector.
+    Quaternion_rotate(&q, (float[]){1, 0, 0}, orientation_vector);
+
+    // Calculate the shortest path from the orientation vector back to the north vector.
+    Quaternion_from_unit_vecs(orientation_vector, (float[]){1, 0, 0}, &shortest_path);
+
+    // Fetch the rotation axis for the shortest path.
+    angle = Quaternion_toAxisAngle(&shortest_path, orientation_correction_axes);
+    *z = orientation_correction_axes[2] * angle;
 }

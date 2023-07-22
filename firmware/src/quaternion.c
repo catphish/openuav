@@ -195,3 +195,11 @@ void Quaternion_from_unit_vecs(float v0[3], float v1[3], Quaternion* output)
     Quaternion_set(w, v[0], v[1], v[2], output);
     Quaternion_normalize(output, output);
 }
+
+void Quaternion_conjugate(Quaternion* q, Quaternion* output)
+{
+    output->w = q->w;
+    output->v[0] = -q->v[0];
+    output->v[1] = -q->v[1];
+    output->v[2] = -q->v[2];
+}

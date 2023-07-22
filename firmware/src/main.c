@@ -57,7 +57,7 @@ int main(void) {
       y_integral = 0;
       z_integral = 0;
       // Recalibrate the IMU.
-      imu_init(&gyro);
+      //imu_init(&gyro, &mag);
     }
     if(gyro_ready()) {
       // Call elrs_tick() regularly to allow a fialsafe timeout.
@@ -74,15 +74,19 @@ int main(void) {
       // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
-      //imu_update_from_mag(&mag);
+      imu_update_from_mag(&mag);
 
       // Get the requested angles from the transmitter.
       int32_t angle_request_x = elrs_channel(1);
       int32_t angle_request_y = elrs_channel(0);
 
       // Get the current X and Y tilt angles from the IMU.
-      float x_tilt, y_tilt;
-      imu_get_xy_tilt(&x_tilt, &y_tilt);
+      float x_tilt, y_tilt, z_rot;
+      imu_get_xy_tilt(&x_tilt, &y_tilt, &z_rot);
+      int x = x_tilt*1000;
+      int y = y_tilt*1000;
+      int z = z_rot*1000;
+      usb_printf("-1000,1000,%d,%d,%d\n", x,y,z);
 
       // Subtract the tilt angle from the requested angle to get the angle error.
       // The units here are arbitrary, but 800 permits a good range of motion.
