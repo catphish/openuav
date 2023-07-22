@@ -90,7 +90,7 @@ int main(void) {
       int32_t angle_error_y = angle_request_y - y_tilt * 800.f;
 
       // Calculate requested angular velocity from the attitude error.
-      // The requested angular velocity of the Z axix is taken directly from the
+      // The requested angular velocity of the Z axis is taken directly from the
       // transmitter.
       int32_t rotation_request_x = angle_error_x;
       int32_t rotation_request_y = angle_error_y;
