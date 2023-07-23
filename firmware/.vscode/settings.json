@@ -21,6 +21,7 @@
         "led.h": "c",
         "util.h": "c",
         "gyro.h": "c",
-        "quaternion.h": "c"
+        "quaternion.h": "c",
+        "spi.h": "c"
     }
 }

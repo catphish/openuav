@@ -1,7 +1,7 @@
 #include <stm32g4xx.h>
 #include "elrs.h"
 
-int channel[5];
+int channel[6];
 int channels_valid = 0;
 
 void elrs_process_char(uint8_t received) {
@@ -28,6 +28,7 @@ void elrs_process_char(uint8_t received) {
       channel[2] = (int)channels->ch2 - 992;
       channel[3] = (int)channels->ch3 - 992;
       channel[4] = (int)channels->ch4 - 992;
+      channel[5] = (int)channels->ch5 - 992;
       channels_valid = 100;
     }
     // uint8_t crc8 = received;

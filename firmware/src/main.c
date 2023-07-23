@@ -18,6 +18,12 @@
 #include "barometer.h"
 #include "i2c.h"
 
+#define ANGLE_RATE 6.0f
+#define RATE 5.0f
+#define RATE_P 0.25f
+#define RATE_I 0.0005f
+#define RATE_Z 1.0f
+
 void SystemInit(void) {
   gpio_init();
   led_init();
@@ -40,9 +46,10 @@ struct mag_data mag;
 int32_t pressure;
 int32_t pressure_zero;
 
-int32_t x_integral = 0;
-int32_t y_integral = 0;
-int32_t z_integral = 0;
+// Gyro integral terms.
+static float ix = 0;
+static float iy = 0;
+static float iz = 0;
 
 int main(void) {
   while(1) {
@@ -54,9 +61,9 @@ int main(void) {
     else {
       // If we are not armed, reset the integral terms.
       dshot.armed = 0;
-      x_integral = 0;
-      y_integral = 0;
-      z_integral = 0;
+      ix = 0;
+      iy = 0;
+      iz = 0;
       // Recalibrate the IMU.
       imu_init(&gyro, &mag);
       // Zero the pressure sensor.
@@ -73,57 +80,57 @@ int main(void) {
 
       // Fetch barometer data.
       pressure = baro_read_pressure();
-      int32_t height = (pressure_zero - pressure);
+      //int32_t height = (pressure_zero - pressure);
 
       // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
-      imu_update_from_mag(&mag);
-
-      // Get the requested angles from the transmitter.
-      int32_t angle_request_x = elrs_channel(1);
-      int32_t angle_request_y = elrs_channel(0);
-      int32_t angle_request_z = elrs_channel(3);
+      //imu_update_from_mag(&mag);
 
       // Get the current X and Y tilt angles, and the z rotation offset from the IMU.
       // TODO: This should be broken out into two functions, one for tilt and one for rotation.
       float x_tilt, y_tilt, z_rot;
       imu_get_xy_tilt(&x_tilt, &y_tilt, &z_rot);
 
-      // Subtract the tilt angle from the requested angle to get the angle error.
-      // The units here are arbitrary, but 800 permits a good range of motion.
-      int32_t angle_error_x = angle_request_x - x_tilt * 800.f;
-      int32_t angle_error_y = angle_request_y - y_tilt * 800.f;
-      // We give the conteoller a bit more authority over the z axis.
-      int32_t angle_error_z = angle_request_z*4 - z_rot * 1000.f;
+      int32_t rotation_request_x = 0;
+      int32_t rotation_request_y = 0;
+      int32_t rotation_request_z = 0;
 
-      // Calculate requested angular velocity from the attitude error.
-      int32_t rotation_request_x = angle_error_x;
-      int32_t rotation_request_y = angle_error_y;
-      int32_t rotation_request_z = angle_error_z;
+      if(elrs_channel(5) > 0) {
+        // Angle mode
+        // Subtract the tilt angle from the requested angle to get the angle error.
+        // The units here are arbitrary, but 800 permits a good range of motion.
+        int32_t angle_error_x = elrs_channel(1) - x_tilt * 800.f;
+        int32_t angle_error_y = elrs_channel(0) - y_tilt * 800.f;
+        rotation_request_x = angle_error_x * ANGLE_RATE;
+        rotation_request_y = angle_error_y * ANGLE_RATE;
+        rotation_request_z = elrs_channel(3) * RATE;
+      } else {
+        // Rate mode. Get angle requests from the controller.
+        rotation_request_x = elrs_channel(1) * RATE;
+        rotation_request_y = elrs_channel(0) * RATE;
+        rotation_request_z = elrs_channel(3) * RATE;
+      }
 
       // Calculate the error in angular velocity by adding the (nagative) gyro
       // readings from the requested angular velocity.
-      int32_t error_x = gyro.x/4 + rotation_request_x;
-      int32_t error_y = gyro.y/4 + rotation_request_y;
-      int32_t error_z = gyro.z/1 + rotation_request_z;
+      int32_t error_x = (gyro.x + rotation_request_x) * RATE_P;
+      int32_t error_y = (gyro.y + rotation_request_y) * RATE_P;
+      int32_t error_z = (gyro.z + rotation_request_z) * RATE_Z;
 
       // Integrate the error in each axis.
-      x_integral += error_x;
-      y_integral += error_y;
-      z_integral += error_z;
+      ix += error_x * RATE_I;
+      iy += error_y * RATE_I;
+      iz += error_z * RATE_I;
 
       // Set the throttle. This will ultimately use the controller input, altitude, and attitude.
-      // Altitude control is here as an example, and it works to a basic extent but it's not ready to use yet.
       int32_t throttle = elrs_channel(2) + 820;
-      //throttle -= height / 10;
 
-      // For each motor, add the appropriate error and integral terms together
-      // to get the final motor output.
-      dshot.motor1 = throttle - error_x + error_y - error_z - x_integral/512 + y_integral/512 - z_integral/512;
-      dshot.motor2 = throttle - error_x - error_y + error_z - x_integral/512 - y_integral/512 + z_integral/512;
-      dshot.motor3 = throttle + error_x + error_y + error_z + x_integral/512 + y_integral/512 + z_integral/512;
-      dshot.motor4 = throttle + error_x - error_y - error_z + x_integral/512 - y_integral/512 - z_integral/512;
+      // For each motor, add all appropriate terms together to get the final output.
+      dshot.motor1 = throttle - error_x + error_y - error_z - ix + iy - iz;
+      dshot.motor2 = throttle - error_x - error_y + error_z - ix - iy + iz;
+      dshot.motor3 = throttle + error_x + error_y + error_z + ix + iy + iz;
+      dshot.motor4 = throttle + error_x - error_y - error_z + ix - iy - iz;
 
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
