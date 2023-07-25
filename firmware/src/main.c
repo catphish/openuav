@@ -20,9 +20,12 @@
 
 #define ANGLE_RATE 6.0f
 #define RATE 5.0f
-#define RATE_P 0.25f
-#define RATE_I 0.0005f
-#define RATE_Z 1.0f
+
+#define RATE_P 0.03f
+#define RATE_I 0.001f
+
+#define RATE_ZP 0.12f
+#define RATE_ZI 0.01f
 
 void SystemInit(void) {
   gpio_init();
@@ -114,23 +117,23 @@ int main(void) {
 
       // Calculate the error in angular velocity by adding the (nagative) gyro
       // readings from the requested angular velocity.
-      int32_t error_x = (gyro.x + rotation_request_x) * RATE_P;
-      int32_t error_y = (gyro.y + rotation_request_y) * RATE_P;
-      int32_t error_z = (gyro.z + rotation_request_z) * RATE_Z;
+      int32_t error_x = RATE_P * (gyro.x + rotation_request_x);
+      int32_t error_y = RATE_P * (gyro.y + rotation_request_y);
+      int32_t error_z = RATE_ZP * (gyro.z + rotation_request_z);
 
       // Integrate the error in each axis.
-      ix += error_x * RATE_I;
-      iy += error_y * RATE_I;
-      iz += error_z * RATE_I;
+      ix += RATE_I * (gyro.x + rotation_request_x);
+      iy += RATE_I * (gyro.y + rotation_request_y);
+      iz += RATE_ZI * (gyro.z + rotation_request_z);
 
       // Set the throttle. This will ultimately use the controller input, altitude, and attitude.
       int32_t throttle = elrs_channel(2) + 820;
 
       // For each motor, add all appropriate terms together to get the final output.
-      dshot.motor1 = throttle - error_x + error_y - error_z - ix + iy - iz;
-      dshot.motor2 = throttle - error_x - error_y + error_z - ix - iy + iz;
-      dshot.motor3 = throttle + error_x + error_y + error_z + ix + iy + iz;
-      dshot.motor4 = throttle + error_x - error_y - error_z + ix - iy - iz;
+      dshot.motor1 = throttle + error_x + error_y - error_z + ix + iy - iz;
+      dshot.motor2 = throttle - error_x + error_y + error_z - ix + iy + iz;
+      dshot.motor3 = throttle + error_x - error_y + error_z + ix - iy + iz;
+      dshot.motor4 = throttle - error_x - error_y - error_z - ix - iy - iz;
 
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
