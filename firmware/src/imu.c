@@ -5,21 +5,16 @@
 
 // A quaternion to represent the orientation of the sensor.
 Quaternion q;
-// A gyro reading to use as the offset after calibration.
-struct gyro_data gyro_offset;
+
+// Magnetometer starting orientation.
 float mag_offset[3];
 
 // Initialize the IMU and calibrate the gyro.
 // This currently uses only a single gyro reading to calibrate.
-void imu_init(struct gyro_data *gyro, struct mag_data *mag)
+void imu_init(struct mag_data *mag)
 {
     // Zero the orientation
     Quaternion_setIdentity(&q);
-
-    // Set the gyro offset to the provided reading.
-    gyro_offset.x = gyro->x;
-    gyro_offset.y = gyro->y;
-    gyro_offset.z = gyro->z;
 
     // Convert magnetometer data to a unit vector.
     mag_offset[0] = -mag->y+4250;
@@ -37,11 +32,6 @@ void imu_init_zero(void)
 {
     // Zero the orientation
     Quaternion_setIdentity(&q);
-
-    // Set the gyro offset to zero.
-    gyro_offset.x = 0;
-    gyro_offset.y = 0;
-    gyro_offset.z = 0;
 
     // Set the magnetometer offset to North.
     mag_offset[0] = 0;
@@ -61,9 +51,9 @@ void imu_update_from_gyro(struct gyro_data *gyro)
     SysTick->CTRL = 5;
 
     // Convert the gyro readings to radians and multiply by the time since the last update.
-    float gyro_x = ((float)gyro->x - (float)gyro_offset.x) * 0.00122173f * (float)dt / 160000000;
-    float gyro_y = ((float)gyro->y - (float)gyro_offset.y) * 0.00122173f * (float)dt / 160000000;
-    float gyro_z = ((float)gyro->z - (float)gyro_offset.z) * 0.00122173f * (float)dt / 160000000;
+    float gyro_x = (float)gyro->x * 0.00122173f * (float)dt / 160000000;
+    float gyro_y = (float)gyro->y * 0.00122173f * (float)dt / 160000000;
+    float gyro_z = (float)gyro->z * 0.00122173f * (float)dt / 160000000;
 
     // Create quaternions for each axis rotation.
     Quaternion q_x, q_y, q_z;

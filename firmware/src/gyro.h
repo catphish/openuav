@@ -14,5 +14,7 @@ struct gyro_data {
 
 void gyro_init(void);
 uint8_t gyro_ready(void);
-void gyro_read(struct gyro_data *);
+void gyro_zero(void);
+void gyro_read_raw(struct gyro_data * d);
+void gyro_read(struct gyro_data * d);
 void accel_read(struct gyro_data * d);

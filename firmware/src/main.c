@@ -18,11 +18,11 @@
 #include "barometer.h"
 #include "i2c.h"
 
-#define ANGLE_RATE 6.0f
-#define RATE 5.0f
+#define ANGLE_RATE 4.0f
+#define RATE 4.0f
 
 #define RATE_P 0.03f
-#define RATE_I 0.001f
+#define RATE_I 0.003f
 
 #define RATE_ZP 0.12f
 #define RATE_ZI 0.01f
@@ -68,7 +68,8 @@ int main(void) {
       iy = 0;
       iz = 0;
       // Recalibrate the IMU.
-      imu_init(&gyro, &mag);
+      gyro_zero();
+      imu_init(&mag);
       // Zero the pressure sensor.
       pressure_zero = pressure;
     }

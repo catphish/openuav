@@ -3,6 +3,8 @@
 #include "spi.h"
 #include "gyro.h"
 
+struct gyro_data gyro_offset;
+
 static void gyro_spi_write_register(uint8_t reg, uint8_t value) {
     // Set CS low
     GPIOC->BSRR = GPIO_BSRR_BR_4;
@@ -28,8 +30,8 @@ void gyro_init(void)
     gpio_init();
     // Set PA4 as input
     gpio_pin_mode(GPIOA, 4, GPIO_MODE_INPUT, 0, GPIO_PUPD_NONE, 0);
-    gyro_spi_write_register(GYRO_REG_CTRL2_G, (6<<4)|(3<<2)); // Enable gyro, 2000 dps, 416 Hz
-    gyro_spi_write_register(GYRO_REG_CTRL1_XL, (6<<4)); // Enable accelerometer, 416 Hz
+    gyro_spi_write_register(GYRO_REG_CTRL2_G, (7<<4)|(3<<2)); // Enable gyro, 2000 dps, 833 Hz
+    gyro_spi_write_register(GYRO_REG_CTRL1_XL, (7<<4)); // Enable accelerometer, 833 Hz
     gyro_spi_write_register(GYRO_REG_INT1_CTRL, (1<<1)); // Enable Gyro data ready interrupt
 }
 
@@ -39,7 +41,11 @@ uint8_t gyro_ready(void)
     return gpio_get_pin(GPIOA, 4);
 }
 
-void gyro_read(struct gyro_data * d)
+void gyro_zero(void) {
+    gyro_read_raw(&gyro_offset);
+}
+
+void gyro_read_raw(struct gyro_data * d)
 {
     uint8_t data[6];
     for(int i=0; i<6; i++) {
@@ -50,6 +56,15 @@ void gyro_read(struct gyro_data * d)
     d->y = (data[3]<<8)|data[2];
     d->z = (data[5]<<8)|data[4];
     d->y = -d->y;
+}
+
+void gyro_read(struct gyro_data * d)
+{
+    struct gyro_data raw;
+    gyro_read_raw(&raw);
+    d->x = raw.x - gyro_offset.x;
+    d->y = raw.y - gyro_offset.y;
+    d->z = raw.z - gyro_offset.z;
 }
 
 void accel_read(struct gyro_data * d)
