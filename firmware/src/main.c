@@ -31,9 +31,10 @@
 struct gyro_data prev_gyro;
 
 void SystemInit(void) {
+  clock_init();
+  msleep(200);
   gpio_init();
   led_init();
-  clock_init();
   usb_init();
   dshot_init();
   spi_init();
