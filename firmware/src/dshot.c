@@ -3,7 +3,7 @@
 #include "gpio.h"
 #include "dshot.h"
 
-uint16_t dma_data[17 * 4];
+volatile uint16_t dma_data[17 * 4];
 
 void dshot_init(void) {
     // Enable GPIOA clock
