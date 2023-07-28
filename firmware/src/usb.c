@@ -18,7 +18,7 @@ struct usb_packet {
 };
 
 struct usb_ring_buffer {
-  struct usb_packet packet[4];
+  struct usb_packet packet[16];
   uint8_t head;
   uint8_t tail;
 } usb_ring_buffer[2];
@@ -132,7 +132,7 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len) {
 // retun immediately.
 void usb_write_string(uint8_t ep, char * data, uint32_t len) {
   while(len) {
-    if((usb_ring_buffer[ep].head + 1) % 4 == usb_ring_buffer[ep].tail) {
+    if((usb_ring_buffer[ep].head + 1) % 16 == usb_ring_buffer[ep].tail) {
       return;
     }
     uint32_t chunk = len;
@@ -141,7 +141,7 @@ void usb_write_string(uint8_t ep, char * data, uint32_t len) {
       usb_ring_buffer[ep].packet[usb_ring_buffer[ep].head].data[n] = data[n];
     }
     usb_ring_buffer[ep].packet[usb_ring_buffer[ep].head].len = chunk;
-    usb_ring_buffer[ep].head = (usb_ring_buffer[ep].head + 1) % 4;
+    usb_ring_buffer[ep].head = (usb_ring_buffer[ep].head + 1) % 16;
     data += chunk;
     len -= chunk;
   }
@@ -229,14 +229,14 @@ void usb_main() {
     // Copy data from the ring buffer into the endpoint buffer.
     if(usb_ring_buffer[0].head != usb_ring_buffer[0].tail) {
       usb_write(0, usb_ring_buffer[0].packet[usb_ring_buffer[0].tail].data, usb_ring_buffer[0].packet[usb_ring_buffer[0].tail].len);
-      usb_ring_buffer[0].tail = (usb_ring_buffer[0].tail + 1) % 4;
+      usb_ring_buffer[0].tail = (usb_ring_buffer[0].tail + 1) % 16;
     }
   }
   if(ep_tx_ready(1)) {
     // Copy data from the ring buffer into the endpoint buffer.
     if(usb_ring_buffer[1].head != usb_ring_buffer[1].tail) {
       usb_write(1, usb_ring_buffer[1].packet[usb_ring_buffer[1].tail].data, usb_ring_buffer[1].packet[usb_ring_buffer[1].tail].len);
-      usb_ring_buffer[1].tail = (usb_ring_buffer[1].tail + 1) % 4;
+      usb_ring_buffer[1].tail = (usb_ring_buffer[1].tail + 1) % 16;
     }
   }
 }

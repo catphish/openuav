@@ -58,6 +58,8 @@ int main(void) {
   while(1) {
     // Poll the USB peripherand to transmit and receive data.
     usb_main();
+    // Poll the UART peripheral to transmit pending data.
+    uart_tx();
     // If we have valid ELRS data, allow the ESCs to be armed.
     if(elrs_valid() && elrs_channel(4) > 0)
       dshot.armed = 1;
