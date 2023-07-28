@@ -22,8 +22,8 @@
 #define RATE 5.0f
 
 #define RATE_P 0.05f
-#define RATE_I 0.001f
-#define RATE_D 0.035f
+#define RATE_I 0.002f
+#define RATE_D 0.05f
 
 #define RATE_ZP 0.1f
 #define RATE_ZI 0.001f
