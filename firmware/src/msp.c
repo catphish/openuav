@@ -32,6 +32,46 @@ void send_msp_status_response(void) {
   send_msp(101, payload, 11);
 }
 
+void send_msp_displayport_clear() {
+  // Prepare a MSP_DISPLAYPORT payload
+  uint8_t payload[1];
+  // Send the clear subcommand
+  payload[0] = 2;
+  // Send the payload
+  send_msp(182, payload, 1);
+}
+
+void send_msp_displayport_write() {
+  // Prepare a MSP_DISPLAYPORT payload
+  uint8_t payload[10];
+  // Send the clear subcommand
+  payload[0] = 3;
+  // Row
+  payload[1] = 2;
+  // Column
+  payload[2] = 2;
+  // Attributes
+  payload[3] = 0;
+  // String
+  payload[4] = 'H';
+  payload[5] = 'e';
+  payload[6] = 'l';
+  payload[7] = 'l';
+  payload[8] = 'o';
+  payload[9] = 0;
+  // Send the payload
+  send_msp(182, payload, 10);
+}
+
+void send_msp_displayport_draw() {
+  // Prepare a MSP_DISPLAYPORT payload
+  uint8_t payload[1];
+  // Send the draw subcommand
+  payload[0] = 4;
+  // Send the payload
+  send_msp(182, payload, 1);
+}
+
 void msp_process_char(uint8_t received) {
   static uint8_t rx_index = 0;
   static uint8_t length = 0;
@@ -71,6 +111,9 @@ void msp_process_char(uint8_t received) {
     if (command == 101) {
       //usb_printf("Received MSP status request\n");
       send_msp_status_response();
+      send_msp_displayport_clear();
+      send_msp_displayport_write();
+      send_msp_displayport_draw();
     }
   }
 }
