@@ -8,11 +8,11 @@ void led_init() {
 }
 
 void led0_on() {
-  gpio_set_pin(GPIOB, 9, 0);
+  gpio_set_pin(GPIOB, 9, 1);
 }
 
 void led0_off() {
-  gpio_set_pin(GPIOB, 9, 1);
+  gpio_set_pin(GPIOB, 9, 0);
 }
 
 void led0_toggle() {
@@ -20,11 +20,11 @@ void led0_toggle() {
 }
 
 void led1_on() {
-  gpio_set_pin(GPIOA, 10, 0);
+  gpio_set_pin(GPIOA, 10, 1);
 }
 
 void led1_off() {
-  gpio_set_pin(GPIOA, 10, 1);
+  gpio_set_pin(GPIOA, 10, 0);
 }
 
 void led1_toggle() {

@@ -2,6 +2,8 @@
 #include <string.h>
 #include "usb.h"
 #include "uart.h"
+#include "adc.h"
+#include "stdio.h"
 
 void send_msp(uint8_t command, uint8_t *payload, uint8_t length) {
   uint8_t checksum = 0;
@@ -43,24 +45,21 @@ void send_msp_displayport_clear() {
 
 void send_msp_displayport_write() {
   // Prepare a MSP_DISPLAYPORT payload
-  uint8_t payload[10];
-  // Send the clear subcommand
+  uint8_t payload[16];
+  memset(payload, 0, 16);
+  // Send the write string subcommand
   payload[0] = 3;
-  // Row
-  payload[1] = 2;
-  // Column
-  payload[2] = 2;
-  // Attributes
+   // Row
+  payload[1] = 15;
+   // Column
+  payload[2] = 20;
+   // Attributes
   payload[3] = 0;
   // String
-  payload[4] = 'H';
-  payload[5] = 'e';
-  payload[6] = 'l';
-  payload[7] = 'l';
-  payload[8] = 'o';
-  payload[9] = 0;
-  // Send the payload
-  send_msp(182, payload, 10);
+  int mv = 13.25f / 4.f * adc_read();
+  snprintf((char*)payload+4, 10, "%d.%dV", mv/1000, mv%1000);
+   // Send the payload
+  send_msp(182, payload, 16);
 }
 
 void send_msp_displayport_draw() {
@@ -70,6 +69,17 @@ void send_msp_displayport_draw() {
   payload[0] = 4;
   // Send the payload
   send_msp(182, payload, 1);
+}
+
+volatile int response_due = 0;
+void msp_send_response(void) {
+  if(response_due) {
+    response_due = 0;
+      send_msp_status_response();
+      send_msp_displayport_clear();
+      send_msp_displayport_write();
+      send_msp_displayport_draw();
+  }
 }
 
 void msp_process_char(uint8_t received) {
@@ -110,10 +120,7 @@ void msp_process_char(uint8_t received) {
     // Process the command
     if (command == 101) {
       //usb_printf("Received MSP status request\n");
-      send_msp_status_response();
-      send_msp_displayport_clear();
-      send_msp_displayport_write();
-      send_msp_displayport_draw();
+      response_due = 1;
     }
   }
 }

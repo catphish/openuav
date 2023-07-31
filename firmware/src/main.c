@@ -17,16 +17,18 @@
 #include "quaternion.h"
 #include "barometer.h"
 #include "i2c.h"
+#include "adc.h"
+#include "msp.h"
 
 #define ANGLE_RATE 4.0f
 #define RATE 5.0f
 
 #define RATE_P 0.05f
-#define RATE_I 0.002f
-#define RATE_D 0.05f
+#define RATE_I 0.003f
+#define RATE_D 0.08f
 
 #define RATE_ZP 0.1f
-#define RATE_ZI 0.001f
+#define RATE_ZI 0.003f
 
 struct gyro_data prev_gyro;
 
@@ -44,6 +46,7 @@ void SystemInit(void) {
   baro_init();
   i2c_init();
   mag_init();
+  adc_init();
 }
 
 struct dshot_data dshot;
@@ -57,6 +60,8 @@ int32_t pressure_zero;
 static float ix = 0;
 static float iy = 0;
 static float iz = 0;
+
+char osd_mv[10];
 
 int main(void) {
   while(1) {
@@ -79,6 +84,8 @@ int main(void) {
       // Zero the pressure sensor.
       pressure_zero = pressure;
     }
+
+    msp_send_response();
 
     if(gyro_ready()) {
       // Call elrs_tick() regularly to allow a fialsafe timeout.
