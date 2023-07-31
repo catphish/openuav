@@ -21,11 +21,11 @@
 #include "msp.h"
 
 #define ANGLE_RATE 4.0f
-#define RATE 5.0f
+#define RATE 6.0f
 
 #define RATE_P 0.05f
 #define RATE_I 0.003f
-#define RATE_D 0.06f
+#define RATE_D 0.05f
 
 #define RATE_ZP 0.1f
 #define RATE_ZI 0.003f
