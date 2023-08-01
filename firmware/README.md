@@ -6,7 +6,7 @@ firmware. It is now flyable in acro and angle mode with configurable PIDs.
 
 # Hardware Drivers
 * LED     - DONE
-* USB     - DONE - printf only
+* USB     - DONE
 * DSHOT   - DONE
 * UART    - DONE
 * ELRS    - DONE - needs checksum
@@ -16,7 +16,7 @@ firmware. It is now flyable in acro and angle mode with configurable PIDs.
 * Baro    - DONE
 * I2C     - DONE
 * Compass - DONE
-* Voltage -
+* Voltage - DONE
 * Servo   -
 * Flash   -
 * GPS     -
@@ -24,7 +24,9 @@ firmware. It is now flyable in acro and angle mode with configurable PIDs.
 # Software
 * Gyro flight          - DONE
 * Accelerometer flight - DONE
-* Compass heading hold - Proof of concept
-* OSD                  - Hello world only
+* OSD                  - Voltage only
+* Compass heading hold -
 * Baro altitude hold   -
 * GPS flight           -
+* Black box            -
+* USB configuration    -
