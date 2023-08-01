@@ -22,14 +22,11 @@
 #define ANGLE_RATE 4.0f
 #define RATE 6.0f
 
-#define RATE_P 0.05f
-#define RATE_I 0.003f
-#define RATE_D 0.05f
+#define RATE_P 0.1f
+#define RATE_I 0.0001f
 
 #define RATE_ZP 0.1f
-#define RATE_ZI 0.003f
-
-struct gyro_data prev_gyro;
+#define RATE_ZI 0.0001f
 
 void SystemInit(void) {
   clock_init();
@@ -129,22 +126,15 @@ int main(void) {
       iy += RATE_I * (gyro.y + rotation_request_y);
       iz += RATE_ZI * (gyro.z + rotation_request_z);
 
-      // Calculate the difference between the current and previous gyro readings.
-      int32_t dx = RATE_D * (gyro.x - prev_gyro.x);
-      int32_t dy = RATE_D * (gyro.y - prev_gyro.y);
-
-      // Store the current gyro readings for the next loop.
-      prev_gyro = gyro;
-
       // Set the throttle. This will ultimately use the controller input, altitude, and attitude.
       // Currently I use 50% throttle and add 200 for "air mode".
       int32_t throttle = (elrs_channel(2) + 820)/2 + 200;
 
       // For each motor, add all appropriate terms together to get the final output.
-      dshot.motor1 = throttle + error_x + error_y - error_z + ix + iy - iz + dx + dy;
-      dshot.motor2 = throttle - error_x + error_y + error_z - ix + iy + iz - dx + dy;
-      dshot.motor3 = throttle + error_x - error_y + error_z + ix - iy + iz + dx - dy;
-      dshot.motor4 = throttle - error_x - error_y - error_z - ix - iy - iz - dx - dy;
+      dshot.motor1 = throttle + error_x + error_y - error_z + ix + iy - iz;
+      dshot.motor2 = throttle - error_x + error_y + error_z - ix + iy + iz;
+      dshot.motor3 = throttle + error_x - error_y + error_z + ix - iy + iz;
+      dshot.motor4 = throttle - error_x - error_y - error_z - ix - iy - iz;
 
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
