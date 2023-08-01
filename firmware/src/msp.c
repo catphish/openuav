@@ -75,10 +75,10 @@ volatile int response_due = 0;
 void msp_send_response(void) {
   if(response_due) {
     response_due = 0;
-      send_msp_status_response();
-      send_msp_displayport_clear();
-      send_msp_displayport_write();
-      send_msp_displayport_draw();
+    send_msp_status_response();
+    send_msp_displayport_clear();
+    send_msp_displayport_write();
+    send_msp_displayport_draw();
   }
 }
 

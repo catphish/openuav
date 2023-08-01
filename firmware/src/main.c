@@ -19,7 +19,7 @@
 #include "adc.h"
 #include "msp.h"
 
-#define ANGLE_RATE 4.0f
+#define ANGLE_RATE 5.0f
 #define RATE 6.0f
 
 #define RATE_P 0.1f
