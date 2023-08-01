@@ -12,7 +12,6 @@
 #include "uart.h"
 #include "clock.h"
 #include "gyro.h"
-#include "mag.h"
 #include "imu.h"
 #include "quaternion.h"
 #include "barometer.h"
@@ -42,19 +41,15 @@ void SystemInit(void) {
   spi_init();
   uart_init();
   gyro_init();
-  imu_init_zero();
+  imu_init();
   baro_init();
   i2c_init();
-  mag_init();
   adc_init();
 }
 
 struct dshot_data dshot;
 struct gyro_data gyro;
 struct gyro_data accel;
-struct mag_data mag;
-int32_t pressure;
-int32_t pressure_zero;
 
 // Gyro integral terms.
 static float ix = 0;
@@ -69,46 +64,39 @@ int main(void) {
     usb_main();
     // Poll the UART peripheral to transmit pending data.
     uart_tx();
-    // If we have valid ELRS data, allow the ESCs to be armed.
-    if(elrs_valid() && elrs_channel(4) > 0)
-      dshot.armed = 1;
-    else {
-      // If we are not armed, reset the integral terms.
-      dshot.armed = 0;
-      ix = 0;
-      iy = 0;
-      iz = 0;
-      // Recalibrate the IMU.
-      gyro_zero();
-      imu_init(&mag);
-      // Zero the pressure sensor.
-      pressure_zero = pressure;
-    }
 
     msp_send_response();
 
     if(gyro_ready()) {
+      // If we have valid ELRS data, allow the ESCs to be armed.
+      if(elrs_valid() && elrs_channel(4) > 0)
+        dshot.armed = 1;
+      else {
+        // If we are not armed, reset the integral terms.
+        dshot.armed = 0;
+        ix = 0;
+        iy = 0;
+        iz = 0;
+        // Recalibrate the IMU.
+        gyro_zero();
+        imu_init();
+      }
+
       // Call elrs_tick() regularly to allow a fialsafe timeout.
       elrs_tick();
+
       // Read the raw gyro and accelerometer data.
       gyro_read(&gyro);
       accel_read(&accel);
-      // Read the raw magnetometer data.
-      mag_read(&mag);
-
-      // Fetch barometer data.
-      pressure = baro_read_pressure();
-      //int32_t height = (pressure_zero - pressure);
 
       // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
-      //imu_update_from_mag(&mag);
 
       // Get the current X and Y tilt angles, and the z rotation offset from the IMU.
       // TODO: This should be broken out into two functions, one for tilt and one for rotation.
-      float x_tilt, y_tilt, z_rot;
-      imu_get_xy_tilt(&x_tilt, &y_tilt, &z_rot);
+      float x_tilt, y_tilt;
+      imu_get_xy_tilt(&x_tilt, &y_tilt);
 
       int32_t rotation_request_x = 0;
       int32_t rotation_request_y = 0;
