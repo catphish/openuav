@@ -33,3 +33,7 @@ fp-info-cache
 
 # Production files
 production/
+
+# SDK / flashing
+STM32Cube
+elf2dfuse
