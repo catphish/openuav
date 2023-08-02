@@ -144,17 +144,29 @@ int main(void) {
             gps_zero_lon = gps_lon();
           }
 
-          // Calculate the distance travelled since the last tick.
-          int32_t gps_delta_lat = gps_lat() - gps_prev_lat();
-          int32_t gps_delta_lon = gps_lon() - gps_prev_lon();
-
-          // Calculate the absolute position error.
+          // Calculate the absolute position error (GPS P term).
           int32_t gps_error_lat = gps_lat() - gps_zero_lat;
           int32_t gps_error_lon = gps_lon() - gps_zero_lon;
+          // Scale the P term.
+          gps_error_lat/= 2;
+          gps_error_lon/= 2;
+          // Limit the P term.
+          // TODO: don't limit these independently, limit the total error vector.
+          if(gps_error_lat > 250) gps_error_lat = 250;
+          if(gps_error_lat < -250) gps_error_lat = -250;
+          if(gps_error_lon > 250) gps_error_lon = 250;
+          if(gps_error_lon < -250) gps_error_lon = -250;
 
-          // Apply the position and rate error to the angle.
-          int32_t angle_error_lat = gps_error_lat/2 + gps_delta_lat*5;
-          int32_t angle_error_lon = gps_error_lon/2 + gps_delta_lon*5;
+          // Calculate the distance travelled since the last tick (GPS D term).
+          int32_t gps_delta_lat = gps_lat() - gps_prev_lat();
+          int32_t gps_delta_lon = gps_lon() - gps_prev_lon();
+          // Scale the D term
+          gps_delta_lat *= 8;
+          gps_delta_lon *= 8;
+
+          // Combine the P and D terms to create a correction (ground frame).
+          int32_t angle_error_lat = gps_error_lat + gps_delta_lat;
+          int32_t angle_error_lon = gps_error_lon + gps_delta_lon;
 
           // Rotate the angle error into the quad frame.
           int32_t gps_angle_error_pitch = angle_error_lat * cosf(heading) + angle_error_lon * sinf(heading);
