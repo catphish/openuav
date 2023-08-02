@@ -5,6 +5,8 @@
 #include "adc.h"
 #include "stdio.h"
 
+#define CELL_COUNT 4.f
+
 void send_msp(uint8_t command, uint8_t *payload, uint8_t length) {
   uint8_t checksum = 0;
   // Send the address
@@ -55,10 +57,14 @@ void send_msp_displayport_write() {
   payload[2] = 20;
    // Attributes
   payload[3] = 0;
+
   // String
-  int mv = 13.25f / 4.f * adc_read();
-  snprintf((char*)payload+4, 10, "%d.%dV", mv/1000, mv%1000);
-   // Send the payload
+  int vbatt = 13.25f / CELL_COUNT * adc_read(); // TODO: autodetect number of cells
+  uint8_t v = vbatt / 1000;
+  uint16_t mv = vbatt % 1000;
+  snprintf((char*)payload+4, 11, "%d.%03dV", v, mv);
+
+  // Send the payload
   send_msp(182, payload, 16);
 }
 

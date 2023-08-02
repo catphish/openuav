@@ -130,11 +130,28 @@ int main(void) {
       // Currently I use 50% throttle and add 200 for "air mode".
       int32_t throttle = (elrs_channel(2) + 820)/2 + 200;
 
+      // TODO: This should be configurable.
+      #define PROPS_IN
+
       // For each motor, add all appropriate terms together to get the final output.
-      dshot.motor1 = throttle + error_x + error_y - error_z + ix + iy - iz;
-      dshot.motor2 = throttle - error_x + error_y + error_z - ix + iy + iz;
-      dshot.motor3 = throttle + error_x - error_y + error_z + ix - iy + iz;
-      dshot.motor4 = throttle - error_x - error_y - error_z - ix - iy - iz;
+      #ifdef PROPS_IN
+      int32_t motor_rear_left   = throttle + error_x + error_y + error_z + ix + iy + iz;
+      int32_t motor_front_right = throttle - error_x - error_y + error_z - ix - iy + iz;
+      int32_t motor_front_left  = throttle - error_x + error_y - error_z - ix + iy - iz;
+      int32_t motor_rear_right  = throttle + error_x - error_y - error_z + ix - iy - iz;
+      #endif
+      #ifdef PROPS_OUT
+      int32_t motor_rear_left   = throttle + error_x + error_y - error_z + ix + iy - iz;
+      int32_t motor_front_right = throttle - error_x - error_y - error_z - ix - iy - iz;
+      int32_t motor_front_left  = throttle - error_x + error_y + error_z - ix + iy + iz;
+      int32_t motor_rear_right  = throttle + error_x - error_y + error_z + ix - iy + iz;
+      #endif
+
+      // Configure motor mappings
+      dshot.motor1 = motor_front_left;
+      dshot.motor2 = motor_front_right;
+      dshot.motor3 = motor_rear_left;
+      dshot.motor4 = motor_rear_right;
 
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
