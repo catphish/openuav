@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 #define BARO_REG_CTRL_REG1 0x10

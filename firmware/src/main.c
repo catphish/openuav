@@ -1,10 +1,10 @@
 #include <stm32g4xx.h>
+#include <string.h>
+#include <stdio.h>
 #include <stdint.h>
 #include "gpio.h"
 #include "usb.h"
 #include "dshot.h"
-#include <string.h>
-#include <stdio.h>
 #include "led.h"
 #include "util.h"
 #include "spi.h"
@@ -19,6 +19,7 @@
 #include "adc.h"
 #include "msp.h"
 #include "gps.h"
+#include "mag.h"
 
 // ANGLE_RATE is a measure of how fast the quad will rotate in angle mode.
 #define ANGLE_RATE 5.0f
@@ -38,6 +39,11 @@
 // AIRBOOST is a minimum throttle to be applied when the quad is armed.
 #define AIRBOOST 200
 
+// Enable magnetometer support (QMC5883L).
+#define USE_MAG
+// Enable GPS support (UBX protocol).
+#define USE_GPS
+
 void SystemInit(void) {
   clock_init();
   msleep(200);
@@ -48,15 +54,20 @@ void SystemInit(void) {
   spi_init();
   uart_init();
   gyro_init();
-  imu_init();
   baro_init();
+  #ifdef USE_MAG
   i2c_init();
+  mag_init();
+  #endif
+  imu_init();
   adc_init();
 }
 
 struct dshot_data dshot;
 struct gyro_data gyro;
 struct gyro_data accel;
+struct mag_data mag;
+float heading = 0;
 
 // Gyro integral terms.
 static float i_pitch = 0;
@@ -103,6 +114,12 @@ int main(void) {
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
 
+      #ifdef USE_MAG
+      // Update the IMU from the magnetometer.
+      mag_read(&mag);
+      heading = imu_heading(&mag);
+      #endif
+
       int32_t rotation_request_pitch = 0;
       int32_t rotation_request_roll  = 0;
       int32_t rotation_request_yaw   = 0;
@@ -116,8 +133,9 @@ int main(void) {
         // Subtract the tilt angle from the requested angle to get the angle error.
         // The units here are arbitrary, but 800 permits a good range of motion.
         int32_t angle_error_pitch = elrs_channel(1) - tilt_pitch * 800.f;
-        int32_t angle_error_roll  = elrs_channel(0) - tilt_roll * 800.f;
+        int32_t angle_error_roll  = elrs_channel(0) - tilt_roll  * 800.f;
 
+        #ifdef USE_GPS
         // See if GPS position hold is enabled and we have a lock.
         if(elrs_channel(7) > 0 && gps_lat() && gps_lon() && gps_prev_lat() && gps_prev_lon()) {
           // If we haven't already done so, record the home position.
@@ -135,13 +153,23 @@ int main(void) {
           int32_t gps_error_lon = gps_lon() - gps_zero_lon;
 
           // Apply the position and rate error to the angle.
-          angle_error_pitch += gps_error_lat/2 + gps_delta_lat*4;
-          angle_error_roll  += gps_error_lon/2 + gps_delta_lon*4;
+          int32_t angle_error_lat = gps_error_lat/2 + gps_delta_lat*5;
+          int32_t angle_error_lon = gps_error_lon/2 + gps_delta_lon*5;
+
+          // Rotate the angle error into the quad frame.
+          int32_t gps_angle_error_pitch = angle_error_lat * cosf(heading) + angle_error_lon * sinf(heading);
+          int32_t gps_angle_error_roll  = angle_error_lon * cosf(heading) - angle_error_lat * sinf(heading);
+
+          // Add the angle error to the requested angle.
+          angle_error_pitch += gps_angle_error_pitch;
+          angle_error_roll  += gps_angle_error_roll;
         } else {
           // GPS hold is disabled, reset the home position.
           gps_zero_lat = 0;
           gps_zero_lon = 0;
         }
+        #endif
+
         rotation_request_pitch = angle_error_pitch * ANGLE_RATE;
         rotation_request_roll  = angle_error_roll  * ANGLE_RATE;
         rotation_request_yaw   = elrs_channel(3)   * RATE;

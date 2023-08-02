@@ -1,3 +1,4 @@
+#pragma once
 #include <stm32g4xx.h>
 
 #define GPIO_MODE_INPUT 0

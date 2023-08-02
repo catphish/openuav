@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 void gps_process_char(uint8_t received);

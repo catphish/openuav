@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 #define GYRO_REG_CTRL1_XL 0x10
