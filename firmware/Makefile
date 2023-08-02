@@ -1,8 +1,16 @@
 # Path you your toolchain installation, leave empty if already in system PATH
-TOOLCHAIN_ROOT =
+TOOLCHAIN_ROOT = 
 
 # Path to the STM32 codebase, make sure to update the submodule to get the code
+# Needs to be specified with a slash (/) at the end!
+# Register at https://www.st.com/en/embedded-software/stm32cubeg4.html
+# and download both, version 1.5.0 as well as the patch to version 1.5.1
 VENDOR_ROOT = $(HOME)/STM32Cube/Repository/STM32Cube_FW_G4_V1.5.1/
+# VENDOR_ROOT = ../STM32Cube/STM32Cube_FW_G4_V1.5.1/
+
+# Clone from https://github.com/majbthrd/elf2dfuse, `make` to compile
+ELF2DFUSE_ROOT = $(HOME)/elf2dfuse/
+# ELF2DFUSE_ROOT = ../elf2dfuse/
 
 ###############################################################################
 
@@ -72,6 +80,13 @@ $(ALL_OBJS):
 clean:
 	@rm -f $(ALL_OBJS) $(TARGET)
 
-flash: $(TARGET)
+# Flash using an STLink
+flash-with-programmer: $(TARGET)
 	arm-none-eabi-objcopy -O binary $(TARGET) $(BINARY)
 	st-flash --reset write $(BINARY) 0x8000000
+
+# Flash over USB (push DFU button while attaching power)
+flash: $(TARGET)
+	arm-none-eabi-objcopy -O binary $(TARGET) $(BINARY)
+	$(ELF2DFUSE_ROOT)/elf2dfuse main.elf main.dfu
+	dfu-util -D main.dfu -a0
