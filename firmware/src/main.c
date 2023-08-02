@@ -18,22 +18,23 @@
 #include "i2c.h"
 #include "adc.h"
 #include "msp.h"
+#include "gps.h"
 
 // ANGLE_RATE is a measure of how fast the quad will rotate in angle mode.
 #define ANGLE_RATE 5.0f
 // RATE is a measure of how fast the quad will rotate in rate mode.
 #define RATE 6.0f
 
-// These are regulat PI gains
-#define RATE_P 0.1f
-#define RATE_I 0.0001f
+// These are regular PI gains
+#define RATE_P 0.25f
+#define RATE_I 0.0002f
 
 // These are the PI gains for the Z axis.
-#define RATE_ZP 0.1f
-#define RATE_ZI 0.0001f
+#define RATE_ZP 1.0f
+#define RATE_ZI 0.0008f
 
 // THROTGAIN is a throttle multiplier. Useful values are between 0.5 and 1.0
-#define THROTGAIN 0.5f
+#define THROTGAIN 0.8f
 // AIRBOOST is a minimum throttle to be applied when the quad is armed.
 #define AIRBOOST 200
 
@@ -61,6 +62,9 @@ struct gyro_data accel;
 static float i_pitch = 0;
 static float i_roll  = 0;
 static float i_yaw   = 0;
+
+int32_t gps_zero_lat = 0;
+int32_t gps_zero_lon = 0;
 
 char osd_mv[10];
 
@@ -113,6 +117,31 @@ int main(void) {
         // The units here are arbitrary, but 800 permits a good range of motion.
         int32_t angle_error_pitch = elrs_channel(1) - tilt_pitch * 800.f;
         int32_t angle_error_roll  = elrs_channel(0) - tilt_roll * 800.f;
+
+        // See if GPS position hold is enabled and we have a lock.
+        if(elrs_channel(7) > 0 && gps_lat() && gps_lon() && gps_prev_lat() && gps_prev_lon()) {
+          // If we haven't already done so, record the home position.
+          if(!gps_zero_lat || !gps_zero_lon) {
+            gps_zero_lat = gps_lat();
+            gps_zero_lon = gps_lon();
+          }
+
+          // Calculate the distance travelled since the last tick.
+          int32_t gps_delta_lat = gps_lat() - gps_prev_lat();
+          int32_t gps_delta_lon = gps_lon() - gps_prev_lon();
+
+          // Calculate the absolute position error.
+          int32_t gps_error_lat = gps_lat() - gps_zero_lat;
+          int32_t gps_error_lon = gps_lon() - gps_zero_lon;
+
+          // Apply the position and rate error to the angle.
+          angle_error_pitch += gps_error_lat/2 + gps_delta_lat*4;
+          angle_error_roll  += gps_error_lon/2 + gps_delta_lon*4;
+        } else {
+          // GPS hold is disabled, reset the home position.
+          gps_zero_lat = 0;
+          gps_zero_lon = 0;
+        }
         rotation_request_pitch = angle_error_pitch * ANGLE_RATE;
         rotation_request_roll  = angle_error_roll  * ANGLE_RATE;
         rotation_request_yaw   = elrs_channel(3)   * RATE;
@@ -121,6 +150,9 @@ int main(void) {
         rotation_request_pitch = elrs_channel(1) * RATE;
         rotation_request_roll  = elrs_channel(0) * RATE;
         rotation_request_yaw   = elrs_channel(3) * RATE;
+        // GPS hold is always disabled in rate mode. Reset the home position.
+        gps_zero_lat = 0;
+        gps_zero_lon = 0;
       }
 
       // Calculate the error in angular velocity by adding the (nagative) gyro

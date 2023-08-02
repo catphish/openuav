@@ -4,6 +4,7 @@
 #include "elrs.h"
 #include "usb.h"
 #include "msp.h"
+#include "gps.h"
 
 volatile uint8_t tx_head = 0;
 volatile uint8_t tx_tail = 0;
@@ -73,6 +74,26 @@ void uart_init() {
     USART3->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_TE | USART_CR1_RXNEIE;
     // Enable USART3 interrupt in NVIC
     NVIC_EnableIRQ(USART3_IRQn);
+
+    // Enable LPUART1 clock
+    RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
+    // Enable GPIOB clock
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+    // Configure PB10 as LPUART1_RX
+    gpio_pin_mode(GPIOB, 10, GPIO_MODE_AF, 8, GPIO_PUPD_NONE, 0);
+    // Configure PB11 as LPUART1_TX
+    gpio_pin_mode(GPIOB, 11, GPIO_MODE_AF, 8, GPIO_PUPD_NONE, 0);
+    // Configure LPUART1 for 115200 baud for GPS (160MHz * 256 / 115200 = 355555.55556)
+    LPUART1->CR1 = 0;
+    LPUART1->CR2 = 0;
+    LPUART1->CR3 = 0;
+    LPUART1->BRR = 355556;
+    // Enable LPUART1 receiver
+    LPUART1->CR1 = USART_CR1_UE | USART_CR1_RE;
+    // Enable LPUART1 interrupt
+    LPUART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE;
+    // Enable LPUART1 interrupt in NVIC
+    NVIC_EnableIRQ(LPUART1_IRQn);
 }
 
 // UART1 interrupt handler
@@ -94,9 +115,22 @@ void USART3_IRQHandler(void) {
   if (USART3->ISR & USART_ISR_RXNE) {
     // Read the received byte
     uint8_t received = USART3->RDR;
-    // Dump the byte to USB as hex
+    // Send the character to the MSP module for processing
     msp_process_char(received);
   }
   // Clear the ORE interrupt flag
   USART3->ICR = USART_ICR_ORECF;
+}
+
+// LPUART1 interrupt handler
+void LPUART1_IRQHandler(void) {
+  // If the interrupt was triggered by a received byte
+  if (LPUART1->ISR & USART_ISR_RXNE) {
+    // Read the received byte
+    uint8_t received = LPUART1->RDR;
+    // Dump the byte to USB as hex
+    gps_process_char(received);
+  }
+  // Clear the ORE interrupt flag
+  LPUART1->ICR = USART_ICR_ORECF;
 }
