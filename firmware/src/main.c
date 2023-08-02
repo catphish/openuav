@@ -19,14 +19,23 @@
 #include "adc.h"
 #include "msp.h"
 
+// ANGLE_RATE is a measure of how fast the quad will rotate in angle mode.
 #define ANGLE_RATE 5.0f
+// RATE is a measure of how fast the quad will rotate in rate mode.
 #define RATE 6.0f
 
+// These are regulat PI gains
 #define RATE_P 0.1f
 #define RATE_I 0.0001f
 
+// These are the PI gains for the Z axis.
 #define RATE_ZP 0.1f
 #define RATE_ZI 0.0001f
+
+// THROTGAIN is a throttle multiplier. Useful values are between 0.5 and 1.0
+#define THROTGAIN 0.5f
+// AIRBOOST is a minimum throttle to be applied when the quad is armed.
+#define AIRBOOST 200
 
 void SystemInit(void) {
   clock_init();
@@ -49,9 +58,9 @@ struct gyro_data gyro;
 struct gyro_data accel;
 
 // Gyro integral terms.
-static float ix = 0;
-static float iy = 0;
-static float iz = 0;
+static float i_pitch = 0;
+static float i_roll  = 0;
+static float i_yaw   = 0;
 
 char osd_mv[10];
 
@@ -71,9 +80,9 @@ int main(void) {
       else {
         // If we are not armed, reset the integral terms.
         dshot.armed = 0;
-        ix = 0;
-        iy = 0;
-        iz = 0;
+        i_pitch = 0;
+        i_roll  = 0;
+        i_yaw   = 0;
         // Recalibrate the IMU.
         gyro_zero();
         imu_init();
@@ -90,61 +99,61 @@ int main(void) {
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
 
-      // Get the current X and Y tilt angles, and the z rotation offset from the IMU.
-      // TODO: This should be broken out into two functions, one for tilt and one for rotation.
-      float x_tilt, y_tilt;
-      imu_get_xy_tilt(&x_tilt, &y_tilt);
-
-      int32_t rotation_request_x = 0;
-      int32_t rotation_request_y = 0;
-      int32_t rotation_request_z = 0;
+      int32_t rotation_request_pitch = 0;
+      int32_t rotation_request_roll  = 0;
+      int32_t rotation_request_yaw   = 0;
 
       if(elrs_channel(5) > 0) {
         // Angle mode
+        // Get the current X and Y tilt angles, and the z rotation offset from the IMU.
+        float tilt_pitch, tilt_roll;
+        imu_get_xy_tilt(&tilt_pitch, &tilt_roll);
+
         // Subtract the tilt angle from the requested angle to get the angle error.
         // The units here are arbitrary, but 800 permits a good range of motion.
-        int32_t angle_error_x = elrs_channel(1) - x_tilt * 800.f;
-        int32_t angle_error_y = elrs_channel(0) - y_tilt * 800.f;
-        rotation_request_x = angle_error_x * ANGLE_RATE;
-        rotation_request_y = angle_error_y * ANGLE_RATE;
-        rotation_request_z = elrs_channel(3) * RATE;
+        int32_t angle_error_pitch = elrs_channel(1) - tilt_pitch * 800.f;
+        int32_t angle_error_roll  = elrs_channel(0) - tilt_roll * 800.f;
+        rotation_request_pitch = angle_error_pitch * ANGLE_RATE;
+        rotation_request_roll  = angle_error_roll  * ANGLE_RATE;
+        rotation_request_yaw   = elrs_channel(3)   * RATE;
       } else {
         // Rate mode. Get angle requests from the controller.
-        rotation_request_x = elrs_channel(1) * RATE;
-        rotation_request_y = elrs_channel(0) * RATE;
-        rotation_request_z = elrs_channel(3) * RATE;
+        rotation_request_pitch = elrs_channel(1) * RATE;
+        rotation_request_roll  = elrs_channel(0) * RATE;
+        rotation_request_yaw   = elrs_channel(3) * RATE;
       }
 
       // Calculate the error in angular velocity by adding the (nagative) gyro
       // readings from the requested angular velocity.
-      int32_t error_x = RATE_P * (gyro.x + rotation_request_x);
-      int32_t error_y = RATE_P * (gyro.y + rotation_request_y);
-      int32_t error_z = RATE_ZP * (gyro.z + rotation_request_z);
+      int32_t error_pitch = RATE_P  * (gyro.x + rotation_request_pitch);
+      int32_t error_roll  = RATE_P  * (gyro.y + rotation_request_roll);
+      int32_t error_yaw   = RATE_ZP * (gyro.z + rotation_request_yaw);
 
       // Integrate the error in each axis.
-      ix += RATE_I * (gyro.x + rotation_request_x);
-      iy += RATE_I * (gyro.y + rotation_request_y);
-      iz += RATE_ZI * (gyro.z + rotation_request_z);
+      i_pitch += RATE_I  * (gyro.x + rotation_request_pitch);
+      i_roll  += RATE_I  * (gyro.y + rotation_request_roll);
+      i_yaw   += RATE_ZI * (gyro.z + rotation_request_yaw);
 
       // Set the throttle. This will ultimately use the controller input, altitude, and attitude.
       // Currently I use 50% throttle and add 200 for "air mode".
-      int32_t throttle = (elrs_channel(2) + 820)/2 + 200;
+      int32_t throttle = THROTGAIN * (elrs_channel(2) + 820) + AIRBOOST;
 
       // TODO: This should be configurable.
       #define PROPS_IN
 
       // For each motor, add all appropriate terms together to get the final output.
       #ifdef PROPS_IN
-      int32_t motor_rear_left   = throttle + error_x + error_y + error_z + ix + iy + iz;
-      int32_t motor_front_right = throttle - error_x - error_y + error_z - ix - iy + iz;
-      int32_t motor_front_left  = throttle - error_x + error_y - error_z - ix + iy - iz;
-      int32_t motor_rear_right  = throttle + error_x - error_y - error_z + ix - iy - iz;
+      int32_t motor_rear_left   = throttle + error_pitch + error_roll + error_yaw + i_pitch + i_roll + i_yaw;
+      int32_t motor_front_right = throttle - error_pitch - error_roll + error_yaw - i_pitch - i_roll + i_yaw;
+      int32_t motor_front_left  = throttle - error_pitch + error_roll - error_yaw - i_pitch + i_roll - i_yaw;
+      int32_t motor_rear_right  = throttle + error_pitch - error_roll - error_yaw + i_pitch - i_roll - i_yaw;
       #endif
+
       #ifdef PROPS_OUT
-      int32_t motor_rear_left   = throttle + error_x + error_y - error_z + ix + iy - iz;
-      int32_t motor_front_right = throttle - error_x - error_y - error_z - ix - iy - iz;
-      int32_t motor_front_left  = throttle - error_x + error_y + error_z - ix + iy + iz;
-      int32_t motor_rear_right  = throttle + error_x - error_y + error_z + ix - iy + iz;
+      int32_t motor_rear_left   = throttle + error_pitch + error_roll - error_yaw + i_pitch + i_roll - i_yaw;
+      int32_t motor_front_right = throttle - error_pitch - error_roll - error_yaw - i_pitch - i_roll - i_yaw;
+      int32_t motor_front_left  = throttle - error_pitch + error_roll + error_yaw - i_pitch + i_roll + i_yaw;
+      int32_t motor_rear_right  = throttle + error_pitch - error_roll + error_yaw + i_pitch - i_roll + i_yaw;
       #endif
 
       // Configure motor mappings

@@ -83,7 +83,7 @@ void imu_update_from_accel(struct gyro_data *accel)
     Quaternion_normalize(&q, &q);
 }
 
-void imu_get_xy_tilt(float *x, float *y)
+void imu_get_xy_tilt(float *pitch, float *roll)
 {
     // Create a vector to hold the current orientation.
     float orientation_vector[3];
@@ -101,6 +101,6 @@ void imu_get_xy_tilt(float *x, float *y)
 
     // Multiply the x and y components of the rotation axis by the angle
     // to get the magnitude of tilt in each axis.
-    *x = orientation_correction_axes[0] * angle;
-    *y = orientation_correction_axes[1] * angle;
+    *pitch = orientation_correction_axes[0] * angle;
+    *roll  = orientation_correction_axes[1] * angle;
 }
