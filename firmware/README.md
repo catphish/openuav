@@ -32,3 +32,17 @@ sudo pacman -Sy arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-newlib \
 # Basic Tuning Guide
 
 Starting from the default values in `firmware/src/main.c`, increase _P_ (`RATE_P`), and keep increasing it until either (1) it feels right, in which case, stop here. Or (2), it starts to oscillate fast, in which case back it off. Once you've done that, try flying in some wind. If it drifts slowly in the wind, increase _I_ (`RATE_I`). Unstable behaviour in wind tends to mean you just have _P_ set way too low. In other words, if it feels like wind knocks it off course suddenly, that's P, and if it's a slow, annoying, but controllable drift, that's I. Should you experience left-yaw without stick input (on `PROPS_IN`, that is) on punchouts, try increasing vertical _P_ (`RATE_ZP`) and _I_ (`RATE_ZI`).
+
+# Tuning Examples
+
+## TBS Source One v5 - 2206 Motors at 4S
+```
+#define ANGLE_RATE 7.0f
+#define RATE 7.0f
+#define RATE_P 0.12f
+#define RATE_I 0.0002f
+#define RATE_ZP 0.12f
+#define RATE_ZI 0.0004f
+#define THROTGAIN 0.8f
+#define AIRBOOST 200
+```

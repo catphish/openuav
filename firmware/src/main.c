@@ -23,11 +23,11 @@
 #define RATE 7.0f
 
 // These are regular PI gains
-#define RATE_P 0.15f
+#define RATE_P 0.12f
 #define RATE_I 0.0002f
 
 // These are the PI gains for the Z axis.
-#define RATE_ZP 0.3f
+#define RATE_ZP 0.12f
 #define RATE_ZI 0.0004f
 
 // THROTGAIN is a throttle multiplier. Useful values are between 0.5 and 1.0
