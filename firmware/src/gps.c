@@ -6,6 +6,8 @@ int32_t lat;
 int32_t lon;
 int32_t prev_lat;
 int32_t prev_lon;
+float filtered_lat_d;
+float filtered_lon_d;
 
 void gps_process_char(uint8_t received) {
   static uint8_t index = 0;
@@ -43,6 +45,10 @@ void gps_process_char(uint8_t received) {
       prev_lon = lon;
       lon = (int32_t)data[24] | (int32_t)data[25] << 8 | (int32_t)data[26] << 16 | (int32_t)data[27] << 24;
       lat = (int32_t)data[28] | (int32_t)data[29] << 8 | (int32_t)data[30] << 16 | (int32_t)data[31] << 24;
+      if(prev_lat == 0 || prev_lon == 0) {
+        prev_lat = lat;
+        prev_lon = lon;
+      }
       led0_on();
     } else {
       lon = 0;
@@ -54,6 +60,15 @@ void gps_process_char(uint8_t received) {
   }
 }
 
+void gps_filter() {
+  if(lat == 0 || lon == 0) {
+    return;
+  }
+
+  filtered_lat_d = filtered_lat_d * 0.99 + (float)(lat - prev_lat) * 0.01f;
+  filtered_lon_d = filtered_lon_d * 0.99 + (float)(lon - prev_lon) * 0.01f;
+}
+
 int32_t gps_lat() {
   return lat;
 }
@@ -61,9 +76,9 @@ int32_t gps_lon() {
   return lon;
 }
 
-int32_t gps_prev_lat() {
-  return prev_lat;
+float gps_lat_d() {
+  return filtered_lat_d;
 }
-int32_t gps_prev_lon() {
-  return prev_lon;
+float gps_lon_d() {
+  return filtered_lon_d;
 }

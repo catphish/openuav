@@ -43,6 +43,8 @@
 #define USE_MAG
 // Enable GPS support (UBX protocol).
 #define USE_GPS
+// Enable barometer for altitude hold.
+#define USE_BARO
 
 void SystemInit(void) {
   clock_init();
@@ -54,7 +56,9 @@ void SystemInit(void) {
   spi_init();
   uart_init();
   gyro_init();
+  #ifdef USE_BARO
   baro_init();
+  #endif
   #ifdef USE_MAG
   i2c_init();
   mag_init();
@@ -76,6 +80,9 @@ static float i_yaw   = 0;
 
 int32_t gps_zero_lat = 0;
 int32_t gps_zero_lon = 0;
+uint32_t loop_count = 0;
+int32_t target_pressure = 0;
+int32_t prev_pressure = 0;
 
 char osd_mv[10];
 
@@ -89,6 +96,8 @@ int main(void) {
     msp_send_response();
 
     if(gyro_ready()) {
+      // Increment the loop counter.
+      loop_count++;
       // If we have valid ELRS data, allow the ESCs to be armed.
       if(elrs_valid() && elrs_channel(4) > 0)
         dshot.armed = 1;
@@ -124,8 +133,27 @@ int main(void) {
       int32_t rotation_request_roll  = 0;
       int32_t rotation_request_yaw   = 0;
 
+      // Set the throttle. This will ultimately use the controller input, altitude, and attitude.
+      // Currently I use 50% throttle and add 200 for "air mode".
+      int32_t throttle = THROTGAIN * (elrs_channel(2) + 820) + AIRBOOST;
+
       if(elrs_channel(5) > 0) {
         // Angle mode
+
+        #ifdef USE_BARO
+        // Fetch barometer data.
+        int32_t pressure = baro_read_pressure();
+        // Set the pressure at ground level.
+        if(target_pressure == 0) target_pressure = pressure;
+        // Calculate a P error term
+        int32_t pressure_error = pressure - target_pressure;
+        throttle += pressure_error / 10;
+        // Calculate a D term
+        int32_t pressure_d = pressure - prev_pressure;
+        throttle += pressure_d * 10;
+        prev_pressure = pressure;
+        #endif
+
         // Get the current X and Y tilt angles, and the z rotation offset from the IMU.
         float tilt_pitch, tilt_roll;
         imu_get_xy_tilt(&tilt_pitch, &tilt_roll);
@@ -136,33 +164,41 @@ int main(void) {
         int32_t angle_error_roll  = elrs_channel(0) - tilt_roll  * 800.f;
 
         #ifdef USE_GPS
+        gps_filter();
         // See if GPS position hold is enabled and we have a lock.
-        if(elrs_channel(7) > 0 && gps_lat() && gps_lon() && gps_prev_lat() && gps_prev_lon()) {
+        if(elrs_channel(7) > 0 && gps_lat() && gps_lon()) {
           // If we haven't already done so, record the home position.
           if(!gps_zero_lat || !gps_zero_lon) {
             gps_zero_lat = gps_lat();
             gps_zero_lon = gps_lon();
           }
-
+          // If we see control inputs, reset the counter to disable GPS hold and reset the home position after some time.
+          if(elrs_channel(0) > 20 || elrs_channel(0) < -20 || elrs_channel(1) > 20 || elrs_channel(1) < -20) {
+            loop_count = 0;
+          }
+          if(loop_count < 800) {
+            // If we have just enabled GPS hold, reset the home position.
+            gps_zero_lat = gps_lat();
+            gps_zero_lon = gps_lon();
+          }
+          
           // Calculate the absolute position error (GPS P term).
-          int32_t gps_error_lat = gps_lat() - gps_zero_lat;
-          int32_t gps_error_lon = gps_lon() - gps_zero_lon;
+          float gps_error_lat = gps_lat() - gps_zero_lat;
+          float gps_error_lon = 0.65f * (gps_lon() - gps_zero_lon);
           // Scale the P term.
-          gps_error_lat/= 2;
-          gps_error_lon/= 2;
-          // Limit the P term.
-          // TODO: don't limit these independently, limit the total error vector.
-          if(gps_error_lat > 250) gps_error_lat = 250;
-          if(gps_error_lat < -250) gps_error_lat = -250;
-          if(gps_error_lon > 250) gps_error_lon = 250;
-          if(gps_error_lon < -250) gps_error_lon = -250;
+          gps_error_lat *= 0.4f;
+          gps_error_lon *= 0.4f;
 
-          // Calculate the distance travelled since the last tick (GPS D term).
-          int32_t gps_delta_lat = gps_lat() - gps_prev_lat();
-          int32_t gps_delta_lon = gps_lon() - gps_prev_lon();
+          // Limit the P term.
+          float magnitude = sqrtf(gps_error_lat * gps_error_lat + gps_error_lon * gps_error_lon);
+          if(magnitude > 250.f) {
+            gps_error_lat = gps_error_lat * 250.f / magnitude;
+            gps_error_lon = gps_error_lon * 250.f / magnitude;
+          }
+
           // Scale the D term
-          gps_delta_lat *= 8;
-          gps_delta_lon *= 8;
+          float gps_delta_lat = gps_lat_d() * 10.f;
+          float gps_delta_lon = gps_lon_d() * 10.f * 0.65f;
 
           // Combine the P and D terms to create a correction (ground frame).
           int32_t angle_error_lat = gps_error_lat + gps_delta_lat;
@@ -205,10 +241,6 @@ int main(void) {
       i_pitch += RATE_I  * (gyro.x + rotation_request_pitch);
       i_roll  += RATE_I  * (gyro.y + rotation_request_roll);
       i_yaw   += RATE_ZI * (gyro.z + rotation_request_yaw);
-
-      // Set the throttle. This will ultimately use the controller input, altitude, and attitude.
-      // Currently I use 50% throttle and add 200 for "air mode".
-      int32_t throttle = THROTGAIN * (elrs_channel(2) + 820) + AIRBOOST;
 
       // TODO: This should be configurable.
       #define PROPS_IN

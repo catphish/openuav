@@ -4,5 +4,6 @@
 void gps_process_char(uint8_t received);
 int32_t gps_lat();
 int32_t gps_lon();
-int32_t gps_prev_lat();
-int32_t gps_prev_lon();
+float gps_lat_d();
+float gps_lon_d();
+void gps_filter();
