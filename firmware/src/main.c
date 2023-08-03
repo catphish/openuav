@@ -18,17 +18,17 @@
 #include "msp.h"
 
 // ANGLE_RATE is a measure of how fast the quad will rotate in angle mode.
-#define ANGLE_RATE 5.0f
+#define ANGLE_RATE 7.0f
 // RATE is a measure of how fast the quad will rotate in rate mode.
-#define RATE 6.0f
+#define RATE 7.0f
 
 // These are regular PI gains
-#define RATE_P 0.25f
+#define RATE_P 0.15f
 #define RATE_I 0.0002f
 
 // These are the PI gains for the Z axis.
-#define RATE_ZP 1.0f
-#define RATE_ZI 0.0008f
+#define RATE_ZP 0.3f
+#define RATE_ZI 0.0004f
 
 // THROTGAIN is a throttle multiplier. Useful values are between 0.5 and 1.0
 #define THROTGAIN 0.8f
@@ -135,7 +135,7 @@ int main(void) {
       i_yaw   += RATE_ZI * (gyro.z + rotation_request_yaw);
 
       // TODO: This should be configurable.
-      #define PROPS_IN
+      #define PROPS_OUT
 
       // For each motor, add all appropriate terms together to get the final output.
       #ifdef PROPS_IN
@@ -153,10 +153,10 @@ int main(void) {
       #endif
 
       // Configure motor mappings
-      dshot.motor1 = motor_front_left;
-      dshot.motor2 = motor_front_right;
-      dshot.motor3 = motor_rear_left;
-      dshot.motor4 = motor_rear_right;
+      dshot.motor1 = motor_rear_left;
+      dshot.motor2 = motor_front_left;
+      dshot.motor3 = motor_rear_right;
+      dshot.motor4 = motor_front_right;
 
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
