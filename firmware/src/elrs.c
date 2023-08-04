@@ -3,12 +3,26 @@
 
 int channel[8];
 int channels_valid = 0;
+uint8_t crc;
+
+// Append a byte to a CRC-8
+void crc8_append(uint8_t data) {
+  crc ^= data;
+  for (uint8_t i = 0; i < 8; i++) {
+    if (crc & 0x80) {
+      crc = (crc << 1) ^ 0xD5;
+    } else {
+      crc <<= 1;
+    }
+  }
+}
 
 void elrs_process_char(uint8_t received) {
   static uint8_t buffer[64];
   static uint8_t buffer_index = 0;
   // If the buffer is empty, wait for an address byte
   if (buffer_index == 0) {
+    crc = 0;
     if (received == CRSF_ADDRESS_FLIGHT_CONTROLLER) {
       buffer[buffer_index++] = received;
     }
@@ -19,9 +33,11 @@ void elrs_process_char(uint8_t received) {
       buffer[buffer_index++] = received;
     }
   } else if (buffer_index < buffer[1] + 1) {
+    crc8_append(received);
     buffer[buffer_index++] = received;
   } else {
-    if (buffer[2] == CRSF_FRAMETYPE_RC_CHANNELS_PACKED) {
+    crc8_append(received);
+    if (buffer[2] == CRSF_FRAMETYPE_RC_CHANNELS_PACKED && crc == 0) {
       struct crsf_channels_s *channels = (struct crsf_channels_s *)&buffer[3];
       channel[0] = (int)channels->ch0 - 992;
       channel[1] = (int)channels->ch1 - 992;

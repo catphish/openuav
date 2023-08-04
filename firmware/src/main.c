@@ -53,12 +53,15 @@ struct dshot_data dshot;
 struct gyro_data gyro;
 struct gyro_data accel;
 
+uint8_t arming_allowed = 0;
+
 // Gyro integral terms.
 static float i_pitch = 0;
 static float i_roll  = 0;
 static float i_yaw   = 0;
 
 int main(void) {
+  led1_on();
   while(1) {
     // Poll the USB peripherand to transmit and receive data.
     usb_main();
@@ -68,10 +71,16 @@ int main(void) {
     msp_send_response();
 
     if(gyro_ready()) {
+      // If we're disarmed and we have valid ELRS data, allow the ESCs to be armed.
+      if(elrs_valid() && elrs_channel(4) < 0) {
+        arming_allowed = 1;
+      }
+
       // If we have valid ELRS data, allow the ESCs to be armed.
-      if(elrs_valid() && elrs_channel(4) > 0)
+      if(elrs_valid() && elrs_channel(4) > 0 && arming_allowed) {
         dshot.armed = 1;
-      else {
+        led0_on();
+      } else {
         // If we are not armed, reset the integral terms.
         dshot.armed = 0;
         i_pitch = 0;
@@ -80,6 +89,7 @@ int main(void) {
         // Recalibrate the IMU.
         gyro_zero();
         imu_init();
+        led0_off();
       }
 
       // Call elrs_tick() regularly to allow a fialsafe timeout.
