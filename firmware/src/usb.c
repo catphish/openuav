@@ -1,12 +1,13 @@
 #include <stm32g4xx.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
 #include "usb_private.h"
 #include "usb.h"
 #include "gpio.h"
 #include "util.h"
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
 #include "led.h"
 
 uint8_t pending_addr = 0;
@@ -99,10 +100,10 @@ uint32_t ep_rx_ready(uint32_t ep) {
 }
 
 // Read 64 bytes from an endpoint buffer.
-void usb_read(uint8_t ep, char * buffer) {
+uint8_t usb_read(uint8_t ep, char * buffer) {
   ep &= 0x7f;
-  while(!ep_rx_ready(ep));
   uint32_t rxBufferAddr = USBBUFTABLE->ep_desc[ep].rxBufferAddr;
+  uint8_t len = USBBUFTABLE->ep_desc[ep].rxBufferCount & 0x3ff;
   if(buffer) {
     for(int n=0; n<64; n+=2) {
       *(uint16_t *)(buffer + n) = *(uint16_t *)(USBBUFRAW+rxBufferAddr+n);
@@ -112,6 +113,7 @@ void usb_read(uint8_t ep, char * buffer) {
   USB_EPR(0) &= 0x078f;
   // RX NAK->VALID, Clear CTR
   USB_EPR(ep) = (USB_EPR(ep) & 0x370f) ^ 0x3000;
+  return len;
 }
 
 // Write data to an endpoint buffer.
@@ -152,6 +154,7 @@ void usb_reset() {
 
   buffer_pointer = 64;
   usb_configure_ep(0x00, 0x01);
+  usb_configure_ep(0x01, 0x10);
   usb_configure_ep(0x81, 0x10);
   USB->BTABLE = 0;
 
@@ -203,6 +206,46 @@ void usb_handle_ep0() {
   }
 }
 
+void usb_handle_ep1() {
+  char packet[64];
+  uint8_t len = usb_read(1, packet);
+  if(len) {
+    if(packet[0] == 'p') {
+      uint8_t setting1 = *(volatile uint32_t *)(FLASH_BASE + 31 * 0x800);
+      usb_printf("Setting 1: %d\n", setting1);
+    } else if(packet[0] == 's') {
+      uint8_t setting1 = atoi(packet+1);
+      __disable_irq();
+      // Wait for flash to be ready
+      while(FLASH->SR & FLASH_SR_BSY);
+      // Unlock flash memory
+      if(FLASH->CR & FLASH_CR_LOCK) {
+        FLASH->KEYR = 0x45670123U;
+        FLASH->KEYR = 0xCDEF89ABU;
+      }
+      // Wait for flash to be ready
+      while(FLASH->SR & FLASH_SR_BSY);
+      // Erase page 31
+      FLASH->CR |= FLASH_CR_PER;
+      FLASH->CR |= (31 << FLASH_CR_PNB_Pos);
+      FLASH->CR |= FLASH_CR_STRT;
+      // Wait for flash to be ready
+      while(FLASH->SR & FLASH_SR_BSY);
+      // Write setting 1
+      FLASH->CR &= ~FLASH_CR_PER;
+      FLASH->CR |= FLASH_CR_PG;
+      *(volatile uint32_t *)(FLASH_BASE + 31 * 0x800) = setting1;
+      *(volatile uint32_t *)(FLASH_BASE + 31 * 0x800 + 4) = setting1;
+      // Wait for flash to be ready
+      while(FLASH->SR & FLASH_SR_BSY);
+      // Lock flash memory
+      FLASH->CR |= FLASH_CR_LOCK;
+      __enable_irq();
+      usb_printf("Setting 1 saved\n");
+    }
+  }
+}
+
 void usb_main() {
   // USB reset
   if(USB->ISTR & USB_ISTR_RESET) {
@@ -212,6 +255,11 @@ void usb_main() {
   if(USB_EPR(0) & (1<<15)) {
     // EP0 RX
     usb_handle_ep0();
+  }
+
+  if(USB_EPR(1) & (1<<15)) {
+    // EP1 RX
+    usb_handle_ep1();
   }
 
   if(USB_EPR(0) & (1<<7)) {

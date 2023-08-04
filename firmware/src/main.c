@@ -20,6 +20,9 @@
 // ANGLE_RATE is a measure of how fast the quad will rotate in angle mode.
 #define ANGLE_RATE 7.0f
 // RATE is a measure of how fast the quad will rotate in rate mode.
+// Rates are currently linear only.
+// A value of 1.0 represents 57.4 degrees per second.
+// A value of 7.0 represents 402 degrees per second.
 #define RATE 7.0f
 
 // These are regular PI gains
