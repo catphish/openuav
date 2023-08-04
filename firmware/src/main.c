@@ -18,16 +18,16 @@
 #include "msp.h"
 
 // ANGLE_RATE is a measure of how fast the quad will rotate in angle mode.
-#define ANGLE_RATE 7.0f
+#define ANGLE_RATE 8.0f
 // RATE is a measure of how fast the quad will rotate in rate mode.
 // Rates are currently linear only.
 // A value of 1.0 represents 57.4 degrees per second.
-// A value of 7.0 represents 402 degrees per second.
-#define RATE 7.0f
+#define RATE 8.0f
 
 // These are regular PI gains
-#define RATE_P 0.1f
+#define RATE_P 0.2f
 #define RATE_I 0.0001f
+#define RATE_D 0.05f
 
 // These are the PI gains for the Z axis.
 #define RATE_ZP 0.1f
@@ -55,6 +55,7 @@ void SystemInit(void) {
 struct dshot_data dshot;
 struct gyro_data gyro;
 struct gyro_data accel;
+struct gyro_data prev_gyro;
 
 uint8_t arming_allowed = 0;
 
@@ -147,22 +148,28 @@ int main(void) {
       i_roll  += RATE_I  * (gyro.y + rotation_request_roll);
       i_yaw   += RATE_ZI * (gyro.z + rotation_request_yaw);
 
+      // Calculate the difference between the current and previous gyro readings.
+      int32_t d_pitch = RATE_D * (gyro.x - prev_gyro.x);
+      int32_t d_roll  = RATE_D * (gyro.y - prev_gyro.y);
+      // Store the current gyro readings for the next loop.
+      prev_gyro = gyro;
+
       // TODO: This should be configurable.
       #define PROPS_OUT
 
       // For each motor, add all appropriate terms together to get the final output.
       #ifdef PROPS_IN
-      int32_t motor_rear_left   = throttle + error_pitch + error_roll + error_yaw + i_pitch + i_roll + i_yaw;
-      int32_t motor_front_right = throttle - error_pitch - error_roll + error_yaw - i_pitch - i_roll + i_yaw;
-      int32_t motor_front_left  = throttle - error_pitch + error_roll - error_yaw - i_pitch + i_roll - i_yaw;
-      int32_t motor_rear_right  = throttle + error_pitch - error_roll - error_yaw + i_pitch - i_roll - i_yaw;
+      int32_t motor_rear_left   = throttle + error_pitch + error_roll + error_yaw + i_pitch + i_roll + i_yaw + d_pitch + d_roll;
+      int32_t motor_front_right = throttle - error_pitch - error_roll + error_yaw - i_pitch - i_roll + i_yaw - d_pitch - d_roll;
+      int32_t motor_front_left  = throttle - error_pitch + error_roll - error_yaw - i_pitch + i_roll - i_yaw - d_pitch + d_roll;
+      int32_t motor_rear_right  = throttle + error_pitch - error_roll - error_yaw + i_pitch - i_roll - i_yaw + d_pitch - d_roll;
       #endif
 
       #ifdef PROPS_OUT
-      int32_t motor_rear_left   = throttle + error_pitch + error_roll - error_yaw + i_pitch + i_roll - i_yaw;
-      int32_t motor_front_right = throttle - error_pitch - error_roll - error_yaw - i_pitch - i_roll - i_yaw;
-      int32_t motor_front_left  = throttle - error_pitch + error_roll + error_yaw - i_pitch + i_roll + i_yaw;
-      int32_t motor_rear_right  = throttle + error_pitch - error_roll + error_yaw + i_pitch - i_roll + i_yaw;
+      int32_t motor_rear_left   = throttle + error_pitch + error_roll - error_yaw + i_pitch + i_roll - i_yaw + d_pitch + d_roll;
+      int32_t motor_front_right = throttle - error_pitch - error_roll - error_yaw - i_pitch - i_roll - i_yaw - d_pitch - d_roll;
+      int32_t motor_front_left  = throttle - error_pitch + error_roll + error_yaw - i_pitch + i_roll + i_yaw - d_pitch + d_roll;
+      int32_t motor_rear_right  = throttle + error_pitch - error_roll + error_yaw + i_pitch - i_roll + i_yaw + d_pitch - d_roll;
       #endif
 
       // Configure motor mappings
