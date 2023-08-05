@@ -16,6 +16,7 @@
 #include "quaternion.h"
 #include "adc.h"
 #include "msp.h"
+#include "settings.h"
 
 // ANGLE_RATE is a measure of how fast the quad will rotate in angle mode.
 #define ANGLE_RATE 8.0f
@@ -66,6 +67,7 @@ static float i_yaw   = 0;
 
 int main(void) {
   led1_on();
+  settings_load();
   while(1) {
     // Poll the USB peripherand to transmit and receive data.
     usb_main();

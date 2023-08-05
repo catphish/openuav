@@ -9,6 +9,7 @@
 #include "gpio.h"
 #include "util.h"
 #include "led.h"
+#include "settings.h"
 
 uint8_t pending_addr = 0;
 uint32_t buffer_pointer;
@@ -211,37 +212,7 @@ void usb_handle_ep1() {
   uint8_t len = usb_read(1, packet);
   if(len) {
     if(packet[0] == 'p') {
-      uint8_t setting1 = *(volatile uint32_t *)(FLASH_BASE + 31 * 0x800);
-      usb_printf("Setting 1: %d\n", setting1);
-    } else if(packet[0] == 's') {
-      uint8_t setting1 = atoi(packet+1);
-      __disable_irq();
-      // Wait for flash to be ready
-      while(FLASH->SR & FLASH_SR_BSY);
-      // Unlock flash memory
-      if(FLASH->CR & FLASH_CR_LOCK) {
-        FLASH->KEYR = 0x45670123U;
-        FLASH->KEYR = 0xCDEF89ABU;
-      }
-      // Wait for flash to be ready
-      while(FLASH->SR & FLASH_SR_BSY);
-      // Erase page 31
-      FLASH->CR |= FLASH_CR_PER;
-      FLASH->CR |= (31 << FLASH_CR_PNB_Pos);
-      FLASH->CR |= FLASH_CR_STRT;
-      // Wait for flash to be ready
-      while(FLASH->SR & FLASH_SR_BSY);
-      // Write setting 1
-      FLASH->CR &= ~FLASH_CR_PER;
-      FLASH->CR |= FLASH_CR_PG;
-      *(volatile uint32_t *)(FLASH_BASE + 31 * 0x800) = setting1;
-      *(volatile uint32_t *)(FLASH_BASE + 31 * 0x800 + 4) = setting1;
-      // Wait for flash to be ready
-      while(FLASH->SR & FLASH_SR_BSY);
-      // Lock flash memory
-      FLASH->CR |= FLASH_CR_LOCK;
-      __enable_irq();
-      usb_printf("Setting 1 saved\n");
+      settings_print();
     }
   }
 }
