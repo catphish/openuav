@@ -124,8 +124,18 @@ int main(void) {
         rotation_request_yaw   = elrs_channel(3)   * acro_rate;
       } else {
         // Rate mode. Get angle requests from the controller.
-        rotation_request_pitch = elrs_channel(1) * acro_rate;
-        rotation_request_roll  = elrs_channel(0) * acro_rate;
+#define EXPO 0.5f
+        float ch0 = elrs_channel(0);
+        if(ch0 >   820) ch0 =  820;
+        if(ch0 <  -820) ch0 = -820;
+        ch0 = EXPO * ch0 * ch0 * ch0 / 820.f / 820.f + (1.f - EXPO) * ch0;
+        float ch1 = elrs_channel(1);
+        if(ch1 >   820) ch1 =  820;
+        if(ch1 <  -820) ch1 = -820;
+        ch1 = EXPO * ch1 * ch1 * ch1 / 820.f / 820.f + (1.f - EXPO) * ch1;
+
+        rotation_request_pitch = ch1 * acro_rate;
+        rotation_request_roll  = ch0 * acro_rate;
         rotation_request_yaw   = elrs_channel(3) * acro_rate;
       }
 
