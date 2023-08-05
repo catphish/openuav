@@ -18,27 +18,6 @@
 #include "msp.h"
 #include "settings.h"
 
-// ANGLE_RATE is a measure of how fast the quad will rotate in angle mode.
-#define ANGLE_RATE 8.0f
-// RATE is a measure of how fast the quad will rotate in rate mode.
-// Rates are currently linear only.
-// A value of 1.0 represents 57.4 degrees per second.
-#define RATE 8.0f
-
-// These are regular PI gains
-#define RATE_P 0.2f
-#define RATE_I 0.0001f
-#define RATE_D 0.05f
-
-// These are the PI gains for the Z axis.
-#define RATE_ZP 0.1f
-#define RATE_ZI 0.0002f
-
-// THROTGAIN is a throttle multiplier. Useful values are between 0.5 and 1.0
-#define THROTGAIN 0.8f
-// AIRBOOST is a minimum throttle to be applied when the quad is armed.
-#define AIRBOOST 200
-
 void SystemInit(void) {
   clock_init();
   msleep(200);
@@ -77,6 +56,17 @@ int main(void) {
     msp_send_response();
 
     if(gyro_ready()) {
+      // Fetch settings
+      float angle_rate    = 0.01f     * settings_get()->angle_rate;
+      float acro_rate     = 0.01f     * settings_get()->acro_rate;
+      float p             = 0.001f    * settings_get()->p;
+      float i             = 0.000001f * settings_get()->i;
+      float d             = 0.001f    * settings_get()->d;
+      float yaw_p         = 0.001f    * settings_get()->yaw_p;
+      float yaw_i         = 0.000001f * settings_get()->yaw_i;
+      float throttle_gain = 0.01f     * settings_get()->throttle_gain;
+      float throttle_min  =             settings_get()->throttle_min;
+
       // If we're disarmed and we have valid ELRS data, allow the ESCs to be armed.
       if(elrs_valid() && elrs_channel(4) < 0) {
         arming_allowed = 1;
@@ -115,7 +105,7 @@ int main(void) {
 
       // Set the throttle. This will ultimately use the controller input, altitude, and attitude.
       // Currently I use 50% throttle and add 200 for "air mode".
-      int32_t throttle = THROTGAIN * (elrs_channel(2) + 820) + AIRBOOST;
+      int32_t throttle = throttle_gain * (elrs_channel(2) + 820) + throttle_min;
 
       if(elrs_channel(5) > 0) {
         // Angle mode
@@ -129,30 +119,30 @@ int main(void) {
         int32_t angle_error_pitch = elrs_channel(1) - tilt_pitch * 800.f;
         int32_t angle_error_roll  = elrs_channel(0) - tilt_roll  * 800.f;
 
-        rotation_request_pitch = angle_error_pitch * ANGLE_RATE;
-        rotation_request_roll  = angle_error_roll  * ANGLE_RATE;
-        rotation_request_yaw   = elrs_channel(3)   * RATE;
+        rotation_request_pitch = angle_error_pitch * angle_rate;
+        rotation_request_roll  = angle_error_roll  * angle_rate;
+        rotation_request_yaw   = elrs_channel(3)   * acro_rate;
       } else {
         // Rate mode. Get angle requests from the controller.
-        rotation_request_pitch = elrs_channel(1) * RATE;
-        rotation_request_roll  = elrs_channel(0) * RATE;
-        rotation_request_yaw   = elrs_channel(3) * RATE;
+        rotation_request_pitch = elrs_channel(1) * acro_rate;
+        rotation_request_roll  = elrs_channel(0) * acro_rate;
+        rotation_request_yaw   = elrs_channel(3) * acro_rate;
       }
 
       // Calculate the error in angular velocity by adding the (nagative) gyro
       // readings from the requested angular velocity.
-      int32_t error_pitch = RATE_P  * (gyro.x + rotation_request_pitch);
-      int32_t error_roll  = RATE_P  * (gyro.y + rotation_request_roll);
-      int32_t error_yaw   = RATE_ZP * (gyro.z + rotation_request_yaw);
+      int32_t error_pitch = p     * (gyro.x + rotation_request_pitch);
+      int32_t error_roll  = p     * (gyro.y + rotation_request_roll);
+      int32_t error_yaw   = yaw_p * (gyro.z + rotation_request_yaw);
 
       // Integrate the error in each axis.
-      i_pitch += RATE_I  * (gyro.x + rotation_request_pitch);
-      i_roll  += RATE_I  * (gyro.y + rotation_request_roll);
-      i_yaw   += RATE_ZI * (gyro.z + rotation_request_yaw);
+      i_pitch += i     * (gyro.x + rotation_request_pitch);
+      i_roll  += i     * (gyro.y + rotation_request_roll);
+      i_yaw   += yaw_i * (gyro.z + rotation_request_yaw);
 
       // Calculate the difference between the current and previous gyro readings.
-      int32_t d_pitch = RATE_D * (gyro.x - prev_gyro.x);
-      int32_t d_roll  = RATE_D * (gyro.y - prev_gyro.y);
+      int32_t d_pitch = d * (gyro.x - prev_gyro.x);
+      int32_t d_roll  = d * (gyro.y - prev_gyro.y);
       // Store the current gyro readings for the next loop.
       prev_gyro = gyro;
 

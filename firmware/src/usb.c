@@ -214,6 +214,16 @@ void usb_handle_ep1() {
     if(packet[0] == 'p') {
       settings_print();
     }
+    if(packet[0] == 'w') {
+      settings_save();
+    }
+    if(packet[0] == 'r') {
+      settings_load();
+    }
+    if(packet[0] == 's') {
+      if(packet[1] == 'r')
+      settings_get()->acro_rate = atoi(packet+2);
+    }
   }
 }
 

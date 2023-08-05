@@ -21,3 +21,6 @@ struct settings {
 
 void settings_load();
 void settings_print();
+void settings_save();
+void settings_defaults();
+struct settings *settings_get();
