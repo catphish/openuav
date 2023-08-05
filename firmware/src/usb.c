@@ -217,13 +217,24 @@ void usb_handle_ep1() {
     if(packet[0] == 'w') {
       settings_save();
     }
-    if(packet[0] == 'r') {
+    if(packet[0] == 'l') {
       settings_load();
     }
-    if(packet[0] == 's') {
-      if(packet[1] == 'r')
-      settings_get()->acro_rate = atoi(packet+2);
+    if(packet[0] == 'r') {
+      settings_default();
     }
+    if(packet[0] == 's') {
+      if(packet[1] == 'r') settings_get()->acro_rate = atoi(packet+2);
+      if(packet[1] == 'a') settings_get()->angle_rate = atoi(packet+2);
+      if(packet[1] == 'p') settings_get()->p = atoi(packet+2);
+      if(packet[1] == 'i') settings_get()->i = atoi(packet+2);
+      if(packet[1] == 'd') settings_get()->d = atoi(packet+2);
+      if(packet[1] == 'y') settings_get()->yaw_p = atoi(packet+2);
+      if(packet[1] == 'Y') settings_get()->yaw_i = atoi(packet+2);
+      if(packet[1] == 't') settings_get()->throttle_gain = atoi(packet+2);
+      if(packet[1] == 'm') settings_get()->throttle_min = atoi(packet+2);
+    }
+
   }
 }
 

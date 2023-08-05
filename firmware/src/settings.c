@@ -11,10 +11,10 @@ void settings_default() {
     settings.angle_rate      = 800;   // 8.0
     settings.acro_rate       = 800;   // 8.0
     settings.p               = 100;   // 0.1
-    settings.i               = 100;   // 0.0001
+    settings.i               = 200;   // 0.0002
     settings.d               = 100;   // 0.1
     settings.yaw_p           = 100;   // 0.1
-    settings.yaw_i           = 200;   // 0.0002
+    settings.yaw_i           = 200;   // 0.0001
     settings.throttle_gain   = 80;    // 0.8
     settings.throttle_min    = 200;   // 200
     settings.motor_direction = 0;     // Props IN

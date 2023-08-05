@@ -30,12 +30,12 @@ void gyro_init(void)
     // Set PA4 as input.
     gpio_pin_mode(GPIOA, 4, GPIO_MODE_INPUT, 0, GPIO_PUPD_NONE, 0);
     // Set up gyroscope.
-    gyro_spi_write_register(GYRO_REG_CTRL2_G, (8<<4)|(3<<2)); // Enable gyro, 2000 dps, 1667 Hz
-    gyro_spi_write_register(GYRO_REG_CTRL4_C, (1<<1));        // Enable gyro low pass filter
-    gyro_spi_write_register(GYRO_REG_CTRL6_C, 4);             // Low pass filter bandwidth = 99.6Hz
+    gyro_spi_write_register(GYRO_REG_CTRL2_G, (7<<4)|(3<<2)); // Enable gyro, 2000 dps, 833 Hz
+    //gyro_spi_write_register(GYRO_REG_CTRL4_C, (1<<1));        // Enable gyro low pass filter
+    //gyro_spi_write_register(GYRO_REG_CTRL6_C, 4);             // Low pass filter bandwidth = 99.6Hz
     gyro_spi_write_register(GYRO_REG_INT1_CTRL, (1<<1));      // Enable Gyro data ready interrupt
     // Set up accelerometer.
-    gyro_spi_write_register(GYRO_REG_CTRL1_XL, (8<<4));       // Enable accelerometer, 1667 Hz
+    gyro_spi_write_register(GYRO_REG_CTRL1_XL, (7<<4));       // Enable accelerometer, 833 Hz
 }
 
 // The gyro is ready when PA4 is high
