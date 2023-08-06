@@ -81,10 +81,11 @@ void settings_save() {
 
 void settings_print() {
   // Print the settings to the USB serial port.
-  usb_printf("Version: %d\n", settings.version);
+  usb_printf("\nVersion: %d\n", settings.version);
   usb_printf("Angle rate: %d\nAcro rate: %d\n", settings.angle_rate, settings.acro_rate);
   usb_printf("P: %d\nI: %d\nD: %d\n", settings.p, settings.i, settings.d);
   usb_printf("Yaw P: %d\nYaw I: %d\n", settings.yaw_p, settings.yaw_i);
+  usb_printf("Expo: %d\nYaw expo: %d\n", settings.expo, settings.yaw_expo);
   usb_printf("Throttle gain: %d\nThrottle min: %d\n", settings.throttle_gain, settings.throttle_min);
   usb_printf("Motor direction: %d\n", settings.motor_direction);
   usb_printf("Motor 1: %d\nMotor 2: %d\nMotor 3: %d\nMotor 4: %d\n", settings.motor1, settings.motor2, settings.motor3, settings.motor4);
