@@ -9,6 +9,8 @@ struct settings {
   uint32_t d;
   uint32_t yaw_p;
   uint32_t yaw_i;
+  uint32_t expo;
+  uint32_t yaw_expo;
   uint32_t throttle_gain;
   uint32_t throttle_min;
   uint32_t motor_direction;
@@ -19,7 +21,7 @@ struct settings {
   uint32_t checksum;
 };
 
-void settings_load();
+void settings_read();
 void settings_print();
 void settings_save();
 void settings_default();

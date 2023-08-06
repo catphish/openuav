@@ -46,7 +46,7 @@ static float i_yaw   = 0;
 
 int main(void) {
   led1_on();
-  settings_load();
+  settings_read();
   while(1) {
     // Poll the USB peripherand to transmit and receive data.
     usb_main();
@@ -64,6 +64,8 @@ int main(void) {
       float d             = 0.001f    * settings_get()->d;
       float yaw_p         = 0.001f    * settings_get()->yaw_p;
       float yaw_i         = 0.000001f * settings_get()->yaw_i;
+      float expo          = 0.01f     * settings_get()->expo;
+      float yaw_expo      = 0.01f     * settings_get()->yaw_expo;
       float throttle_gain = 0.01f     * settings_get()->throttle_gain;
       float throttle_min  =             settings_get()->throttle_min;
 
@@ -123,20 +125,26 @@ int main(void) {
         rotation_request_roll  = angle_error_roll  * angle_rate;
         rotation_request_yaw   = elrs_channel(3)   * acro_rate;
       } else {
-        // Rate mode. Get angle requests from the controller.
-#define EXPO 0.5f
-        float ch0 = elrs_channel(0);
-        if(ch0 >   820) ch0 =  820;
-        if(ch0 <  -820) ch0 = -820;
-        ch0 = EXPO * ch0 * ch0 * ch0 / 820.f / 820.f + (1.f - EXPO) * ch0;
-        float ch1 = elrs_channel(1);
-        if(ch1 >   820) ch1 =  820;
-        if(ch1 <  -820) ch1 = -820;
-        ch1 = EXPO * ch1 * ch1 * ch1 / 820.f / 820.f + (1.f - EXPO) * ch1;
-
-        rotation_request_pitch = ch1 * acro_rate;
-        rotation_request_roll  = ch0 * acro_rate;
-        rotation_request_yaw   = elrs_channel(3) * acro_rate;
+        // Rate mode.
+        // Apply expo to roll input.
+        float transmitter_roll = elrs_channel(0);
+        if(transmitter_roll >  820) transmitter_roll =  820;
+        if(transmitter_roll < -820) transmitter_roll = -820;
+        transmitter_roll = expo * transmitter_roll * transmitter_roll * transmitter_roll / 820.f / 820.f + (1.f - expo) * transmitter_roll;
+        // Apply expo to pitch input.
+        float transmitter_pitch = elrs_channel(1);
+        if(transmitter_pitch >  820) transmitter_pitch =  820;
+        if(transmitter_pitch < -820) transmitter_pitch = -820;
+        transmitter_pitch = expo * transmitter_pitch * transmitter_pitch * transmitter_pitch / 820.f / 820.f + (1.f - expo) * transmitter_pitch;
+        // Apply expo to yaw input.
+        float transmitter_yaw = elrs_channel(3);
+        if(transmitter_yaw >  820) transmitter_yaw =  820;
+        if(transmitter_yaw < -820) transmitter_yaw = -820;
+        transmitter_yaw = yaw_expo * transmitter_yaw * transmitter_yaw * transmitter_yaw / 820.f / 820.f + (1.f - yaw_expo) * transmitter_yaw;
+        // Apply the requested rotation rate.
+        rotation_request_pitch = transmitter_pitch * acro_rate;
+        rotation_request_roll  = transmitter_roll  * acro_rate;
+        rotation_request_yaw   = transmitter_yaw   * acro_rate;
       }
 
       // Calculate the error in angular velocity by adding the (nagative) gyro
@@ -156,29 +164,33 @@ int main(void) {
       // Store the current gyro readings for the next loop.
       prev_gyro = gyro;
 
-      // TODO: This should be configurable.
-      #define PROPS_OUT
-
-      // For each motor, add all appropriate terms together to get the final output.
-      #ifdef PROPS_IN
-      int32_t motor_rear_left   = throttle + error_pitch + error_roll + error_yaw + i_pitch + i_roll + i_yaw + d_pitch + d_roll;
-      int32_t motor_front_right = throttle - error_pitch - error_roll + error_yaw - i_pitch - i_roll + i_yaw - d_pitch - d_roll;
-      int32_t motor_front_left  = throttle - error_pitch + error_roll - error_yaw - i_pitch + i_roll - i_yaw - d_pitch + d_roll;
-      int32_t motor_rear_right  = throttle + error_pitch - error_roll - error_yaw + i_pitch - i_roll - i_yaw + d_pitch - d_roll;
-      #endif
-
-      #ifdef PROPS_OUT
-      int32_t motor_rear_left   = throttle + error_pitch + error_roll - error_yaw + i_pitch + i_roll - i_yaw + d_pitch + d_roll;
-      int32_t motor_front_right = throttle - error_pitch - error_roll - error_yaw - i_pitch - i_roll - i_yaw - d_pitch - d_roll;
-      int32_t motor_front_left  = throttle - error_pitch + error_roll + error_yaw - i_pitch + i_roll + i_yaw - d_pitch + d_roll;
-      int32_t motor_rear_right  = throttle + error_pitch - error_roll + error_yaw + i_pitch - i_roll + i_yaw + d_pitch - d_roll;
-      #endif
+      // Calculate the motor outputs.
+      // 0: no output
+      // 1: rear left
+      // 2: front right
+      // 3: front left
+      // 4: rear right
+      int32_t motor_outputs[5];
+      motor_outputs[0] = 0;
+      if(settings_get()->motor_direction) {
+        // Props out
+        motor_outputs[1] = throttle + error_pitch + error_roll - error_yaw + i_pitch + i_roll - i_yaw + d_pitch + d_roll;
+        motor_outputs[2] = throttle - error_pitch - error_roll - error_yaw - i_pitch - i_roll - i_yaw - d_pitch - d_roll;
+        motor_outputs[3] = throttle - error_pitch + error_roll + error_yaw - i_pitch + i_roll + i_yaw - d_pitch + d_roll;
+        motor_outputs[4] = throttle + error_pitch - error_roll + error_yaw + i_pitch - i_roll + i_yaw + d_pitch - d_roll;
+      } else {
+        // Props in
+        motor_outputs[1] = throttle + error_pitch + error_roll + error_yaw + i_pitch + i_roll + i_yaw + d_pitch + d_roll;
+        motor_outputs[2] = throttle - error_pitch - error_roll + error_yaw - i_pitch - i_roll + i_yaw - d_pitch - d_roll;
+        motor_outputs[3] = throttle - error_pitch + error_roll - error_yaw - i_pitch + i_roll - i_yaw - d_pitch + d_roll;
+        motor_outputs[4] = throttle + error_pitch - error_roll - error_yaw + i_pitch - i_roll - i_yaw + d_pitch - d_roll;
+      }
 
       // Configure motor mappings
-      dshot.motor1 = motor_rear_left;
-      dshot.motor2 = motor_front_left;
-      dshot.motor3 = motor_rear_right;
-      dshot.motor4 = motor_front_right;
+      dshot.motor1 = motor_outputs[settings_get()->motor1];
+      dshot.motor2 = motor_outputs[settings_get()->motor2];
+      dshot.motor3 = motor_outputs[settings_get()->motor3];
+      dshot.motor4 = motor_outputs[settings_get()->motor4];
 
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);

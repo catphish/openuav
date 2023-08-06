@@ -217,24 +217,32 @@ void usb_handle_ep1() {
     if(packet[0] == 'w') {
       settings_save();
     }
-    if(packet[0] == 'l') {
-      settings_load();
-    }
     if(packet[0] == 'r') {
+      settings_read();
+    }
+    if(packet[0] == 'd') {
       settings_default();
     }
     if(packet[0] == 's') {
       if(packet[1] == 'r') settings_get()->acro_rate = atoi(packet+2);
-      if(packet[1] == 'a') settings_get()->angle_rate = atoi(packet+2);
+      if(packet[1] == 'R') settings_get()->angle_rate = atoi(packet+2);
       if(packet[1] == 'p') settings_get()->p = atoi(packet+2);
       if(packet[1] == 'i') settings_get()->i = atoi(packet+2);
       if(packet[1] == 'd') settings_get()->d = atoi(packet+2);
       if(packet[1] == 'y') settings_get()->yaw_p = atoi(packet+2);
       if(packet[1] == 'Y') settings_get()->yaw_i = atoi(packet+2);
       if(packet[1] == 't') settings_get()->throttle_gain = atoi(packet+2);
-      if(packet[1] == 'm') settings_get()->throttle_min = atoi(packet+2);
+      if(packet[1] == 'T') settings_get()->throttle_min = atoi(packet+2);
+      if(packet[1] == 'e') settings_get()->expo = atoi(packet+2);
+      if(packet[1] == 'E') settings_get()->yaw_expo = atoi(packet+2);
+      if(packet[1] == 'm') {
+        if(packet[2] == 'd') settings_get()->motor_direction = atoi(packet+3);
+        if(packet[2] == '1') settings_get()->motor1 = atoi(packet+3);
+        if(packet[2] == '2') settings_get()->motor2 = atoi(packet+3);
+        if(packet[2] == '3') settings_get()->motor3 = atoi(packet+3);
+        if(packet[2] == '4') settings_get()->motor4 = atoi(packet+3);
+      }
     }
-
   }
 }
 

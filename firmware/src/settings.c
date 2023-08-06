@@ -2,7 +2,7 @@
 #include "settings.h"
 #include "usb.h"
 
-#define VERSION 1
+#define VERSION 2
 
 struct settings settings;
 
@@ -15,17 +15,19 @@ void settings_default() {
     settings.d               = 100;   // 0.1
     settings.yaw_p           = 100;   // 0.1
     settings.yaw_i           = 200;   // 0.0001
+    settings.expo            = 50;    // 0.5
+    settings.yaw_expo        = 50;    // 0.5
     settings.throttle_gain   = 80;    // 0.8
     settings.throttle_min    = 200;   // 200
     settings.motor_direction = 0;     // Props IN
-    settings.motor1          = 1;     // Rear left
-    settings.motor2          = 2;     // Front left
-    settings.motor3          = 3;     // Rear right
-    settings.motor4          = 4;     // Front right
+    settings.motor1          = 0;     // Default disabled
+    settings.motor2          = 0;     // Default disabled
+    settings.motor3          = 0;     // Default disabled
+    settings.motor4          = 0;     // Default disabled
     settings.checksum        = 0;
 }
 
-void settings_load() {
+void settings_read() {
   // Load the settings from flash at (FLASH_BASE + 31 * 0x800) into the settings struct.
   // If the settings are invalid, set them to default values.
   struct settings *flash = (struct settings *)(FLASH_BASE + 31 * 0x800);
