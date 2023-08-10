@@ -36,13 +36,13 @@ Starting from the default values in `firmware/src/main.c`, increase _P_ (`RATE_P
 # Tuning Examples
 
 ## TBS Source One v5 - 2206 Motors at 4S
+
+THIS TUNE IS NEW AND NEEDS IMPROVEMENT
 ```
-#define ANGLE_RATE 7.0f
-#define RATE 7.0f
-#define RATE_P 0.12f
-#define RATE_I 0.0002f
-#define RATE_ZP 0.12f
-#define RATE_ZI 0.0004f
-#define THROTGAIN 0.8f
-#define AIRBOOST 200
+Acro rate: 1200
+P: 80
+I: 50
+D: 0
+Yaw P: 160
+Yaw I: 100
 ```
