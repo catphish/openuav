@@ -192,6 +192,17 @@ int main(void) {
       dshot.motor3 = motor_outputs[settings_get()->motor3];
       dshot.motor4 = motor_outputs[settings_get()->motor4];
 
+      // Enforce minimum and maximum motor outputs.
+      // TODO: make these configurable options.
+      if(dshot.motor1 < 100) dshot.motor1 = 100;
+      if(dshot.motor2 < 100) dshot.motor2 = 100;
+      if(dshot.motor3 < 100) dshot.motor3 = 100;
+      if(dshot.motor4 < 100) dshot.motor4 = 100;
+      if(dshot.motor1 > 2000) dshot.motor1 = 2000;
+      if(dshot.motor2 > 2000) dshot.motor2 = 2000;
+      if(dshot.motor3 > 2000) dshot.motor3 = 2000;
+      if(dshot.motor4 > 2000) dshot.motor4 = 2000;
+
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
     }
