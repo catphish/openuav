@@ -37,12 +37,15 @@ Starting from the default values in `firmware/src/main.c`, increase _P_ (`RATE_P
 
 ## TBS Source One v5 - 2206 Motors at 4S
 
-THIS TUNE IS NEW AND NEEDS IMPROVEMENT
+THIS TUNE IS STILL UNDERGOING TESTING
 ```
+Angle rate: 800
 Acro rate: 1200
-P: 100
-I: 35
-D: 10
-Yaw P: 160
-Yaw I: 100
+P: 120
+I: 120
+D: 120
+Yaw P: 200
+Yaw I: 200
+Expo: 60
+Yaw expo: 60
 ```
