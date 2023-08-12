@@ -40,9 +40,9 @@ Starting from the default values in `firmware/src/main.c`, increase _P_ (`RATE_P
 THIS TUNE IS NEW AND NEEDS IMPROVEMENT
 ```
 Acro rate: 1200
-P: 80
-I: 50
-D: 0
+P: 100
+I: 35
+D: 10
 Yaw P: 160
 Yaw I: 100
 ```
