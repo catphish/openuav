@@ -44,6 +44,67 @@ static float i_pitch = 0;
 static float i_roll  = 0;
 static float i_yaw   = 0;
 
+// Air mode.
+void air_mode() {
+  // TODO: Make the limits configurable.
+  if(dshot.motor1 < 100) {
+    int32_t motor_error = 100 - dshot.motor1;
+    dshot.motor1 = 100;
+    dshot.motor2 += motor_error;
+    dshot.motor3 += motor_error;
+    dshot.motor4 += motor_error;
+  }
+  if(dshot.motor2 < 100) {
+    int32_t motor_error = 100 - dshot.motor2;
+    dshot.motor2 = 100;
+    dshot.motor1 += motor_error;
+    dshot.motor3 += motor_error;
+    dshot.motor4 += motor_error;
+  }
+  if(dshot.motor3 < 100) {
+    int32_t motor_error = 100 - dshot.motor3;
+    dshot.motor3 = 100;
+    dshot.motor1 += motor_error;
+    dshot.motor2 += motor_error;
+    dshot.motor4 += motor_error;
+  }
+  if(dshot.motor4 < 100) {
+    int32_t motor_error = 100 - dshot.motor4;
+    dshot.motor4 = 100;
+    dshot.motor1 += motor_error;
+    dshot.motor2 += motor_error;
+    dshot.motor3 += motor_error;
+  }
+  if(dshot.motor1 > 2000) {
+    int32_t motor_error = dshot.motor1 - 2000;
+    dshot.motor1 = 2000;
+    dshot.motor2 -= motor_error;
+    dshot.motor3 -= motor_error;
+    dshot.motor4 -= motor_error;
+  }
+  if(dshot.motor2 > 2000) {
+    int32_t motor_error = dshot.motor2 - 2000;
+    dshot.motor2 = 2000;
+    dshot.motor1 -= motor_error;
+    dshot.motor3 -= motor_error;
+    dshot.motor4 -= motor_error;
+  }
+  if(dshot.motor3 > 2000) {
+    int32_t motor_error = dshot.motor3 - 2000;
+    dshot.motor3 = 2000;
+    dshot.motor1 -= motor_error;
+    dshot.motor2 -= motor_error;
+    dshot.motor4 -= motor_error;
+  }
+  if(dshot.motor4 > 2000) {
+    int32_t motor_error = dshot.motor4 - 2000;
+    dshot.motor4 = 2000;
+    dshot.motor1 -= motor_error;
+    dshot.motor2 -= motor_error;
+    dshot.motor3 -= motor_error;
+  }
+}
+
 int main(void) {
   led1_on();
   settings_read();
@@ -192,16 +253,8 @@ int main(void) {
       dshot.motor3 = motor_outputs[settings_get()->motor3];
       dshot.motor4 = motor_outputs[settings_get()->motor4];
 
-      // Enforce minimum and maximum motor outputs.
-      // TODO: make these configurable options.
-      if(dshot.motor1 < 100) dshot.motor1 = 100;
-      if(dshot.motor2 < 100) dshot.motor2 = 100;
-      if(dshot.motor3 < 100) dshot.motor3 = 100;
-      if(dshot.motor4 < 100) dshot.motor4 = 100;
-      if(dshot.motor1 > 2000) dshot.motor1 = 2000;
-      if(dshot.motor2 > 2000) dshot.motor2 = 2000;
-      if(dshot.motor3 > 2000) dshot.motor3 = 2000;
-      if(dshot.motor4 > 2000) dshot.motor4 = 2000;
+      // Activate air mode.
+      air_mode();
 
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
