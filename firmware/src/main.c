@@ -17,6 +17,7 @@
 #include "adc.h"
 #include "msp.h"
 #include "settings.h"
+#include "flash.h"
 
 void SystemInit(void) {
   clock_init();
@@ -30,6 +31,7 @@ void SystemInit(void) {
   gyro_init();
   imu_init();
   adc_init();
+  flash_init();
 }
 
 struct dshot_data dshot;

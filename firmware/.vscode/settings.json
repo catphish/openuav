@@ -22,7 +22,8 @@
         "util.h": "c",
         "gyro.h": "c",
         "quaternion.h": "c",
-        "spi.h": "c"
+        "spi.h": "c",
+        "stdint.h": "c"
     },
     "editor.tabSize": 2
 }

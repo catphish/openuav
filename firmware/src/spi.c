@@ -16,10 +16,16 @@ static void spi1_init() {
   gpio_pin_mode(GPIOA, 7, GPIO_MODE_AF, 5, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
   // Set PC4 to output (SPI1_CS)
   gpio_pin_mode(GPIOC, 4, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // Set PA5 to very high speed
+  GPIOA->OSPEEDR |= GPIO_OSPEEDR_OSPEED5;
+  // Set PA6 to very high speed
+  GPIOA->OSPEEDR |= GPIO_OSPEEDR_OSPEED6;
+  // Set PA7 to very high speed
+  GPIOA->OSPEEDR |= GPIO_OSPEEDR_OSPEED7;
 
   // Disable SPI1
   SPI1->CR1 = 0;
-  // Configure SPI1 CR1
+  // Configure SPI1 CR1 (10MHz)
   SPI1->CR1 = SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR | SPI_CR1_BR_0 | SPI_CR1_BR_1 | SPI_CR1_CPOL | SPI_CR1_CPHA;
   // Configure SPI1 CR2
   SPI1->CR2 =  SPI_CR2_FRXTH | SPI_CR2_DS_0 | SPI_CR2_DS_1 | SPI_CR2_DS_2;
@@ -40,15 +46,52 @@ static void spi2_init() {
   gpio_pin_mode(GPIOB, 15, GPIO_MODE_AF, 5, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
   // Set PC6 to output (SPI2_CS)
   gpio_pin_mode(GPIOC, 6, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // Set PB13 to very high speed
+  GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED13;
+  // Set PB14 to very high speed
+  GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED14;
+  // Set PB15 to very high speed
+  GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED15;
 
   // Disable SPI2
   SPI2->CR1 = 0;
-  // Configure SPI1 CR1
+  // Configure SPI1 CR1 (10MHz)
   SPI2->CR1 = SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR | SPI_CR1_BR_0 | SPI_CR1_BR_1 | SPI_CR1_CPOL | SPI_CR1_CPHA;
   // Configure SPI1 CR2
   SPI2->CR2 =  SPI_CR2_FRXTH | SPI_CR2_DS_0 | SPI_CR2_DS_1 | SPI_CR2_DS_2;
   // Enable SPI1
   SPI2->CR1 |= SPI_CR1_SPE;
+}
+
+static void spi3_init() {
+  // Enable SPI3 clock
+  RCC->APB1ENR1 |= RCC_APB1ENR1_SPI3EN;
+  // Set CS high
+  GPIOA->BSRR = GPIO_BSRR_BS_15;
+  // Set PB3 to AF6 (SPI3_SCK)
+  gpio_pin_mode(GPIOB, 3, GPIO_MODE_AF, 6, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // Set PB4 to AF6 (SPI3_MISO)
+  gpio_pin_mode(GPIOB, 4, GPIO_MODE_AF, 6, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // Set PB5 to AF6 (SPI3_MOSI)
+  gpio_pin_mode(GPIOB, 5, GPIO_MODE_AF, 6, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // Set PA15 to output (SPI3_CS)
+  gpio_pin_mode(GPIOA, 15, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // Set PB3 to very high speed
+  GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED3;
+  // Set PB4 to very high speed
+  GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED4;
+  // Set PB5 to very high speed
+  GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED5;
+
+
+  // Disable SPI3
+  SPI3->CR1 = 0;
+  // Configure SPI3 CR1 (80MHz)
+  SPI3->CR1 = SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR | SPI_CR1_CPOL | SPI_CR1_CPHA;
+  // Configure SPI3 CR2
+  SPI3->CR2 =  SPI_CR2_FRXTH | SPI_CR2_DS_0 | SPI_CR2_DS_1 | SPI_CR2_DS_2;
+  // Enable SPI3
+  SPI3->CR1 |= SPI_CR1_SPE;
 }
 
 void spi_init() {
@@ -57,6 +100,7 @@ void spi_init() {
   // Configure each SPI peripheral.
   spi1_init();
   spi2_init();
+  spi3_init();
 }
 
 void spi_transmit(SPI_TypeDef * SPIx, uint8_t data)
