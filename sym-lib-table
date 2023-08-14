@@ -2,4 +2,5 @@
   (version 7)
   (lib (name "ST_Sensors")(type "KiCad")(uri "${KIPRJMOD}/ST_Sensors.kicad_sym")(options "")(descr ""))
   (lib (name "MCU_ST_STM32G4")(type "KiCad")(uri "${KIPRJMOD}/MCU_ST_STM32G4.kicad_sym")(options "")(descr ""))
+  (lib (name "openuav")(type "KiCad")(uri "${KIPRJMOD}/openuav.kicad_sym")(options "")(descr ""))
 )
