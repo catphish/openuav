@@ -40,10 +40,10 @@ Starting from the default values in `firmware/src/main.c`, increase _P_ (`RATE_P
 THIS TUNE IS STILL UNDERGOING TESTING
 ```
 Angle rate: 800
-Acro rate: 1200
-P: 120
-I: 120
-D: 120
+Acro rate: 1000 (574 dps)
+P: 100
+I: 60
+D: 0
 Yaw P: 200
 Yaw I: 200
 Expo: 60
