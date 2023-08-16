@@ -10,6 +10,8 @@
 #include "util.h"
 #include "led.h"
 #include "settings.h"
+#include "flash.h"
+#include "blackbox.h"
 
 uint8_t pending_addr = 0;
 uint32_t buffer_pointer;
@@ -131,6 +133,13 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len) {
   USB_EPR(ep) = (USB_EPR(ep) & 0x87bf) ^ 0x30;
 }
 
+uint8_t usb_write_ready(uint8_t ep) {
+  if((usb_ring_buffer[ep].head + 1) % 16 == usb_ring_buffer[ep].tail) {
+    return 0;
+  }
+  return 1;
+}
+
 // Copy data into the ring buffer in 64 byte chunks. If the buffer is full,
 // retun immediately.
 void usb_write_string(uint8_t ep, char * data, uint32_t len) {
@@ -207,6 +216,7 @@ void usb_handle_ep0() {
   }
 }
 
+extern volatile uint32_t dump_flash;
 void usb_handle_ep1() {
   char packet[64];
   uint8_t len = usb_read(1, packet);
@@ -242,6 +252,26 @@ void usb_handle_ep1() {
         if(packet[2] == '3') settings_get()->motor3 = atoi(packet+3);
         if(packet[2] == '4') settings_get()->motor4 = atoi(packet+3);
       }
+    }
+    if(packet[0] == 'e') {
+      //flash_erase();
+      //blackbox_init();
+      usb_printf("Flash not erased\n");
+    }
+    if(packet[0] == 'f') {
+      uint16_t page = blackbox_find_free_page();
+      usb_printf("Free page: %d\n", page);
+    }
+    if(packet[0] == 'g') {
+      uint16_t page = atoi(packet+1);
+      flash_page_read(page);
+      uint32_t data;
+      flash_read((uint8_t*)&data, 4, 0);
+      usb_printf("Read page %d: %d\n", page, data);
+    }
+    if(packet[0] == 'h') {
+      // Dump flash to USB
+      dump_flash = blackbox_find_free_page();
     }
   }
 }

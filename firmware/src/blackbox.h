@@ -12,3 +12,7 @@ struct __attribute__((__packed__)) blackbox_frame {
     int16_t d[3];         // 6 bytes
     // 42 bytes
 };
+
+void blackbox_init();
+uint16_t blackbox_find_free_page();
+void blackbox_write(struct blackbox_frame * frame);

@@ -42,6 +42,10 @@ struct gyro_data prev_gyro;
 
 uint8_t arming_allowed = 0;
 
+volatile uint32_t dump_flash = 0;
+uint32_t dump_flash_page = 0;
+uint32_t dump_flash_offset = 0;
+
 // Gyro integral terms.
 static float i_pitch = 0;
 static float i_roll  = 0;
@@ -262,33 +266,51 @@ int main(void) {
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
 
-      // A continuously increasing frame count for logging.
-      static uint32_t frame_count = 0;
+      // // A continuously increasing frame count for logging.
+      // static uint32_t frame_count = 0;
  
-      // Populate a blackbox frame.
-      struct blackbox_frame frame;
-      frame.timestamp = frame_count++;
-      frame.gyro_data[0] = gyro.x;
-      frame.gyro_data[1] = gyro.y;
-      frame.gyro_data[2] = gyro.z;
-      frame.setpoint[0] = rotation_request_pitch;
-      frame.setpoint[1] = rotation_request_roll;
-      frame.setpoint[2] = rotation_request_yaw;
-      frame.p[0] = error_pitch;
-      frame.p[1] = error_roll;
-      frame.p[2] = error_yaw;
-      frame.i[0] = i_pitch;
-      frame.i[1] = i_roll;
-      frame.i[2] = i_yaw;
-      frame.d[0] = d_pitch;
-      frame.d[1] = d_roll;
-      frame.d[2] = 0;
-      frame.motor[0] = dshot.motor1;
-      frame.motor[1] = dshot.motor2;
-      frame.motor[2] = dshot.motor3;
-      frame.motor[3] = dshot.motor4;
+      // // Populate a blackbox frame.
+      // struct blackbox_frame frame;
+      // frame.timestamp = frame_count++;
+      // frame.gyro_data[0] = gyro.x;
+      // frame.gyro_data[1] = gyro.y;
+      // frame.gyro_data[2] = gyro.z;
+      // frame.setpoint[0] = rotation_request_pitch;
+      // frame.setpoint[1] = rotation_request_roll;
+      // frame.setpoint[2] = rotation_request_yaw;
+      // frame.p[0] = error_pitch;
+      // frame.p[1] = error_roll;
+      // frame.p[2] = error_yaw;
+      // frame.i[0] = i_pitch;
+      // frame.i[1] = i_roll;
+      // frame.i[2] = i_yaw;
+      // frame.d[0] = d_pitch;
+      // frame.d[1] = d_roll;
+      // frame.d[2] = 0;
+      // frame.motor[0] = dshot.motor1;
+      // frame.motor[1] = dshot.motor2;
+      // frame.motor[2] = dshot.motor3;
+      // frame.motor[3] = dshot.motor4;
 
-      flash_record_data();
+      //if(dshot.armed) blackbox_write(&frame);
+      if(dump_flash) {
+        if(usb_write_ready(1)) {
+          uint8_t data[32];
+          flash_page_read(dump_flash_page);
+          flash_read(data, 32, dump_flash_offset);
+          dump_flash_offset += 32;
+          if(dump_flash_offset == 2048) {
+            dump_flash_offset = 0;
+            dump_flash_page++;
+          }
+          if(dump_flash_page == dump_flash) {
+            dump_flash = 0;
+            dump_flash_page = 0;
+          }
+          usb_write_string(1, (char*)data, 32);
+        }
+      }
+
     }
   }
   return 0;
