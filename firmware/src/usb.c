@@ -215,63 +215,63 @@ void usb_handle_ep0() {
     usb_write(0,0,0);
   }
 }
+volatile uint8_t usb_enabled = 0;
 
 extern volatile uint32_t dump_flash;
 void usb_handle_ep1() {
   char packet[64];
   uint8_t len = usb_read(1, packet);
   if(len) {
-    if(packet[0] == 'p') {
-      settings_print();
+    if(packet[0] == 'E' && packet[1] == 'N' && packet[2] == 'A' && packet[3] == 'B' && packet[4] == 'L' && packet[5] == 'E') {
+      usb_enabled = 1;
+      usb_printf("USB commands enabled\n");
     }
-    if(packet[0] == 'w') {
-      settings_save();
-    }
-    if(packet[0] == 'r') {
-      settings_read();
-    }
-    if(packet[0] == 'd') {
-      settings_default();
-    }
-    if(packet[0] == 's') {
-      if(packet[1] == 'r') settings_get()->acro_rate = atoi(packet+2);
-      if(packet[1] == 'R') settings_get()->angle_rate = atoi(packet+2);
-      if(packet[1] == 'p') settings_get()->p = atoi(packet+2);
-      if(packet[1] == 'i') settings_get()->i = atoi(packet+2);
-      if(packet[1] == 'd') settings_get()->d = atoi(packet+2);
-      if(packet[1] == 'y') settings_get()->yaw_p = atoi(packet+2);
-      if(packet[1] == 'Y') settings_get()->yaw_i = atoi(packet+2);
-      if(packet[1] == 't') settings_get()->throttle_gain = atoi(packet+2);
-      if(packet[1] == 'T') settings_get()->throttle_min = atoi(packet+2);
-      if(packet[1] == 'e') settings_get()->expo = atoi(packet+2);
-      if(packet[1] == 'E') settings_get()->yaw_expo = atoi(packet+2);
-      if(packet[1] == 'm') {
-        if(packet[2] == 'd') settings_get()->motor_direction = atoi(packet+3);
-        if(packet[2] == '1') settings_get()->motor1 = atoi(packet+3);
-        if(packet[2] == '2') settings_get()->motor2 = atoi(packet+3);
-        if(packet[2] == '3') settings_get()->motor3 = atoi(packet+3);
-        if(packet[2] == '4') settings_get()->motor4 = atoi(packet+3);
+    if(usb_enabled) {
+      if(packet[0] == 'p') {
+        settings_print();
       }
-    }
-    if(packet[0] == 'e') {
-      //flash_erase();
-      //blackbox_init();
-      usb_printf("Flash not erased\n");
-    }
-    if(packet[0] == 'f') {
-      uint16_t page = blackbox_find_free_page();
-      usb_printf("Free page: %d\n", page);
-    }
-    if(packet[0] == 'g') {
-      uint16_t page = atoi(packet+1);
-      flash_page_read(page);
-      uint32_t data;
-      flash_read((uint8_t*)&data, 4, 0);
-      usb_printf("Read page %d: %d\n", page, data);
-    }
-    if(packet[0] == 'h') {
-      // Dump flash to USB
-      dump_flash = blackbox_find_free_page();
+      if(packet[0] == 'w') {
+        settings_save();
+      }
+      if(packet[0] == 'r') {
+        settings_read();
+      }
+      if(packet[0] == 'd') {
+        settings_default();
+      }
+      if(packet[0] == 's') {
+        if(packet[1] == 'r') settings_get()->acro_rate = atoi(packet+2);
+        if(packet[1] == 'R') settings_get()->angle_rate = atoi(packet+2);
+        if(packet[1] == 'p') settings_get()->p = atoi(packet+2);
+        if(packet[1] == 'i') settings_get()->i = atoi(packet+2);
+        if(packet[1] == 'd') settings_get()->d = atoi(packet+2);
+        if(packet[1] == 'y') settings_get()->yaw_p = atoi(packet+2);
+        if(packet[1] == 'Y') settings_get()->yaw_i = atoi(packet+2);
+        if(packet[1] == 't') settings_get()->throttle_gain = atoi(packet+2);
+        if(packet[1] == 'T') settings_get()->throttle_min = atoi(packet+2);
+        if(packet[1] == 'e') settings_get()->expo = atoi(packet+2);
+        if(packet[1] == 'E') settings_get()->yaw_expo = atoi(packet+2);
+        if(packet[1] == 'm') {
+          if(packet[2] == 'd') settings_get()->motor_direction = atoi(packet+3);
+          if(packet[2] == '1') settings_get()->motor1 = atoi(packet+3);
+          if(packet[2] == '2') settings_get()->motor2 = atoi(packet+3);
+          if(packet[2] == '3') settings_get()->motor3 = atoi(packet+3);
+          if(packet[2] == '4') settings_get()->motor4 = atoi(packet+3);
+        }
+      }
+      if(packet[0] == 'e') {
+        flash_erase();
+        blackbox_init();
+        usb_printf("Flash erased\n");
+      }
+      if(packet[0] == 'f') {
+        uint16_t page = blackbox_find_free_page();
+        usb_printf("Free page: %d\n", page);
+      }
+      if(packet[0] == 'h') {
+        // Dump flash to USB
+        dump_flash = blackbox_find_free_page();
+      }
     }
   }
 }

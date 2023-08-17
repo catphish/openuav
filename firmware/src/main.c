@@ -266,33 +266,34 @@ int main(void) {
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
 
-      // // A continuously increasing frame count for logging.
-      // static uint32_t frame_count = 0;
+      // A continuously increasing frame count for logging.
+      static uint32_t frame_count = 0;
  
-      // // Populate a blackbox frame.
-      // struct blackbox_frame frame;
-      // frame.timestamp = frame_count++;
-      // frame.gyro_data[0] = gyro.x;
-      // frame.gyro_data[1] = gyro.y;
-      // frame.gyro_data[2] = gyro.z;
-      // frame.setpoint[0] = rotation_request_pitch;
-      // frame.setpoint[1] = rotation_request_roll;
-      // frame.setpoint[2] = rotation_request_yaw;
-      // frame.p[0] = error_pitch;
-      // frame.p[1] = error_roll;
-      // frame.p[2] = error_yaw;
-      // frame.i[0] = i_pitch;
-      // frame.i[1] = i_roll;
-      // frame.i[2] = i_yaw;
-      // frame.d[0] = d_pitch;
-      // frame.d[1] = d_roll;
-      // frame.d[2] = 0;
-      // frame.motor[0] = dshot.motor1;
-      // frame.motor[1] = dshot.motor2;
-      // frame.motor[2] = dshot.motor3;
-      // frame.motor[3] = dshot.motor4;
+      // Populate a blackbox frame.
+      struct blackbox_frame frame;
+      frame.timestamp = frame_count++;
+      frame.gyro_data[0] = gyro.x;
+      frame.gyro_data[1] = gyro.y;
+      frame.gyro_data[2] = gyro.z;
+      frame.setpoint[0] = rotation_request_pitch;
+      frame.setpoint[1] = rotation_request_roll;
+      frame.setpoint[2] = rotation_request_yaw;
+      frame.p[0] = error_pitch;
+      frame.p[1] = error_roll;
+      frame.p[2] = error_yaw;
+      frame.i[0] = i_pitch;
+      frame.i[1] = i_roll;
+      frame.i[2] = i_yaw;
+      frame.d[0] = d_pitch;
+      frame.d[1] = d_roll;
+      frame.d[2] = 0;
+      frame.motor[0] = dshot.motor1;
+      frame.motor[1] = dshot.motor2;
+      frame.motor[2] = dshot.motor3;
+      frame.motor[3] = dshot.motor4;
 
-      //if(dshot.armed) blackbox_write(&frame);
+      if(dshot.armed) blackbox_write(&frame);
+      
       if(dump_flash) {
         if(usb_write_ready(1)) {
           uint8_t data[32];

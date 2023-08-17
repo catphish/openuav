@@ -3,7 +3,6 @@
 
 // Reset the flash chip
 void flash_init(void);
-void busy_wait(void);
 void write_enable(void);
 void flash_erase_block(uint16_t block);
 void flash_erase(void);
