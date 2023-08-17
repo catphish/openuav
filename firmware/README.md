@@ -41,9 +41,9 @@ THIS TUNE IS STILL UNDERGOING TESTING
 ```
 Angle rate: 800
 Acro rate: 1000 (574 dps)
-P: 100
-I: 60
-D: 0
+P: 150
+I: 100
+D: 4000
 Yaw P: 200
 Yaw I: 200
 Expo: 60
