@@ -51,6 +51,10 @@ static float i_pitch = 0;
 static float i_roll  = 0;
 static float i_yaw   = 0;
 
+// D filter terms
+static float d_pitch_filter = 0;
+static float d_roll_filter  = 0;
+
 // Air mode.
 void air_mode() {
   // TODO: Make the limits configurable.
@@ -226,9 +230,12 @@ int main(void) {
       i_roll  += i     * (gyro.y + rotation_request_roll);
       i_yaw   += yaw_i * (gyro.z + rotation_request_yaw);
 
-      // Calculate the difference between the current and previous gyro readings.
-      int32_t d_pitch = d * (gyro.x - prev_gyro.x);
-      int32_t d_roll  = d * (gyro.y - prev_gyro.y);
+      // Filter D term
+      d_pitch_filter = d_pitch_filter * 0.99 + 0.01 * (gyro.x - prev_gyro.x);
+      d_roll_filter  = d_roll_filter  * 0.99 + 0.01 * (gyro.y - prev_gyro.y);
+      int d_pitch = d_pitch_filter * d;
+      int d_roll  = d_roll_filter  * d;
+
       // Store the current gyro readings for the next loop.
       prev_gyro = gyro;
 
