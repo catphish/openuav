@@ -2,22 +2,15 @@
 Here you will find the beginnings of a simple custom flight controller
 firmware. It is now flyable in acro and angle mode with configurable PIDs.
 
-# Progress
-
-# Hardware Drivers
-* LED     - DONE
-* USB     - DONE
-* DSHOT   - DONE
-* UART    - DONE
-* ELRS    - DONE - needs checksum
-* SPI     - DONE
-* Gyro    - DONE
-* Accel   - DONE
-
-# Software
-* Gyro flight          - DONE
-* Accelerometer flight - DONE
-* OSD                  - Voltage only
+# Features
+* Status LEDs
+* DSHOT
+* ELRS
+* Gyro
+* Accelerometer
+* Blackbox
+* USB configuration
+* Canvas OSD
 
 # Dependencies
 
@@ -28,6 +21,13 @@ sudo pacman -Sy arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-newlib \
                 dfu-util \
                 stlink
 ```
+
+# Roadmap
+* Tidy up and comment all current code
+* Improved USB interface for configuration and data log download
+* Independent software filtering for gyro P and D terms
+* More OSD options
+* 40V SMPS with 9V 2A output
 
 # Basic Tuning Guide
 
