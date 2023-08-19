@@ -36,15 +36,26 @@ void adc_init() {
 
   // Set ADC1 to continuous mode and overrun mode
   ADC1->CFGR = ADC_CFGR_OVRMOD | ADC_CFGR_CONT;
-  // Set the sequence. One conversion, channel 10.
+  // Enable oversampling
+  ADC1->CFGR2 = ADC_CFGR2_ROVSE;
+  // Set oversampling ratio to 32x (= 0b100)
+  ADC1->CFGR2 |= ADC_CFGR2_OVSR_2;
+  // Slow ADC further down by setting 0x sampling time (= 0b111)
+  ADC1->SMPR1 = ADC_SMPR1_SMP1_0 | ADC_SMPR1_SMP1_1 | ADC_SMPR1_SMP1_2;
+  // Set the sequence. One conversion, channel 10
   ADC1->SQR1 = 0 | ADC_SQR1_SQ1_3 | ADC_SQR1_SQ1_1;
   // Start ADC1
   ADC1->CR |= ADC_CR_ADSTART;
 }
 
-uint16_t adc_read_mV() {
+uint32_t adc_read_mV() {
   struct settings *settings = settings_get(); // convenience
+  uint32_t adc = 0;
+  do {
+    adc = ADC1->DR;
+  } while (adc < 1);
   // Multiply ADC reading with ADC coefficient
-  // (which is saved at * 100 its required value)
-  return ADC1->DR * (settings->adc_coefficient / 100.0f);
+  // The coefficient is saved in flash memory hundredfold
+  // The second factor is to negate the 32x oversampling
+  return adc * (settings->adc_coefficient / 100.0f / 32.0f);
 }
