@@ -21,7 +21,7 @@ struct settings {
   uint32_t motor2;
   uint32_t motor3; // 16
   uint32_t motor4;
-  uint32_t checksum;
+  uint32_t adc_coefficient; // 18
 };
 
 void settings_read();
