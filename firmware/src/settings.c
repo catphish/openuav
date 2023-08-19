@@ -24,6 +24,7 @@ void settings_default() {
     settings.motor2          = 0;     // Default disabled
     settings.motor3          = 0;     // Default disabled
     settings.motor4          = 0;     // Default disabled
+    settings.adc_coefficient = 1325; // 1325 for TBS Source One 5" PCB, 1470 for Toadie 3" PCB
     settings.checksum        = 0;
 }
 

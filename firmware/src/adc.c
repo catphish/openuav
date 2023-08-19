@@ -2,6 +2,7 @@
 #include "gpio.h"
 #include "util.h"
 #include "led.h"
+#include "settings.h"
 
 void adc_init() {
   // Set ADC12 clock source to sysclk
@@ -41,6 +42,9 @@ void adc_init() {
   ADC1->CR |= ADC_CR_ADSTART;
 }
 
-uint16_t adc_read() {
-  return ADC1->DR;
+uint16_t adc_read_mV() {
+  struct settings *settings = settings_get(); // convenience
+  // Multiply ADC reading with ADC coefficient
+  // (which is saved at * 100 its required value)
+  return ADC1->DR * (settings->adc_coefficient / 100.0f);
 }
