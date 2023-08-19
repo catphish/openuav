@@ -11,6 +11,7 @@ firmware. It is now flyable in acro and angle mode with configurable PIDs.
 * Blackbox
 * USB configuration
 * Canvas OSD
+* 40V SMPS with 9V 2A output
 
 # Dependencies
 
@@ -27,7 +28,6 @@ sudo pacman -Sy arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-newlib \
 * Improved USB interface for configuration and data log download
 * Independent software filtering for gyro P and D terms
 * More OSD options
-* 40V SMPS with 9V 2A output
 
 # Basic Tuning Guide
 
