@@ -1,6 +1,7 @@
 #include <stm32g4xx.h>
 #include "settings.h"
 #include "usb.h"
+#include "adc.h"
 
 #define VERSION 2
 
@@ -25,6 +26,11 @@ void settings_default() {
     settings.motor3          = 0;     // Default disabled
     settings.motor4          = 0;     // Default disabled
     settings.adc_coefficient = 1325; // 1325 for TBS Source One 5" PCB, 1470 for Toadie 3" PCB
+    settings.cell_count      = 0;
+    settings.chemistry       = 0;
+    // Remove this if you add another setting; it's just to keep number
+    // of settings even ... see settings.h for more information on this
+    settings.make_this_an_even_number = 0;
     settings.checksum        = 0;
 }
 

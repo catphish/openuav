@@ -1,11 +1,13 @@
 #include <stdint.h>
 #include <string.h>
-#include "usb.h"
-#include "uart.h"
-#include "adc.h"
+#include "usb.h"   // For debugging purposes only
+#include "uart.h"  // MSP messages are sent via UART
+#include "adc.h"   // Necessary to get battery voltage
+#include "settings.h" // Cell count and chemistry
 #include "stdio.h"
 
-#define CELL_COUNT 4.f
+static int8_t  cell_count = -1; // As-yet unset
+static uint8_t chemistry  =  0; // LiPo
 
 void send_msp(uint8_t command, uint8_t *payload, uint8_t length) {
   uint8_t checksum = 0;
@@ -19,9 +21,8 @@ void send_msp(uint8_t command, uint8_t *payload, uint8_t length) {
   checksum ^= command;
   // Send the payload
   uart_tx_string(payload, length);
-  for (uint8_t i = 0; i < length; i++) {
-    checksum ^= payload[i];
-  }
+  // Calculate the checksum
+  for (uint8_t i = 0; i < length; i++) checksum ^= payload[i];
   // Send the checksum
   uart_tx_string(&checksum, 1);
 }
@@ -45,10 +46,42 @@ void send_msp_displayport_clear() {
   send_msp(182, payload, 1);
 }
 
+// Parts of this are borrowed from the QuickSilver firmware's source code
+uint8_t guess_battery_cell_count(uint8_t chemistry) {
+  // Get an average mV reading
+  int count = 0;
+  int vbatt_avg = 0;
+  while(count < 5000) {
+    vbatt_avg += adc_read_mV();
+    count++;
+  }; vbatt_avg = vbatt_avg / count;
+
+  // A best-effort guess is best done from the midpoint of the
+  // cell's voltage range, which depends on battery chemistry
+  float v_cell_min;
+  float v_cell_max;
+  switch(chemistry) {
+    case 1:  v_cell_min = 3.2f; v_cell_max = 4.35f; break; // lihv
+    case 2:  v_cell_min = 2.5f; v_cell_max = 4.20f; break; // good-quality li-ion
+    default: v_cell_min = 3.2f; v_cell_max = 4.20f;        // lipo
+  }
+  float v_cell_mid = (v_cell_min+((v_cell_max-v_cell_min)/2));
+
+  // Using average cell voltage and voltage range midpoint,
+  // we're now able to make our guess with some confidence
+  for(int i=6; i>0; i--) {
+    if((vbatt_avg / i) > (int)(v_cell_mid*1000)) {
+      return i;
+    }
+  }
+
+  return 0; // no clue...
+}
+
 void send_msp_displayport_write() {
   // Prepare a MSP_DISPLAYPORT payload
-  uint8_t payload[16];
-  memset(payload, 0, 16);
+  uint8_t payload[19];
+  memset(payload, 0, 19);
   // Send the write string subcommand
   payload[0] = 3;
    // Row
@@ -58,14 +91,27 @@ void send_msp_displayport_write() {
    // Attributes
   payload[3] = 0;
 
-  // String
-  int vbatt = 13.25f / CELL_COUNT * adc_read(); // TODO: autodetect number of cells
-  uint8_t v = vbatt / 1000;
-  uint16_t mv = vbatt % 1000;
-  snprintf((char*)payload+4, 11, "%d.%03dV", v, mv);
+  // Set cell count, but only once
+  if (cell_count == -1) {
+    struct settings *settings = settings_get(); // convenience
+    cell_count = settings->cell_count;
+    if (cell_count == 0) {
+      chemistry = settings->chemistry;
+      cell_count = guess_battery_cell_count(chemistry);
+    }
+  }
 
-  // Send the payload
-  send_msp(182, payload, 16);
+  // Anything else would result in meaningless output
+  if (cell_count > 0) {
+    // String
+    int vbatt = adc_read_mV() / cell_count;
+    uint8_t v = vbatt / 1000;
+    uint16_t mv = vbatt % 1000;
+    snprintf((char*)payload+4, 16, "%iS %d.%02dV", (uint8_t)cell_count, v, mv);
+
+    // Send the payload
+    send_msp(182, payload, 19);
+  }
 }
 
 void send_msp_displayport_draw() {

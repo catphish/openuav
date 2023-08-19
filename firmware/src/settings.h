@@ -22,6 +22,13 @@ struct settings {
   uint32_t motor3; // 16
   uint32_t motor4;
   uint32_t adc_coefficient; // 18
+  uint32_t cell_count;
+  uint32_t chemistry; // 20
+  
+  // (Remove if you add another one)
+  uint32_t make_this_an_even_number;
+  // MUST be the last value, and MUST be even
+  uint32_t checksum; // 22
 };
 
 void settings_read();
