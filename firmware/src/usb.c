@@ -13,6 +13,8 @@
 #include "flash.h"
 #include "blackbox.h"
 
+#define USB_LINES 25
+
 uint8_t pending_addr = 0;
 uint32_t buffer_pointer;
 
@@ -22,7 +24,7 @@ struct usb_packet {
 };
 
 struct usb_ring_buffer {
-  struct usb_packet packet[16];
+  struct usb_packet packet[USB_LINES];
   uint8_t head;
   uint8_t tail;
 } usb_ring_buffer[2];
@@ -134,7 +136,7 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len) {
 }
 
 uint8_t usb_write_ready(uint8_t ep) {
-  if((usb_ring_buffer[ep].head + 1) % 16 == usb_ring_buffer[ep].tail) {
+  if((usb_ring_buffer[ep].head + 1) % USB_LINES == usb_ring_buffer[ep].tail) {
     return 0;
   }
   return 1;
@@ -144,7 +146,7 @@ uint8_t usb_write_ready(uint8_t ep) {
 // retun immediately.
 void usb_write_string(uint8_t ep, char * data, uint32_t len) {
   while(len) {
-    if((usb_ring_buffer[ep].head + 1) % 16 == usb_ring_buffer[ep].tail) {
+    if((usb_ring_buffer[ep].head + 1) % USB_LINES == usb_ring_buffer[ep].tail) {
       return;
     }
     uint32_t chunk = len;
@@ -153,7 +155,7 @@ void usb_write_string(uint8_t ep, char * data, uint32_t len) {
       usb_ring_buffer[ep].packet[usb_ring_buffer[ep].head].data[n] = data[n];
     }
     usb_ring_buffer[ep].packet[usb_ring_buffer[ep].head].len = chunk;
-    usb_ring_buffer[ep].head = (usb_ring_buffer[ep].head + 1) % 16;
+    usb_ring_buffer[ep].head = (usb_ring_buffer[ep].head + 1) % USB_LINES;
     data += chunk;
     len -= chunk;
   }
@@ -261,6 +263,10 @@ void usb_handle_ep1() {
           if(packet[2] == '3') settings->motor3 = atoi(packet+3);
           if(packet[2] == '4') settings->motor4 = atoi(packet+3);
         }
+        if(packet[1] == 'b') { // "battery"
+          if(packet[2] == 'a') settings->adc_coefficient = atoi(packet+3);
+          if(packet[2] == 'c') settings->cell_count = atoi(packet+3);
+          if(packet[2] == 'h') settings->chemistry = atoi(packet+3);
         }
       }
       if(packet[0] == 'e') {
@@ -311,14 +317,14 @@ void usb_main() {
     // Copy data from the ring buffer into the endpoint buffer.
     if(usb_ring_buffer[0].head != usb_ring_buffer[0].tail) {
       usb_write(0, usb_ring_buffer[0].packet[usb_ring_buffer[0].tail].data, usb_ring_buffer[0].packet[usb_ring_buffer[0].tail].len);
-      usb_ring_buffer[0].tail = (usb_ring_buffer[0].tail + 1) % 16;
+      usb_ring_buffer[0].tail = (usb_ring_buffer[0].tail + 1) % USB_LINES;
     }
   }
   if(ep_tx_ready(1)) {
     // Copy data from the ring buffer into the endpoint buffer.
     if(usb_ring_buffer[1].head != usb_ring_buffer[1].tail) {
       usb_write(1, usb_ring_buffer[1].packet[usb_ring_buffer[1].tail].data, usb_ring_buffer[1].packet[usb_ring_buffer[1].tail].len);
-      usb_ring_buffer[1].tail = (usb_ring_buffer[1].tail + 1) % 16;
+      usb_ring_buffer[1].tail = (usb_ring_buffer[1].tail + 1) % USB_LINES;
     }
   }
 }
@@ -326,7 +332,7 @@ void usb_main() {
 void usb_printf(const char* format, ...) {
   va_list args;
   va_start(args, format);
-  char buffer[64];
+  char buffer[80];
   vsprintf(buffer, format, args);
   usb_write_string(1, buffer, strlen(buffer));
   va_end( args );
