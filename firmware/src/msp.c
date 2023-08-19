@@ -48,14 +48,6 @@ void send_msp_displayport_clear() {
 
 // Parts of this are borrowed from the QuickSilver firmware's source code
 uint8_t guess_battery_cell_count(uint8_t chemistry) {
-  // Get an average mV reading
-  int count = 0;
-  int vbatt_avg = 0;
-  while(count < 5000) {
-    vbatt_avg += adc_read_mV();
-    count++;
-  }; vbatt_avg = vbatt_avg / count;
-
   // A best-effort guess is best done from the midpoint of the
   // cell's voltage range, which depends on battery chemistry
   float v_cell_min;
@@ -69,8 +61,9 @@ uint8_t guess_battery_cell_count(uint8_t chemistry) {
 
   // Using average cell voltage and voltage range midpoint,
   // we're now able to make our guess with some confidence
+  uint32_t v_batt_curr = adc_read_mV();
   for(int i=6; i>0; i--) {
-    if((vbatt_avg / i) > (int)(v_cell_mid*1000)) {
+    if((v_batt_curr / i) > (uint32_t)(v_cell_mid*1000)) {
       return i;
     }
   }
@@ -80,8 +73,8 @@ uint8_t guess_battery_cell_count(uint8_t chemistry) {
 
 void send_msp_displayport_write() {
   // Prepare a MSP_DISPLAYPORT payload
-  uint8_t payload[19];
-  memset(payload, 0, 19);
+  uint8_t payload[20];
+  memset(payload, 0, 20);
   // Send the write string subcommand
   payload[0] = 3;
    // Row
@@ -110,7 +103,7 @@ void send_msp_displayport_write() {
     snprintf((char*)payload+4, 16, "%iS %d.%02dV", (uint8_t)cell_count, v, mv);
 
     // Send the payload
-    send_msp(182, payload, 19);
+    send_msp(182, payload, 20);
   }
 }
 
