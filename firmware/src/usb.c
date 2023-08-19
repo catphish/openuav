@@ -222,11 +222,14 @@ void usb_handle_ep1() {
   char packet[64];
   uint8_t len = usb_read(1, packet);
   if(len) {
+    // let user enable USB commands if they wish to use them
     if(packet[0] == 'E' && packet[1] == 'N' && packet[2] == 'A' && packet[3] == 'B' && packet[4] == 'L' && packet[5] == 'E') {
       usb_enabled = 1;
       usb_printf("USB commands enabled\n");
     }
+    // prevent USB commands from affecting main loop duration while not in use
     if(usb_enabled) {
+      struct settings *settings = settings_get(); // convenience
       if(packet[0] == 'p') {
         settings_print();
       }
@@ -239,24 +242,25 @@ void usb_handle_ep1() {
       if(packet[0] == 'd') {
         settings_default();
       }
-      if(packet[0] == 's') {
-        if(packet[1] == 'r') settings_get()->acro_rate = atoi(packet+2);
-        if(packet[1] == 'R') settings_get()->angle_rate = atoi(packet+2);
-        if(packet[1] == 'p') settings_get()->p = atoi(packet+2);
-        if(packet[1] == 'i') settings_get()->i = atoi(packet+2);
-        if(packet[1] == 'd') settings_get()->d = atoi(packet+2);
-        if(packet[1] == 'y') settings_get()->yaw_p = atoi(packet+2);
-        if(packet[1] == 'Y') settings_get()->yaw_i = atoi(packet+2);
-        if(packet[1] == 't') settings_get()->throttle_gain = atoi(packet+2);
-        if(packet[1] == 'T') settings_get()->throttle_min = atoi(packet+2);
-        if(packet[1] == 'e') settings_get()->expo = atoi(packet+2);
-        if(packet[1] == 'E') settings_get()->yaw_expo = atoi(packet+2);
-        if(packet[1] == 'm') {
-          if(packet[2] == 'd') settings_get()->motor_direction = atoi(packet+3);
-          if(packet[2] == '1') settings_get()->motor1 = atoi(packet+3);
-          if(packet[2] == '2') settings_get()->motor2 = atoi(packet+3);
-          if(packet[2] == '3') settings_get()->motor3 = atoi(packet+3);
-          if(packet[2] == '4') settings_get()->motor4 = atoi(packet+3);
+      if(packet[0] == 's') { // "set"
+        if(packet[1] == 'r') settings->acro_rate = atoi(packet+2);
+        if(packet[1] == 'R') settings->angle_rate = atoi(packet+2);
+        if(packet[1] == 'p') settings->p = atoi(packet+2);
+        if(packet[1] == 'i') settings->i = atoi(packet+2);
+        if(packet[1] == 'd') settings->d = atoi(packet+2);
+        if(packet[1] == 'y') settings->yaw_p = atoi(packet+2);
+        if(packet[1] == 'Y') settings->yaw_i = atoi(packet+2);
+        if(packet[1] == 't') settings->throttle_gain = atoi(packet+2); // poor man's airmode
+        if(packet[1] == 'T') settings->throttle_min = atoi(packet+2); // idle, basically
+        if(packet[1] == 'e') settings->expo = atoi(packet+2); // pitch and roll
+        if(packet[1] == 'E') settings->yaw_expo = atoi(packet+2);
+        if(packet[1] == 'm') { // "motor"
+          if(packet[2] == 'd') settings->motor_direction = atoi(packet+3); // flip direction of all of them
+          if(packet[2] == '1') settings->motor1 = atoi(packet+3);
+          if(packet[2] == '2') settings->motor2 = atoi(packet+3);
+          if(packet[2] == '3') settings->motor3 = atoi(packet+3);
+          if(packet[2] == '4') settings->motor4 = atoi(packet+3);
+        }
         }
       }
       if(packet[0] == 'e') {
@@ -268,7 +272,7 @@ void usb_handle_ep1() {
         uint16_t page = blackbox_find_free_page();
         usb_printf("Free page: %d\n", page);
       }
-      if(packet[0] == 'h') {
+      if(packet[0] == 'h') { // "help, i'm running out of letters"
         // Dump flash to USB
         dump_flash = blackbox_find_free_page();
       }

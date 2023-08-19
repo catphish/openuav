@@ -157,7 +157,7 @@ int main(void) {
     // Each time the gyro has new data, we run the main control loop.
     if(gyro_ready()) {
       // Fetch settings and scale them to the appropriate units.
-      struct settings *settings = settings_get();
+      struct settings *settings = settings_get(); // convenience
       float angle_rate    = 0.01f     * settings->angle_rate;
       float acro_rate     = 0.01f     * settings->acro_rate;
       float p             = 0.001f    * settings->p;

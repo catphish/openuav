@@ -36,7 +36,8 @@ Starting from the default values in `firmware/src/main.c`, increase _P_ (`RATE_P
 
 ## TBS Source One V5 5" - 2206 Motors at 4S
 
-THIS TUNE IS STILL UNDERGOING TESTING
+THIS TUNE IS STILL UNDERGOING TESTING!
+
 ```
 Angle rate: 800
 Acro rate: 1500 (861 dps)
