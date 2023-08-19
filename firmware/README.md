@@ -35,7 +35,7 @@ Starting from the default values in `firmware/src/main.c`, increase _P_ (`RATE_P
 
 # Tuning Examples
 
-## TBS Source One v5 - 2206 Motors at 4S
+## TBS Source One V5 5" - 2206 Motors at 4S
 
 THIS TUNE IS STILL UNDERGOING TESTING
 ```
@@ -48,4 +48,22 @@ Yaw P: 200
 Yaw I: 200
 Expo: 60
 Yaw expo: 60
+```
+
+## iFlight iX3 Racer V1 3" - 1104/5250KV Motors at 3S
+
+THIS TUNE IS STILL UNDERGOING TESTING
+
+```
+Angle rate (sR): 670
+Acro rate (sr): 670
+P (sp): 180
+I (si): 120
+D (sd): 400
+Yaw P (sy): 220
+Yaw I (sY): 200
+Expo (se): 25
+Yaw expo (sE): 30
+Throttle gain (st): 80
+Throttle min (sT): 100
 ```
