@@ -3,6 +3,7 @@
 #include "usb.h"   // For debugging purposes only
 #include "uart.h"  // MSP messages are sent via UART
 #include "adc.h"   // Necessary to get battery voltage
+#include "main.h"  // Exposes armed state
 #include "settings.h" // Cell count and chemistry
 #include "stdio.h"
 
@@ -31,8 +32,8 @@ void send_msp_status_response(void) {
   // Prepare a MSP_STATUS response payload
   uint8_t payload[11];
   memset(payload, 0, 11);
-  // Send the arming status (currently hardcoded to 1=armed)
-  payload[6] = 1;
+  // Send the arming status
+  payload[6] = main_get_armed_state();
   // Send the response
   send_msp(101, payload, 11);
 }
@@ -99,12 +100,27 @@ void send_msp_displayport_write() {
     // String
     int vbatt = adc_read_mV() / cell_count;
     uint8_t v = vbatt / 1000;
-    uint16_t mv = vbatt % 1000;
+    uint16_t mv = (vbatt % 1000) / 10; // For 2 decimal places
     snprintf((char*)payload+4, 16, "%iS %d.%02dV", (uint8_t)cell_count, v, mv);
-
     // Send the payload
     send_msp(182, payload, 20);
   }
+
+  // Prepare a MSP_DISPLAYPORT payload
+  memset(payload, 0, 12);
+  // Send the write string subcommand
+  payload[0] = 3;
+  // Row
+  payload[1] = 15;
+  // Column
+  payload[2] = 10;
+   // Attributes
+  payload[3] = 0;
+  // Either "armed" or "disarmed"
+  if(1 == main_get_armed_state()) snprintf((char*)payload+4, 6, "armed");
+  else snprintf((char*)payload+4, 9, "disarmed");
+  // Send the payload
+  send_msp(182, payload, 8);
 }
 
 void send_msp_displayport_draw() {

@@ -1,0 +1,1 @@
+uint8_t main_get_armed_state();
