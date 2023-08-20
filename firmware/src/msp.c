@@ -3,11 +3,17 @@
 #include "usb.h"   // For debugging purposes only
 #include "uart.h"  // MSP messages are sent via UART
 #include "adc.h"   // Necessary to get battery voltage
+#include "main.h"  // Exposes armed state
 #include "settings.h" // Cell count and chemistry
 #include "stdio.h"
 
-static int8_t  cell_count = -1; // As-yet unset
-static uint8_t chemistry  =  0; // LiPo
+// As-yet unset
+// Will either be set from settings or guessed
+static int8_t cell_count = -1;
+// LiPo
+static uint8_t chemistry = 0;
+static float v_cell_min = 3.2f;
+static float v_cell_max = 4.20f;
 
 void send_msp(uint8_t command, uint8_t *payload, uint8_t length) {
   uint8_t checksum = 0;
@@ -31,8 +37,8 @@ void send_msp_status_response(void) {
   // Prepare a MSP_STATUS response payload
   uint8_t payload[11];
   memset(payload, 0, 11);
-  // Send the arming status (currently hardcoded to 1=armed)
-  payload[6] = 1;
+  // Send the arming status
+  payload[6] = main_get_armed_state();
   // Send the response
   send_msp(101, payload, 11);
 }
@@ -50,12 +56,9 @@ void send_msp_displayport_clear() {
 uint8_t guess_battery_cell_count(uint8_t chemistry) {
   // A best-effort guess is best done from the midpoint of the
   // cell's voltage range, which depends on battery chemistry
-  float v_cell_min;
-  float v_cell_max;
   switch(chemistry) {
-    case 1:  v_cell_min = 3.2f; v_cell_max = 4.35f; break; // lihv
-    case 2:  v_cell_min = 2.5f; v_cell_max = 4.20f; break; // good-quality li-ion
-    default: v_cell_min = 3.2f; v_cell_max = 4.20f;        // lipo
+    case 1: v_cell_min = 3.2f; v_cell_max = 4.35f; break; // LiHV
+    case 2: v_cell_min = 2.5f; v_cell_max = 4.20f; break; // good-quality Li-Ion
   }
   float v_cell_mid = (v_cell_min+((v_cell_max-v_cell_min)/2));
 
@@ -72,18 +75,40 @@ uint8_t guess_battery_cell_count(uint8_t chemistry) {
 }
 
 void send_msp_displayport_write() {
-  // Prepare a MSP_DISPLAYPORT payload
+  // Strings can have payload length minus four characters
   uint8_t payload[20];
+
+  // Prepare a MSP_DISPLAYPORT payload
   memset(payload, 0, 20);
   // Send the write string subcommand
   payload[0] = 3;
-   // Row
+  // Bottom row
   payload[1] = 15;
-   // Column
+  // Column
+  // (left third on older HDZ VRX firmware)
+  payload[2] = 6;
+  // Attributes
+  payload[3] = 0;
+  // String (all letters must be uppercase, lowercase letters map to symbols)
+  char mode_chars[3] = {'D', 'C', '\0'};
+  if(1 == main_get_armed_state() ) mode_chars[0] = 'A';
+  if(main_get_elrs_channel(5) > 0) mode_chars[1] = 'A';
+  snprintf((char*)payload+4, 10, "%s", mode_chars);
+
+  // Send the payload
+  send_msp(182, payload, 14);
+  
+  // Prepare a MSP_DISPLAYPORT payload
+  memset(payload, 0, 20);
+  // Send the write string subcommand
+  payload[0] = 3;
+   // Bottom row
+  payload[1] = 15;
+  // Column
+  // (right third on older HDZ VRX firmware)
   payload[2] = 20;
    // Attributes
   payload[3] = 0;
-
   // Set cell count, but only once
   if (cell_count == -1) {
     struct settings *settings = settings_get(); // convenience
@@ -93,17 +118,33 @@ void send_msp_displayport_write() {
       cell_count = guess_battery_cell_count(chemistry);
     }
   }
-
-  // Anything else would result in meaningless output
+  // (Anything else would result in meaningless output)
   if (cell_count > 0) {
     // String
-    int vbatt = adc_read_mV() / cell_count;
+    uint16_t vbatt = adc_read_mV() / cell_count;
     uint8_t v = vbatt / 1000;
-    uint16_t mv = vbatt % 1000;
+    uint16_t mv = (vbatt % 1000) / 10; // For 2 decimal places
     snprintf((char*)payload+4, 16, "%iS %d.%02dV", (uint8_t)cell_count, v, mv);
-
     // Send the payload
     send_msp(182, payload, 20);
+
+    // Prepare another MSP_DISPLAYPORT payload
+    memset(payload, 0, 20);
+    // Send the write string subcommand
+    payload[0] = 3;
+    // Middle row
+    payload[1] = 7;
+    // Column
+    // (mid-point on older HDZ VRX firmware)
+    payload[2] = 13;
+    // Attributes
+    payload[3] = 0;
+    if(vbatt < (uint16_t)(v_cell_min*1000)) {
+      // Another string
+      snprintf((char*)payload+4, 10, "BATTERY!");
+      // Send the payload again
+      send_msp(182, payload, 14);
+    }
   }
 }
 
