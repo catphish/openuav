@@ -1,24 +1,34 @@
 #include <stdint.h>
 
+// as an undocumented quirk, the STM32 flash won't save anything unless
+// it has 64 bytes to write. therefore, the number of these settings must
+// be EVEN and each setting must be 32bits long, so e.g. uint32_t...
 struct settings {
   uint32_t version;
-  uint32_t angle_rate;
+  uint32_t angle_rate; // 2
   uint32_t acro_rate;
-  uint32_t p;
+  uint32_t p; // 4
   uint32_t i;
-  uint32_t d;
+  uint32_t d; // 6
   uint32_t yaw_p;
-  uint32_t yaw_i;
+  uint32_t yaw_i; // 8
   uint32_t expo;
-  uint32_t yaw_expo;
+  uint32_t yaw_expo; // 10
   uint32_t throttle_gain;
-  uint32_t throttle_min;
+  uint32_t throttle_min; // 12
   uint32_t motor_direction;
-  uint32_t motor1;
+  uint32_t motor1; // 14
   uint32_t motor2;
-  uint32_t motor3;
+  uint32_t motor3; // 16
   uint32_t motor4;
-  uint32_t checksum;
+  uint32_t adc_coefficient; // 18
+  uint32_t cell_count;
+  uint32_t chemistry; // 20
+  
+  // (Remove if you add another one)
+  uint32_t make_this_an_even_number;
+  // MUST be the last value, and MUST be even
+  uint32_t checksum; // 22
 };
 
 void settings_read();
