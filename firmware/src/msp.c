@@ -78,13 +78,31 @@ void send_msp_displayport_write() {
   memset(payload, 0, 20);
   // Send the write string subcommand
   payload[0] = 3;
-   // Row
+  // Bottom row
   payload[1] = 15;
-   // Column
+  // Column
+  // (left third on older HDZ VRX firmware)
+  payload[2] = 6;
+  // Attributes
+  payload[3] = 0;
+  // String
+  if(1 == main_get_armed_state()) snprintf((char*)payload+4, 10, "armed");
+  else snprintf((char*)payload+4, 10, "disarmed");
+  // Send the payload
+  // FIXME: results in only garbage being shown ... WHY?!
+  // send_msp(182, payload, 14);
+  
+  // Prepare another MSP_DISPLAYPORT payload
+  memset(payload, 0, 20);
+  // Send the write string subcommand
+  payload[0] = 3;
+   // Bottom row
+  payload[1] = 15;
+  // Column
+  // (right third on older HDZ VRX firmware)
   payload[2] = 20;
    // Attributes
   payload[3] = 0;
-
   // Set cell count, but only once
   if (cell_count == -1) {
     struct settings *settings = settings_get(); // convenience
@@ -94,8 +112,7 @@ void send_msp_displayport_write() {
       cell_count = guess_battery_cell_count(chemistry);
     }
   }
-
-  // Anything else would result in meaningless output
+  // (Anything else would result in meaningless output)
   if (cell_count > 0) {
     // String
     int vbatt = adc_read_mV() / cell_count;
@@ -105,22 +122,6 @@ void send_msp_displayport_write() {
     // Send the payload
     send_msp(182, payload, 20);
   }
-
-  // Prepare a MSP_DISPLAYPORT payload
-  memset(payload, 0, 12);
-  // Send the write string subcommand
-  payload[0] = 3;
-  // Row
-  payload[1] = 15;
-  // Column
-  payload[2] = 10;
-   // Attributes
-  payload[3] = 0;
-  // Either "armed" or "disarmed"
-  if(1 == main_get_armed_state()) snprintf((char*)payload+4, 6, "armed");
-  else snprintf((char*)payload+4, 9, "disarmed");
-  // Send the payload
-  send_msp(182, payload, 8);
 }
 
 void send_msp_displayport_draw() {
