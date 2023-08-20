@@ -20,6 +20,7 @@
 #include "flash.h"
 #include "blackbox.h"
 #include "airmode.h"
+#include "main.h"
 
 #define FILTER_LEN  17
 float coeffs[ FILTER_LEN ] =
@@ -114,6 +115,9 @@ void SystemInit(void) {
 
 // This struct contains the data that will be output to the four motors.
 struct dshot_data dshot;
+
+// Used by msp.c
+int main_get_armed_state() { return dshot.armed; }
 
 // These structs contain the raw gyro and accelerometer data.
 struct gyro_data gyro;
