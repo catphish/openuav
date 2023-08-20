@@ -29,9 +29,6 @@ void adc_init() {
   // Ensure ADC1 is disabled
   ADC1->CR &= ~ADC_CR_ADEN;
 
-  // Set ADC1 clock divider to 32 (5MHz) again
-  ADC12_COMMON->CCR = ADC_CCR_PRESC_3;
-
   // Calibrate ADC1
   ADC1->CR |= ADC_CR_ADCAL;
   while(ADC1->CR & ADC_CR_ADCAL) {}
@@ -50,10 +47,10 @@ void adc_init() {
   // Set ADC1 to 256x oversampling, this results in 20 bit total resolution
   ADC1->CFGR2 |= ADC_CFGR2_OVSR_0 | ADC_CFGR2_OVSR_1 | ADC_CFGR2_OVSR_2;
 
-  // Set ADC1 to 3-bit right shift, this results in 14 bit output, the lowest 3 bits are discarded
-  // Otherwise, at 20 bits of resolution, the output would always be clipped to 65363, because the
+  // Set ADC1 to 4-bit right shift, this results in 20-bit output, the lowest 4 bits are discarded
+  // Otherwise, at 20 bits of resolution, the output would always be clipped to 65535, because the
   // DR register is only 16 bits wide
-  ADC1->CFGR2 |= ADC_CFGR2_OVSS_0 | ADC_CFGR2_OVSS_1;
+  ADC1->CFGR2 |= ADC_CFGR2_OVSS_2;
 
   // Set ADC1 to 640.5 + 12.5 cycles sampling time
   ADC1->SMPR1 |= ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2;
@@ -71,13 +68,15 @@ void adc_init() {
 uint32_t adc_read_mV() {
   struct settings *settings = settings_get(); // convenience
   uint32_t adc = 0;
+
+  // Wait for ADC to be ready
+  // The above message was mindread by a LLaMA, wow!
   do {
+    // Read from the ADC data register
     adc = ADC1->DR;
   } while (adc < 1);
 
-  // Multiply ADC reading with ADC coefficient
-  // - The coefficient is saved in flash memory hundredfold
-  // - The second factor is to negate the multiplication still
-  //   present from the oversampling after the 3-bit right-shift
-  return adc * (settings->adc_coefficient / 100.0f / 48.0f);
+  // Divide ADC reading by ADC coefficient, which is itself
+  // divided by 1000 since it needs to be stored as an integer
+  return adc / (settings->adc_coefficient / 1000.0f);
 }
