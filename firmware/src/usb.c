@@ -252,8 +252,8 @@ void usb_handle_ep1() {
         if(packet[1] == 'd') settings->d = atoi(packet+2);
         if(packet[1] == 'y') settings->yaw_p = atoi(packet+2);
         if(packet[1] == 'Y') settings->yaw_i = atoi(packet+2);
-        if(packet[1] == 't') settings->throttle_gain = atoi(packet+2); // poor man's airmode
-        if(packet[1] == 'T') settings->throttle_min = atoi(packet+2); // idle, basically
+        if(packet[1] == 't') settings->throttle_gain = atoi(packet+2); // max throttle limit
+        if(packet[1] == 'T') settings->throttle_min = atoi(packet+2); // full throttle is the above + this
         if(packet[1] == 'e') settings->expo = atoi(packet+2); // pitch and roll
         if(packet[1] == 'E') settings->yaw_expo = atoi(packet+2);
         if(packet[1] == 'm') { // "motor"
@@ -278,7 +278,7 @@ void usb_handle_ep1() {
         uint16_t page = blackbox_find_free_page();
         usb_printf("Free page: %d\n", page);
       }
-      if(packet[0] == 'h') { // "help, i'm running out of letters"
+      if(packet[0] == 'h') {
         // Dump flash to USB
         dump_flash = blackbox_find_free_page();
       }
