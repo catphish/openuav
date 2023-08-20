@@ -9,6 +9,8 @@ void adc_init() {
   RCC->CCIPR |= RCC_CCIPR_ADC12SEL_1;
   // Enable ADC12 clock
   RCC->AHB2ENR |= RCC_AHB2ENR_ADC12EN;
+  // Set ADC1 clock divider to 32 (5MHz)
+  ADC12_COMMON->CCR = ADC_CCR_PRESC_3;
 
   // Enable GPIOF clock
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOFEN;
@@ -17,13 +19,18 @@ void adc_init() {
   // Set PF1 to analog mode
   gpio_pin_mode(GPIOF, 1, GPIO_MODE_ANALOG, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
 
+  // Disable the Deep Power Down mode
   ADC1->CR &= ~ADC_CR_DEEPPWD;
   msleep(10);
+  // Enable the internal ADC voltage regulator
   ADC1->CR |= ADC_CR_ADVREGEN;
   msleep(10);
 
-  // Disable ADC1
+  // Ensure ADC1 is disabled
   ADC1->CR &= ~ADC_CR_ADEN;
+
+  // Set ADC1 clock divider to 32 (5MHz) again
+  ADC12_COMMON->CCR = ADC_CCR_PRESC_3;
 
   // Calibrate ADC1
   ADC1->CR |= ADC_CR_ADCAL;
@@ -36,14 +43,27 @@ void adc_init() {
 
   // Set ADC1 to continuous mode and overrun mode
   ADC1->CFGR = ADC_CFGR_OVRMOD | ADC_CFGR_CONT;
-  // Enable oversampling
+
+  // Instruct ADC1 to oversample
   ADC1->CFGR2 = ADC_CFGR2_ROVSE;
-  // Set oversampling ratio to 32x (= 0b100)
-  ADC1->CFGR2 |= ADC_CFGR2_OVSR_2;
-  // Slow ADC further down by setting 0x sampling time (= 0b111)
-  ADC1->SMPR1 = ADC_SMPR1_SMP1_0 | ADC_SMPR1_SMP1_1 | ADC_SMPR1_SMP1_2;
-  // Set the sequence. One conversion, channel 10
+
+  // Set ADC1 to 256x oversampling, this results in 20 bit total resolution
+  ADC1->CFGR2 |= ADC_CFGR2_OVSR_0 | ADC_CFGR2_OVSR_1 | ADC_CFGR2_OVSR_2;
+
+  // Set ADC1 to 3-bit right shift, this results in 14 bit output, the lowest 3 bits are discarded
+  // Otherwise, at 20 bits of resolution, the output would always be clipped to 65363, because the
+  // DR register is only 16 bits wide
+  ADC1->CFGR2 |= ADC_CFGR2_OVSS_0 | ADC_CFGR2_OVSS_1;
+
+  // Set ADC1 to 640.5 + 12.5 cycles sampling time
+  ADC1->SMPR1 |= ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2;
+  ADC1->SMPR1 |= ADC_SMPR1_SMP1_0 | ADC_SMPR1_SMP1_1 | ADC_SMPR1_SMP1_2;
+  // Set the sequence. One conversion, channel 10.
   ADC1->SQR1 = 0 | ADC_SQR1_SQ1_3 | ADC_SQR1_SQ1_1;
+
+  // At 5Mhz, this is 640.5 + 12.5 cycles = 130us per sample
+  // With 256x oversampling, this is 33ms per sample
+
   // Start ADC1
   ADC1->CR |= ADC_CR_ADSTART;
 }
@@ -54,8 +74,10 @@ uint32_t adc_read_mV() {
   do {
     adc = ADC1->DR;
   } while (adc < 1);
+
   // Multiply ADC reading with ADC coefficient
-  // The coefficient is saved in flash memory hundredfold
-  // The second factor is to negate the 32x oversampling
-  return adc * (settings->adc_coefficient / 100.0f / 32.0f);
+  // - The coefficient is saved in flash memory hundredfold
+  // - The second factor is to negate the multiplication still
+  //   present from the oversampling after the 3-bit right-shift
+  return adc * (settings->adc_coefficient / 100.0f / 48.0f);
 }
