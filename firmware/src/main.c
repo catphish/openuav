@@ -21,6 +21,81 @@
 #include "blackbox.h"
 #include "airmode.h"
 
+#define FILTER_LEN  17
+float coeffs[ FILTER_LEN ] =
+{
+    0.000000000000000000,
+    0.000460990755913804,
+    0.003904853418603426,
+    0.014975629354308056,
+    0.038805516331589775,
+    0.076533957530631885,
+    0.121097318822696309,
+    0.158012278728653421,
+    0.172418910115206325,
+    0.158012278728653421,
+    0.121097318822696351,
+    0.076533957530631941,
+    0.038805516331589796,
+    0.014975629354308051,
+    0.003904853418603431,
+    0.000460990755913805,
+    0.000000000000000000,
+};
+float filter[FILTER_LEN][3];
+
+#define FILTER_LEN_D 47
+float coeffs_d[ FILTER_LEN_D] = {
+    -0.000000000000000001,
+    0.000064393676763220,
+    0.000271319801257540,
+    0.000649073204382278,
+    0.001235623050647806,
+    0.002076637553675906,
+    0.003222058252059904,
+    0.004721452177155942,
+    0.006618513253826244,
+    0.008945196904421814,
+    0.011716041834802050,
+    0.014923251981835048,
+    0.018533075973444006,
+    0.022483932798082779,
+    0.026686597480116862,
+    0.031026590809771163,
+    0.035368727580917296,
+    0.039563585562856544,
+    0.043455480385182557,
+    0.046891386356592825,
+    0.049730143962839937,
+    0.051851251307310706,
+    0.053162553912562159,
+    0.053606224358990776,
+    0.053162553912562159,
+    0.051851251307310706,
+    0.049730143962839930,
+    0.046891386356592839,
+    0.043455480385182564,
+    0.039563585562856544,
+    0.035368727580917296,
+    0.031026590809771187,
+    0.026686597480116866,
+    0.022483932798082775,
+    0.018533075973443999,
+    0.014923251981835051,
+    0.011716041834802057,
+    0.008945196904421819,
+    0.006618513253826253,
+    0.004721452177155945,
+    0.003222058252059902,
+    0.002076637553675908,
+    0.001235623050647806,
+    0.000649073204382280,
+    0.000271319801257541,
+    0.000064393676763220,
+    -0.000000000000000001
+};
+float filter_d[FILTER_LEN_D][2];
+
 // Set up all the hardware. Each devide has its own init function.
 void SystemInit(void) {
   clock_init();
@@ -44,7 +119,7 @@ struct dshot_data dshot;
 struct gyro_data gyro;
 struct gyro_data accel;
 // This struct contains the gyro data from the previous loop, which is used to calculate the D term.
-struct gyro_data prev_gyro;
+float prev_gyro[3];
 
 // This flag is set when it's safe to arm and inhibits arming at power-on.
 uint8_t arming_allowed = 0;
@@ -56,18 +131,12 @@ uint32_t dump_flash_page = 0;
 uint32_t dump_flash_offset = 0;
 
 // These variables are used to store the accumulated integral terms for each axis.
-static float i_pitch = 0;
-static float i_roll  = 0;
-static float i_yaw   = 0;
+float i_pitch = 0;
+float i_roll  = 0;
+float i_yaw   = 0;
 
 // A continuously increasing counter that is used to timestamp blackbox frames.
-static uint32_t frame_count = 0;
-
-
-// These variables are used to filter the D term. This will likely be replaced with a
-// proper filter on both P and D terms within the gyro code.
-static float d_pitch_filter = 0;
-static float d_roll_filter  = 0;
+uint32_t frame_count = 0;
 
 int main(void) {
   // LED1 is the power LED, turn it on before we do anything else.
@@ -93,7 +162,7 @@ int main(void) {
       float acro_rate     = 0.01f     * settings->acro_rate;
       float p             = 0.001f    * settings->p;
       float i             = 0.000001f * settings->i;
-      float d             = 0.001f    * settings->d;
+      float d             = 0.01f     * settings->d;
       float yaw_p         = 0.001f    * settings->yaw_p;
       float yaw_i         = 0.000001f * settings->yaw_i;
       float expo          = 0.01f     * settings->expo;
@@ -131,6 +200,31 @@ int main(void) {
       // Read the raw gyro and accelerometer data.
       gyro_read(&gyro);
       accel_read(&accel);
+
+      // Filter the gyro data
+      filter[frame_count % FILTER_LEN][0] = gyro.x;
+      filter[frame_count % FILTER_LEN][1] = gyro.y;
+      filter[frame_count % FILTER_LEN][2] = gyro.z;
+      float gyro_filter_p[3] = {0, 0, 0};
+      for(int i=0; i<FILTER_LEN; i++) {
+        gyro_filter_p[0] += coeffs[i] * filter[(frame_count + i) % FILTER_LEN][0];
+        gyro_filter_p[1] += coeffs[i] * filter[(frame_count + i) % FILTER_LEN][1];
+        gyro_filter_p[2] += coeffs[i] * filter[(frame_count + i) % FILTER_LEN][2];
+      }
+
+      // Filter the gyro data again to get the D term.
+      filter_d[frame_count % FILTER_LEN_D][0] = gyro.x;
+      filter_d[frame_count % FILTER_LEN_D][1] = gyro.y;
+      float gyro_filter_d[2] = {0, 0};
+      for(int i=0; i<FILTER_LEN_D; i++) {
+        gyro_filter_d[0] += coeffs_d[i] * filter_d[(frame_count + i) % FILTER_LEN_D][0];
+        gyro_filter_d[1] += coeffs_d[i] * filter_d[(frame_count + i) % FILTER_LEN_D][1];
+      }
+
+      // Copy the P term filtered gyro data back into the gyro struct.
+      gyro.x = gyro_filter_p[0];
+      gyro.y = gyro_filter_p[1];
+      gyro.z = gyro_filter_p[2];
 
       // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
@@ -197,15 +291,13 @@ int main(void) {
       i_roll  += i     * (gyro.y + rotation_request_roll);
       i_yaw   += yaw_i * (gyro.z + rotation_request_yaw);
 
-      // Calculate the change in angular velocity since the last iteration and filter it.
-      d_pitch_filter = d_pitch_filter * 0.99 + 0.01 * (gyro.x - prev_gyro.x);
-      d_roll_filter  = d_roll_filter  * 0.99 + 0.01 * (gyro.y - prev_gyro.y);
       // Multiply the filtered change in angular velocity by the D gain to get the D term.
-      int d_pitch = d_pitch_filter * d;
-      int d_roll  = d_roll_filter  * d;
+      float d_pitch = d * (gyro_filter_d[0] - prev_gyro[0]);
+      float d_roll  = d * (gyro_filter_d[1] - prev_gyro[1]);
 
       // Store the current gyro readings for the next loop.
-      prev_gyro = gyro;
+      prev_gyro[0] = gyro_filter_d[0];
+      prev_gyro[1] = gyro_filter_d[1];
 
       // Calculate the motor outputs. The motor_outputs array contains the following elements.
       // 0: no output
@@ -245,7 +337,7 @@ int main(void) {
 
       // Populate a blackbox frame with current data.
       struct blackbox_frame frame;
-      frame.timestamp = frame_count++;
+      frame.timestamp = frame_count;
       frame.gyro_data[0] = gyro.x;
       frame.gyro_data[1] = gyro.y;
       frame.gyro_data[2] = gyro.z;
@@ -289,6 +381,8 @@ int main(void) {
         }
       }
 
+      // Increment the loop counter
+      frame_count++;
     }
   }
   return 0;
