@@ -26,7 +26,6 @@ sudo pacman -Sy arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-newlib \
 # Roadmap
 * Tidy up and comment all current code
 * Improved USB interface for configuration and data log download
-* Independent software filtering for gyro P and D terms
 * More OSD options
 
 # Basic Tuning Guide
