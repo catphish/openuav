@@ -26,7 +26,7 @@
 /**
  * Maximum floating point difference that is considered as equal.
  */
-#define QUATERNION_EPS (1e-4f)
+#define QUATERNION_EPS (1e-6f)
 
 /**
  * Data structure to hold a quaternion.

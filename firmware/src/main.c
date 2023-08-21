@@ -201,6 +201,10 @@ int main(void) {
       gyro_read(&gyro);
       accel_read(&accel);
 
+      // Update the IMU using the gyro and accelerometer data.
+      imu_update_from_gyro(&gyro);
+      imu_update_from_accel(&accel);
+
       // Filter the gyro data
       filter[frame_count % FILTER_LEN][0] = gyro.x;
       filter[frame_count % FILTER_LEN][1] = gyro.y;
@@ -226,10 +230,6 @@ int main(void) {
       gyro.y = gyro_filter_p[1];
       gyro.z = gyro_filter_p[2];
 
-      // Update the IMU using the gyro and accelerometer data.
-      imu_update_from_gyro(&gyro);
-      imu_update_from_accel(&accel);
-
       // These variables will store the requested rotation rate for each axis.
       int32_t rotation_request_pitch = 0;
       int32_t rotation_request_roll  = 0;
@@ -246,7 +246,6 @@ int main(void) {
         // Get the current X and Y tilt angles, and the z rotation offset from the IMU.
         float tilt_pitch, tilt_roll;
         imu_get_xy_tilt(&tilt_pitch, &tilt_roll);
-
         // Subtract the tilt angle from the requested angle to get the angle error.
         // The units here are arbitrary, but 800 permits a good range of motion.
         // This max angle should probably be configurable.

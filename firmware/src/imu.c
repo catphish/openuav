@@ -21,18 +21,10 @@ void imu_init(void)
 // Rotate the quaternion by the given angular velocity.
 void imu_update_from_gyro(struct gyro_data *gyro)
 {
-  // Use the systick counter to calculate the time since the last update.
-  int dt = 0x00FFFFFF - SysTick->VAL;
-
-  // Reset the systick counter.
-  SysTick->LOAD = 0x00FFFFFF;
-  SysTick->VAL = 0;
-  SysTick->CTRL = 5;
-
   // Convert the gyro readings to radians and multiply by the time since the last update.
-  float gyro_x = (float)gyro->x * 0.00122173f * (float)dt / 160000000;
-  float gyro_y = (float)gyro->y * 0.00122173f * (float)dt / 160000000;
-  float gyro_z = (float)gyro->z * 0.00122173f * (float)dt / 160000000;
+  float gyro_x = (float)gyro->x * 0.00122173f / 3300.f;
+  float gyro_y = (float)gyro->y * 0.00122173f / 3300.f;
+  float gyro_z = (float)gyro->z * 0.00122173f / 3300.f;
 
   // Create quaternions for each axis rotation.
   Quaternion q_x, q_y, q_z;
@@ -75,7 +67,7 @@ void imu_update_from_accel(struct gyro_data *accel)
   float angle = Quaternion_toAxisAngle(&shortest_path, axis);
 
   // Limit the angle to 0.0001 radians to create a very small correction.
-  if(angle > 0.001f) angle = 0.001f;
+  if(angle > 0.0001f) angle = 0.0001f;
 
   // Generate a quaternion for the correction.
   Quaternion correction;
