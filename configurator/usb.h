@@ -1,13 +1,3 @@
-#pragma once
-#include <stdint.h>
-
-void usb_init();
-void usb_main();
-uint32_t ep_tx_ready(uint32_t ep);
-uint32_t ep_rx_ready(uint32_t ep);
-uint8_t usb_read(uint8_t ep, char * buffer);
-void usb_write(uint8_t ep, char * buffer, uint32_t len);
-
 #define USB_COMMAND_SETTING_GET     0x01
 #define USB_COMMAND_SETTING_SET     0x02
 #define USB_COMMAND_SETTING_SAVE    0x03

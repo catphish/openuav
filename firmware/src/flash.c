@@ -5,6 +5,21 @@
 #include "usb.h"
 #include "util.h"
 
+// Wait for busy flag to clear
+void busy_wait(void) {
+  int busy = 1;
+  while(busy) {
+    // Set CS low (A15)
+    GPIOA->BSRR = GPIO_BSRR_BR_15;
+    spi_transmit(SPI3, 0x0F); // Read register
+    spi_transmit(SPI3, 0xC0); // Status register 3
+    busy = spi_receive(SPI3) & 1;
+    // Set CS high (A15)
+    GPIOA->BSRR = GPIO_BSRR_BS_15;
+    usleep(10);
+  }
+}
+
 void flash_init(void) {
   // Set CS low (A15)
   GPIOA->BSRR = GPIO_BSRR_BR_15;
@@ -55,7 +70,7 @@ void flash_erase_block(uint16_t block) {
   // Set CS high (A15)
   GPIOA->BSRR = GPIO_BSRR_BS_15;
   // Wait for erase to complete
-  msleep(10);
+  busy_wait();
 }
 
 // Erase whole 128MB flash chip (1024 blocks of 128KB)
@@ -99,7 +114,10 @@ void flash_program_execute(uint32_t page_address) {
   GPIOA->BSRR = GPIO_BSRR_BS_15;
 }
 
+uint16_t page_cache = 0xFFFF;
 void flash_page_read(uint16_t page_address) {
+  if(page_cache == page_address) return;
+  page_cache = page_address;
   // Set CS low (A15)
   GPIOA->BSRR = GPIO_BSRR_BR_15;
   // Send read command

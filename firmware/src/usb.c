@@ -13,21 +13,8 @@
 #include "flash.h"
 #include "blackbox.h"
 
-#define USB_LINES 25
-
 uint8_t pending_addr = 0;
 uint32_t buffer_pointer;
-
-struct usb_packet {
-  char data[64];
-  uint8_t len;
-};
-
-struct usb_ring_buffer {
-  struct usb_packet packet[USB_LINES];
-  uint8_t head;
-  uint8_t tail;
-} usb_ring_buffer[2];
 
 void usb_init() {
   // Enable GPIOA clock
@@ -98,12 +85,6 @@ uint32_t ep_tx_ready(uint32_t ep) {
   return((USB_EPR(ep) & 0x30) == 0x20);
 }
 
-// Check the endpoint CTR_RX, indicating that a packet has been received.
-uint32_t ep_rx_ready(uint32_t ep) {
-  ep &= 0x7f;
-  return(USB_EPR(ep) & (1<<15));
-}
-
 // Read 64 bytes from an endpoint buffer.
 uint8_t usb_read(uint8_t ep, char * buffer) {
   ep &= 0x7f;
@@ -135,32 +116,6 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len) {
   USB_EPR(ep) = (USB_EPR(ep) & 0x87bf) ^ 0x30;
 }
 
-uint8_t usb_write_ready(uint8_t ep) {
-  if((usb_ring_buffer[ep].head + 1) % USB_LINES == usb_ring_buffer[ep].tail) {
-    return 0;
-  }
-  return 1;
-}
-
-// Copy data into the ring buffer in 64 byte chunks. If the buffer is full,
-// retun immediately.
-void usb_write_string(uint8_t ep, char * data, uint32_t len) {
-  while(len) {
-    if((usb_ring_buffer[ep].head + 1) % USB_LINES == usb_ring_buffer[ep].tail) {
-      return;
-    }
-    uint32_t chunk = len;
-    if(chunk > 64) chunk = 64;
-    for(uint32_t n=0; n<chunk; n++) {
-      usb_ring_buffer[ep].packet[usb_ring_buffer[ep].head].data[n] = data[n];
-    }
-    usb_ring_buffer[ep].packet[usb_ring_buffer[ep].head].len = chunk;
-    usb_ring_buffer[ep].head = (usb_ring_buffer[ep].head + 1) % USB_LINES;
-    data += chunk;
-    len -= chunk;
-  }
-}
-
 void usb_reset() {
   USB->ISTR &= ~USB_ISTR_RESET;
 
@@ -175,41 +130,36 @@ void usb_reset() {
 }
 
 void usb_handle_ep0() {
-  char packet[64];
-  usb_read(0, packet);
+  char request[64];
+  usb_read(0, request);
 
-  uint8_t bmRequestType = packet[0];
-  uint8_t bRequest      = packet[1];
+  uint8_t bmRequestType = request[0];
+  uint8_t bRequest      = request[1];
 
   // Descriptor request
   if(bmRequestType == 0x80 && bRequest == 0x06) {
-    uint8_t descriptor_type = packet[3];
-    uint8_t descriptor_idx  = packet[2];
+    uint8_t descriptor_type = request[3];
+    uint8_t descriptor_idx  = request[2];
 
     if(descriptor_type == 1 && descriptor_idx == 0) {
       uint32_t len = 18;
-      if(len > packet[6]) len = packet[6];
-      usb_write_string(0, device_descriptor, len);
+      if(len > request[6]) len = request[6];
+      usb_write(0, device_descriptor, len);
     }
     if(descriptor_type == 2 && descriptor_idx == 0) {
       uint32_t len = config_descriptor[2];
-      if(len > packet[6]) len = packet[6];
-      usb_write_string(0, config_descriptor, len);
+      if(len > request[6]) len = request[6];
+      usb_write(0, config_descriptor, len);
     }
     if(descriptor_type == 3 && descriptor_idx == 0) {
       uint32_t len = string_descriptor[0];
-      if(len > packet[6]) len = packet[6];
-      usb_write_string(0, string_descriptor, len);
-    } else if (descriptor_type == 3){
-      usb_write(0,0,0);
+      if(len > request[6]) len = request[6];
+      usb_write(0, string_descriptor, len);
     }
-  }
-  if(bmRequestType == 0x21) {
-    usb_write(0,0,0);
   }
   // Set address
   if(bmRequestType == 0x00 && bRequest == 0x05) {
-    pending_addr = packet[2];
+    pending_addr = request[2];
     usb_write(0,0,0);
   }
   // Set configuration
@@ -219,69 +169,143 @@ void usb_handle_ep0() {
 }
 volatile uint8_t usb_enabled = 0;
 
-extern volatile uint32_t dump_flash;
 void usb_handle_ep1() {
-  char packet[64];
-  uint8_t len = usb_read(1, packet);
+  struct settings *settings = settings_get();
+  uint8_t request[64];
+  uint8_t response[64];
+  uint8_t len = usb_read(1, (char*)request);
   if(len) {
-    // let user enable USB commands if they wish to use them
-    if(packet[0] == 'E' && packet[1] == 'N' && packet[2] == 'A' && packet[3] == 'B' && packet[4] == 'L' && packet[5] == 'E') {
-      usb_enabled = 1;
-      usb_printf("USB commands enabled\n");
-    }
-    // prevent USB commands from affecting main loop duration while not in use
-    if(usb_enabled) {
-      struct settings *settings = settings_get(); // convenience
-      if(packet[0] == 'p') {
-        settings_print();
-      }
-      if(packet[0] == 'w') {
-        settings_save();
-      }
-      if(packet[0] == 'r') {
-        settings_read();
-      }
-      if(packet[0] == 'd') {
-        settings_default();
-      }
-      if(packet[0] == 's') { // "set"
-        if(packet[1] == 'r') settings->acro_rate = atoi(packet+2);
-        if(packet[1] == 'R') settings->angle_rate = atoi(packet+2);
-        if(packet[1] == 'p') settings->p = atoi(packet+2);
-        if(packet[1] == 'i') settings->i = atoi(packet+2);
-        if(packet[1] == 'd') settings->d = atoi(packet+2);
-        if(packet[1] == 'y') settings->yaw_p = atoi(packet+2);
-        if(packet[1] == 'Y') settings->yaw_i = atoi(packet+2);
-        if(packet[1] == 't') settings->throttle_gain = atoi(packet+2); // max throttle limit
-        if(packet[1] == 'T') settings->throttle_min = atoi(packet+2); // full throttle is the above + this
-        if(packet[1] == 'e') settings->expo = atoi(packet+2); // pitch and roll
-        if(packet[1] == 'E') settings->yaw_expo = atoi(packet+2);
-        if(packet[1] == 'm') { // "motor"
-          if(packet[2] == 'd') settings->motor_direction = atoi(packet+3); // flip direction of all of them
-          if(packet[2] == '1') settings->motor1 = atoi(packet+3);
-          if(packet[2] == '2') settings->motor2 = atoi(packet+3);
-          if(packet[2] == '3') settings->motor3 = atoi(packet+3);
-          if(packet[2] == '4') settings->motor4 = atoi(packet+3);
+    if(request[0] == USB_COMMAND_SETTING_GET) {
+      uint32_t value;
+      if(request[1] == USB_SETTING_CAT_TUNE) {
+        if(request[2] == USB_SETTING_TUNE_P) {
+          value = settings->p;
+        } else if(request[2] == USB_SETTING_TUNE_I) {
+          value = settings->i;
+        } else if(request[2] == USB_SETTING_TUNE_D) {
+          value = settings->d;
+        } else if(request[2] == USB_SETTING_TUNE_YAW_P) {
+          value = settings->yaw_p;
+        } else if(request[2] == USB_SETTING_TUNE_YAW_I) {
+          value = settings->yaw_i;
         }
-        if(packet[1] == 'b') { // "battery"
-          if(packet[2] == 'a') settings->adc_coefficient = atoi(packet+3);
-          if(packet[2] == 'c') settings->cell_count = atoi(packet+3);
-          if(packet[2] == 'h') settings->chemistry = atoi(packet+3);
+      } else if(request[1] == USB_SETTING_CAT_CONTROL) {
+        if(request[2] == USB_SETTING_CONTROL_ANGLE_RATE) {
+          value = settings->angle_rate;
+        } else if(request[2] == USB_SETTING_CONTROL_ACRO_RATE) {
+          value = settings->acro_rate;
+        } else if(request[2] == USB_SETTING_CONTROL_EXPO) {
+          value = settings->expo;
+        } else if(request[2] == USB_SETTING_CONTROL_YAW_EXPO) {
+          value = settings->yaw_expo;
+        } else if(request[2] == USB_SETTING_CONTROL_THROTTLE_GAIN) {
+          value = settings->throttle_gain;
+        } else if(request[2] == USB_SETTING_CONTROL_THROTTLE_MIN) {
+          value = settings->throttle_min;
+        }
+      } else if(request[1] == USB_SETTING_CAT_MOTOR) {
+        if(request[2] == USB_SETTING_MOTOR_DIRECTION) {
+          value = settings->motor_direction;
+        } else if(request[2] == USB_SETTING_MOTOR_1) {
+          value = settings->motor1;
+        } else if(request[2] == USB_SETTING_MOTOR_2) {
+          value = settings->motor2;
+        } else if(request[2] == USB_SETTING_MOTOR_3) {
+          value = settings->motor3;
+        } else if(request[2] == USB_SETTING_MOTOR_4) {
+          value = settings->motor4;
+        }
+      } else if(request[1] == USB_SETTING_CAT_BATT) {
+        if(request[2] == USB_SETTING_BATT_ADC_COEFFICIENT) {
+          value = settings->adc_coefficient;
+        } else if(request[2] == USB_SETTING_BATT_CHEMISTRY) {
+          value = settings->chemistry;
         }
       }
-      if(packet[0] == 'e') {
-        flash_erase();
-        blackbox_init();
-        usb_printf("Flash erased\n");
+      response[0] = USB_COMMAND_SETTING_GET;
+      response[1] = request[1];
+      response[2] = request[2];
+      response[3] = value;
+      response[4] = value >> 8;
+      response[5] = value >> 16;
+      response[6] = value >> 24;
+      usb_write(1, (char*)response, 7);
+    } else if(request[0] == USB_COMMAND_SETTING_SET) {
+      uint32_t value = request[3] | (request[4] << 8) | (request[5] << 16) | (request[6] << 24);
+      if(request[1] == USB_SETTING_CAT_TUNE) {
+        if(request[2] == USB_SETTING_TUNE_P) {
+          settings->p = value;
+        } else if(request[2] == USB_SETTING_TUNE_I) {
+          settings->i = value;
+        } else if(request[2] == USB_SETTING_TUNE_D) {
+          settings->d = value;
+        } else if(request[2] == USB_SETTING_TUNE_YAW_P) {
+          settings->yaw_p = value;
+        } else if(request[2] == USB_SETTING_TUNE_YAW_I) {
+          settings->yaw_i = value;
+        }
+      } else if(request[1] == USB_SETTING_CAT_CONTROL) {
+        if(request[2] == USB_SETTING_CONTROL_ANGLE_RATE) {
+          settings->angle_rate = value;
+        } else if(request[2] == USB_SETTING_CONTROL_ACRO_RATE) {
+          settings->acro_rate = value;
+        } else if(request[2] == USB_SETTING_CONTROL_EXPO) {
+          settings->expo = value;
+        } else if(request[2] == USB_SETTING_CONTROL_YAW_EXPO) {
+          settings->yaw_expo = value;
+        } else if(request[2] == USB_SETTING_CONTROL_THROTTLE_GAIN) {
+          settings->throttle_gain = value;
+        } else if(request[2] == USB_SETTING_CONTROL_THROTTLE_MIN) {
+          settings->throttle_min = value;
+        }
+      } else if(request[1] == USB_SETTING_CAT_MOTOR) {
+        if(request[2] == USB_SETTING_MOTOR_DIRECTION) {
+          settings->motor_direction = value;
+        } else if(request[2] == USB_SETTING_MOTOR_1) {
+          settings->motor1 = value;
+        } else if(request[2] == USB_SETTING_MOTOR_2) {
+          settings->motor2 = value;
+        } else if(request[2] == USB_SETTING_MOTOR_3) {
+          settings->motor3 = value;
+        } else if(request[2] == USB_SETTING_MOTOR_4) {
+          settings->motor4 = value;
+        }
+      } else if(request[1] == USB_SETTING_CAT_BATT) {
+        if(request[2] == USB_SETTING_BATT_ADC_COEFFICIENT) {
+          settings->adc_coefficient = value;
+        } else if(request[2] == USB_SETTING_BATT_CHEMISTRY) {
+          settings->chemistry = value;
+        }
       }
-      if(packet[0] == 'f') {
-        uint16_t page = blackbox_find_free_page();
-        usb_printf("Free page: %d\n", page);
-      }
-      if(packet[0] == 'h') {
-        // Dump flash to USB
-        dump_flash = blackbox_find_free_page();
-      }
+      response[0] = USB_COMMAND_SETTING_SET;
+      response[1] = request[1];
+      response[2] = request[2];
+      usb_write(1, (char*)response, 3);
+    } else if(request[0] == USB_COMMAND_SETTING_SAVE) {
+      settings_save();
+      response[0] = USB_COMMAND_SETTING_SAVE;
+      usb_write(1, (char*)response, 1);
+    } else if(request[0] == USB_COMMAND_SETTING_LOAD) {
+      settings_read();
+      response[0] = USB_COMMAND_SETTING_LOAD;
+      usb_write(1, (char*)response, 1);
+    } else if(request[0] == USB_COMMAND_FLASH_READ) {
+      uint32_t addr = request[1] | (request[2] << 8) | (request[3] << 16) | (request[4] << 24);
+      uint16_t page = addr / 2048;
+      uint16_t offset = addr % 2048;
+      response[0] = USB_COMMAND_FLASH_READ;
+      response[1] = request[1];
+      response[2] = request[2];
+      response[3] = request[3];
+      response[4] = request[4];      
+      flash_page_read(page);
+      flash_read(response + 5, 32, offset);
+      usb_write(1, (char*)response, 32+5);
+    } else if(request[0] == USB_COMMAND_FLASH_ERASE) {
+      uint16_t block = request[1] | (request[2] << 8);
+      flash_erase_block(block);
+      response[0] = USB_COMMAND_FLASH_ERASE;
+      usb_write(1, (char*)response, 1);
     }
   }
 }
@@ -312,28 +336,4 @@ void usb_main() {
     // Clear pending state
     USB_EPR(0) &= 0x870f;
   }
-
-  if(ep_tx_ready(0)) {
-    // Copy data from the ring buffer into the endpoint buffer.
-    if(usb_ring_buffer[0].head != usb_ring_buffer[0].tail) {
-      usb_write(0, usb_ring_buffer[0].packet[usb_ring_buffer[0].tail].data, usb_ring_buffer[0].packet[usb_ring_buffer[0].tail].len);
-      usb_ring_buffer[0].tail = (usb_ring_buffer[0].tail + 1) % USB_LINES;
-    }
-  }
-  if(ep_tx_ready(1)) {
-    // Copy data from the ring buffer into the endpoint buffer.
-    if(usb_ring_buffer[1].head != usb_ring_buffer[1].tail) {
-      usb_write(1, usb_ring_buffer[1].packet[usb_ring_buffer[1].tail].data, usb_ring_buffer[1].packet[usb_ring_buffer[1].tail].len);
-      usb_ring_buffer[1].tail = (usb_ring_buffer[1].tail + 1) % USB_LINES;
-    }
-  }
-}
-
-void usb_printf(const char* format, ...) {
-  va_list args;
-  va_start(args, format);
-  char buffer[80];
-  vsprintf(buffer, format, args);
-  usb_write_string(1, buffer, strlen(buffer));
-  va_end( args );
 }

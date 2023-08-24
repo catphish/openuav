@@ -124,12 +124,6 @@ float prev_gyro[3];
 // This flag is set when it's safe to arm and inhibits arming at power-on.
 uint8_t arming_allowed = 0;
 
-// This flag is set when we are dumping flash memory over USB.
-// This is a terrible implementation and will be replaced with a new USB interface soon.
-volatile uint32_t dump_flash = 0;
-uint32_t dump_flash_page = 0;
-uint32_t dump_flash_offset = 0;
-
 // These variables are used to store the accumulated integral terms for each axis.
 float i_pitch = 0;
 float i_roll  = 0;
@@ -139,8 +133,8 @@ float i_yaw   = 0;
 uint32_t frame_count = 0;
 
 int main(void) {
-  // LED1 is the power LED, turn it on before we do anything else.
-  led1_on();
+  // LED2 is the power LED, turn it on before we do anything else.
+  led2_on();
   // Load settings from flash.
   settings_read();
 
@@ -179,8 +173,8 @@ int main(void) {
       // If we have valid ELRS data, and the arming switch is set, arm the motors.
       if(elrs_valid() && elrs_channel(4) > 0 && arming_allowed) {
         dshot.armed = 1;
-        // LED0 indicated the arming state.
-        led0_on();
+        // LED1 indicated the arming state.
+        led1_on();
       } else {
         // If we are not armed, reset the integral terms.
         dshot.armed = 0;
@@ -190,7 +184,7 @@ int main(void) {
         // Zero the gyro and recalibrate the IMU wenever we're not armed.
         gyro_zero();
         imu_init();
-        led0_off();
+        led1_off();
       }
 
       // Call elrs_tick() at regular intervals. This allows it to count down an internal
@@ -359,26 +353,6 @@ int main(void) {
 
       // If we're armed, write the log data to the blackbox.
       if(dshot.armed) blackbox_write(&frame);
-      
-      // This is temporary code to dump the flash contents to USB.
-      // It will soon be replaced with a better USB ineterface.
-      if(dump_flash) {
-        if(usb_write_ready(1)) {
-          uint8_t data[32];
-          flash_page_read(dump_flash_page);
-          flash_read(data, 32, dump_flash_offset);
-          dump_flash_offset += 32;
-          if(dump_flash_offset == 2048) {
-            dump_flash_offset = 0;
-            dump_flash_page++;
-          }
-          if(dump_flash_page == dump_flash) {
-            dump_flash = 0;
-            dump_flash_page = 0;
-          }
-          usb_write_string(1, (char*)data, 32);
-        }
-      }
 
       // Increment the loop counter
       frame_count++;

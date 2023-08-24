@@ -6,8 +6,8 @@
 #include "settings.h" // Cell count and chemistry
 #include "stdio.h"
 
-static int8_t  cell_count = -1; // As-yet unset
-static uint8_t chemistry  =  0; // LiPo
+static int8_t  cell_count = 0; // As-yet unset
+static uint8_t chemistry  = 0; // LiPo
 
 void send_msp(uint8_t command, uint8_t *payload, uint8_t length) {
   uint8_t checksum = 0;
@@ -85,13 +85,10 @@ void send_msp_displayport_write() {
   payload[3] = 0;
 
   // Set cell count, but only once
-  if (cell_count == -1) {
-    struct settings *settings = settings_get(); // convenience
-    cell_count = settings->cell_count;
-    if (cell_count == 0) {
-      chemistry = settings->chemistry;
-      cell_count = guess_battery_cell_count(chemistry);
-    }
+  struct settings *settings = settings_get(); // convenience
+  if (cell_count == 0) {
+    chemistry = settings->chemistry;
+    cell_count = guess_battery_cell_count(chemistry);
   }
 
   // Anything else would result in meaningless output
@@ -164,7 +161,6 @@ void msp_process_char(uint8_t received) {
     rx_index = 0;
     // Process the command
     if (command == 101) {
-      //usb_printf("Received MSP status request\n");
       response_due = 1;
     }
   }
