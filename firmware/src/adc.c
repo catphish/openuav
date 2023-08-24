@@ -20,49 +20,49 @@ void adc_init() {
   gpio_pin_mode(GPIOF, 1, GPIO_MODE_ANALOG, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
 
   // Disable the Deep Power Down mode
-  ADC1->CR &= ~ADC_CR_DEEPPWD;
+  ADC2->CR &= ~ADC_CR_DEEPPWD;
   msleep(10);
   // Enable the internal ADC voltage regulator
-  ADC1->CR |= ADC_CR_ADVREGEN;
+  ADC2->CR |= ADC_CR_ADVREGEN;
   msleep(10);
 
-  // Ensure ADC1 is disabled
-  ADC1->CR &= ~ADC_CR_ADEN;
+  // Ensure ADC2 is disabled
+  ADC2->CR &= ~ADC_CR_ADEN;
 
-  // Calibrate ADC1
-  ADC1->CR |= ADC_CR_ADCAL;
-  while(ADC1->CR & ADC_CR_ADCAL) {}
+  // Calibrate ADC2
+  ADC2->CR |= ADC_CR_ADCAL;
+  while(ADC2->CR & ADC_CR_ADCAL) {}
 
-  // Enable ADC1
-  ADC1->ISR |= ADC_ISR_ADRDY;
-  ADC1->CR |= ADC_CR_ADEN;
-  while(!(ADC1->ISR & ADC_ISR_ADRDY)) {}
+  // Enable ADC2
+  ADC2->ISR |= ADC_ISR_ADRDY;
+  ADC2->CR |= ADC_CR_ADEN;
+  while(!(ADC2->ISR & ADC_ISR_ADRDY)) {}
 
-  // Set ADC1 to continuous mode and overrun mode
-  ADC1->CFGR = ADC_CFGR_OVRMOD | ADC_CFGR_CONT;
+  // Set ADC2 to continuous mode and overrun mode
+  ADC2->CFGR = ADC_CFGR_OVRMOD | ADC_CFGR_CONT;
 
-  // Instruct ADC1 to oversample
-  ADC1->CFGR2 = ADC_CFGR2_ROVSE;
+  // Instruct ADC2 to oversample
+  ADC2->CFGR2 = ADC_CFGR2_ROVSE;
 
-  // Set ADC1 to 256x oversampling, this results in 20 bit total resolution
-  ADC1->CFGR2 |= ADC_CFGR2_OVSR_0 | ADC_CFGR2_OVSR_1 | ADC_CFGR2_OVSR_2;
+  // Set ADC2 to 256x oversampling, this results in 20 bit total resolution
+  ADC2->CFGR2 |= ADC_CFGR2_OVSR_0 | ADC_CFGR2_OVSR_1 | ADC_CFGR2_OVSR_2;
 
-  // Set ADC1 to 4-bit right shift, this results in 20-bit output, the lowest 4 bits are discarded
+  // Set ADC2 to 4-bit right shift, this results in 20-bit output, the lowest 4 bits are discarded
   // Otherwise, at 20 bits of resolution, the output would always be clipped to 65535, because the
   // DR register is only 16 bits wide
-  ADC1->CFGR2 |= ADC_CFGR2_OVSS_2;
+  ADC2->CFGR2 |= ADC_CFGR2_OVSS_2;
 
-  // Set ADC1 to 640.5 + 12.5 cycles sampling time
-  ADC1->SMPR1 |= ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2;
-  ADC1->SMPR1 |= ADC_SMPR1_SMP1_0 | ADC_SMPR1_SMP1_1 | ADC_SMPR1_SMP1_2;
+  // Set ADC2 to 640.5 + 12.5 cycles sampling time
+  ADC2->SMPR1 |= ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2;
+  ADC2->SMPR1 |= ADC_SMPR1_SMP1_0 | ADC_SMPR1_SMP1_1 | ADC_SMPR1_SMP1_2;
   // Set the sequence. One conversion, channel 10.
-  ADC1->SQR1 = 0 | ADC_SQR1_SQ1_3 | ADC_SQR1_SQ1_1;
+  ADC2->SQR1 = 0 | ADC_SQR1_SQ1_3 | ADC_SQR1_SQ1_1;
 
   // At 5Mhz, this is 640.5 + 12.5 cycles = 130us per sample
   // With 256x oversampling, this is 33ms per sample
 
-  // Start ADC1
-  ADC1->CR |= ADC_CR_ADSTART;
+  // Start ADC2
+  ADC2->CR |= ADC_CR_ADSTART;
 }
 
 uint32_t adc_read_mV() {
@@ -73,7 +73,7 @@ uint32_t adc_read_mV() {
   // The above message was mindread by a LLaMA, wow!
   do {
     // Read from the ADC data register
-    adc = ADC1->DR;
+    adc = ADC2->DR;
   } while (adc < 1);
 
   // Divide ADC reading by ADC coefficient, which is itself

@@ -170,6 +170,11 @@ int main(void) {
         arming_allowed = 1;
       }
 
+      if(elrs_channel(7) > 0) {
+        nine_volt_on();
+      } else {
+        nine_volt_off();
+      }
       // If we have valid ELRS data, and the arming switch is set, arm the motors.
       if(elrs_valid() && elrs_channel(4) > 0 && arming_allowed) {
         dshot.armed = 1;
@@ -241,10 +246,10 @@ int main(void) {
         float tilt_pitch, tilt_roll;
         imu_get_xy_tilt(&tilt_pitch, &tilt_roll);
         // Subtract the tilt angle from the requested angle to get the angle error.
-        // The units here are arbitrary, but 800 permits a good range of motion.
+        // The units here are arbitrary, but 600 permits a good range of motion.
         // This max angle should probably be configurable.
-        int32_t angle_error_pitch = elrs_channel(1) - tilt_pitch * 800.f;
-        int32_t angle_error_roll  = elrs_channel(0) - tilt_roll  * 800.f;
+        int32_t angle_error_pitch = elrs_channel(1) - tilt_pitch * 600.f;
+        int32_t angle_error_roll  = elrs_channel(0) - tilt_roll  * 600.f;
 
         // Multiply the angle error by the configured angle rate to get the required rotation rate.
         rotation_request_pitch = angle_error_pitch * angle_rate;

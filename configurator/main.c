@@ -65,9 +65,29 @@ int main(void)
 
   int32_t value;
 
-  uint32_t random_p = rand();
-  printf("\nSetting random P value: %d\n", random_p);
-  set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_P, random_p);
+  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_P, 100);
+  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_I, 100);
+  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_D, 200);
+  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_P, 200);
+  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_I, 200);
+
+  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ACRO_RATE, 1200);
+  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ANGLE_RATE, 1200);
+  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_EXPO, 60);
+  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_YAW_EXPO, 60);
+  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_GAIN, 80);
+  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_MIN, 200);
+
+  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_DIRECTION, 1);
+  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_1, 1);
+  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_2, 3);
+  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_3, 4);
+  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_4, 2);
+
+  // set_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC_COEFFICIENT, 1778);
+  // set_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CHEMISTRY, 0);
+
+  // save_settings();
 
   printf("            TUNING\n");
   value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_P);
@@ -113,16 +133,16 @@ int main(void)
   value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CHEMISTRY);
   printf("    Chemistry: %d\n", value);
 
-  printf("\nFLASH\n");
-  printf("=====\n");
-  uint8_t flash_data[32];
-  for(int n=0; n<256; n+=32) {
-    read_flash(n, flash_data);
-    printf("%06X: ", n);
-    for(int i=0;  i<16; i++) printf("%02X ", flash_data[i]); printf("\n");
-    printf("%06X: ", n + 0x10);
-    for(int i=16; i<32; i++) printf("%02X ", flash_data[i]); printf("\n");
-  }
+  // printf("\nFLASH\n");
+  // printf("=====\n");
+  // uint8_t flash_data[32];
+  // for(int n=0; n<256; n+=32) {
+  //   read_flash(n, flash_data);
+  //   printf("%06X: ", n);
+  //   for(int i=0;  i<16; i++) printf("%02X ", flash_data[i]); printf("\n");
+  //   printf("%06X: ", n + 0x10);
+  //   for(int i=16; i<32; i++) printf("%02X ", flash_data[i]); printf("\n");
+  // }
 
 
   libusb_close(devh);
