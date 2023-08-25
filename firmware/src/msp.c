@@ -6,6 +6,7 @@
 #include "main.h"  // Exposes armed state
 #include "settings.h" // Cell count and chemistry
 #include "stdio.h"
+#include "elrs.h"
 
 // As-yet unset
 // Will either be set from settings or guessed
@@ -92,7 +93,7 @@ void send_msp_displayport_write() {
   // String (all letters must be uppercase, lowercase letters map to symbols)
   char mode_chars[3] = {'D', 'C', '\0'};
   if(1 == main_get_armed_state() ) mode_chars[0] = 'A';
-  if(main_get_elrs_channel(5) > 0) mode_chars[1] = 'A';
+  if(elrs_channel(5) > 0) mode_chars[1] = 'A';
   snprintf((char*)payload+4, 10, "%s", mode_chars);
 
   // Send the payload
