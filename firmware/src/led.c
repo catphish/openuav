@@ -1,45 +1,60 @@
 #include "gpio.h"
 
+#define LED1_PORT GPIOA
+#define LED1_PIN 14
+#define LED2_PORT GPIOA
+#define LED2_PIN 13
+#define NINEVOLT_PORT GPIOB
+#define NINEVOLT_PIN 9
+
 void led_init() {
-  // LED1 - PA14
-  gpio_set_pin(GPIOA, 14, 0);
-  gpio_pin_mode(GPIOA, 14, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
-  // LED2 - PA13
-  gpio_set_pin(GPIOA, 13, 0);
-  gpio_pin_mode(GPIOA, 13, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
-  // 9V Enable - PB9
-  gpio_set_pin(GPIOB, 9, 0);
-  gpio_pin_mode(GPIOB, 9, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // LED1
+  gpio_set_pin(LED1_PORT, LED1_PIN, 0);
+  gpio_pin_mode(LED1_PORT, LED1_PIN, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // LED2
+  gpio_set_pin(LED2_PORT, LED2_PIN, 0);
+  gpio_pin_mode(LED2_PORT, LED2_PIN, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+
+  #ifdef NINEVOLT_PORT
+  // 9V Enable
+  gpio_set_pin(NINEVOLT_PORT, NINEVOLT_PIN, 0);
+  gpio_pin_mode(NINEVOLT_PORT, NINEVOLT_PIN, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  #endif
 }
 
+
 void led1_on() {
-  gpio_set_pin(GPIOA, 14, 1);
+  gpio_set_pin(LED1_PORT, LED1_PIN, 1);
 }
 
 void led1_off() {
-  gpio_set_pin(GPIOA, 14, 0);
+  gpio_set_pin(LED1_PORT, LED1_PIN, 0);
 }
 
 void led1_toggle() {
-  gpio_set_pin(GPIOA, 14, !gpio_get_pin(GPIOA, 14));
+  gpio_set_pin(LED1_PORT, LED1_PIN, !gpio_get_pin(LED1_PORT, LED1_PIN));
 }
 
 void led2_on() {
-  gpio_set_pin(GPIOA, 13, 1);
+  gpio_set_pin(LED2_PORT, LED2_PIN, 1);
 }
 
 void led2_off() {
-  gpio_set_pin(GPIOA, 13, 0);
+  gpio_set_pin(LED2_PORT, LED2_PIN, 0);
 }
 
 void led2_toggle() {
-  gpio_set_pin(GPIOA, 13, !gpio_get_pin(GPIOA, 13));
+  gpio_set_pin(LED2_PORT, LED2_PIN, !gpio_get_pin(LED2_PORT, LED2_PIN));
 }
 
 void nine_volt_on() {
-  gpio_set_pin(GPIOB, 9, 1);
+  #ifdef NINEVOLT_PORT
+  gpio_set_pin(NINEVOLT_PORT, NINEVOLT_PIN, 1);
+  #endif
 }
 
 void nine_volt_off() {
-  gpio_set_pin(GPIOB, 9, 0);
+  #ifdef NINEVOLT_PORT
+  gpio_set_pin(NINEVOLT_PORT, NINEVOLT_PIN, 0);
+  #endif
 }
