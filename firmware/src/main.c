@@ -174,11 +174,6 @@ int main(void) {
         arming_allowed = 1;
       }
 
-      if(elrs_channel(7) > 0) {
-        nine_volt_on();
-      } else {
-        nine_volt_off();
-      }
       // If we have valid ELRS data, and the arming switch is set, arm the motors.
       if(elrs_valid() && elrs_channel(4) > 0 && arming_allowed) {
         dshot.armed = 1;

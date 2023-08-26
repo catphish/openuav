@@ -5,16 +5,6 @@
 #include "usb.h"
 #include "msp.h"
 
-#define USE_UART3
-
-#ifdef USE_UART3
-#define ELRS_UART USART3
-#endif
-
-#ifdef USE_UART4
-#define ELRS_UART LPUART1
-#endif
-
 volatile uint8_t tx_head = 0;
 volatile uint8_t tx_tail = 0;
 volatile uint8_t tx_buffer[256];
@@ -35,11 +25,11 @@ void uart_tx_string(uint8_t *string, uint32_t length) {
 // Transmit bytes over LPUART1 or UART3 when bytes are buffered and the transmitter is ready.
 void uart_tx(void) {
   // If the transmitter is ready and there are bytes to transmit
-  if ((ELRS_UART->ISR & USART_ISR_TXE) && (tx_head != tx_tail)) {
+  if ((USART3->ISR & USART_ISR_TXE) && (tx_head != tx_tail)) {
     // Transmit the next byte
     uint8_t b = tx_buffer[tx_tail];
     tx_tail++;
-    ELRS_UART->TDR = b;
+    USART3->TDR = b;
   }
 }
 
@@ -69,7 +59,6 @@ void uart_init() {
     // Enable USART1 interrupt in NVIC
     NVIC_EnableIRQ(USART1_IRQn);
 
-    #ifdef USE_UART3
     // Enable USART3 clock
     RCC->APB1ENR1 |= RCC_APB1ENR1_USART3EN;
     // Configure PC10 as USART3_TX
@@ -87,27 +76,6 @@ void uart_init() {
     USART3->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_TE | USART_CR1_RXNEIE;
     // Enable USART3 interrupt in NVIC
     NVIC_EnableIRQ(USART3_IRQn);
-    #endif
-
-    #ifdef USE_UART4
-    // Enable LPUART1 clock
-    RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
-    // Configure PB10 as LPUART1_RX
-    gpio_pin_mode(GPIOB, 10, GPIO_MODE_AF, 8, GPIO_PUPD_NONE, 0);
-    // Configure PB11 as LPUART1_TX
-    gpio_pin_mode(GPIOB, 11, GPIO_MODE_AF, 8, GPIO_PUPD_NONE, 0);
-    // Configure LPUART1 for 115200 baud for GPS (160MHz * 256 / 115200 = 355555.55556)
-    LPUART1->CR1 = 0;
-    LPUART1->CR2 = 0;
-    LPUART1->CR3 = 0;
-    LPUART1->BRR = 355556;
-    // Enable LPUART1 receiver and transmitter
-    LPUART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_TE;
-    // Enable LPUART1 interrupt
-    LPUART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_TE | USART_CR1_RXNEIE;
-    // Enable LPUART1 interrupt in NVIC
-    NVIC_EnableIRQ(LPUART1_IRQn);
-    #endif
 }
 
 // UART1 interrupt handler
@@ -123,7 +91,6 @@ void USART1_IRQHandler(void) {
   USART1->ICR = USART_ICR_ORECF;
 }
 
-#ifdef USE_UART3
 // UART3 interrupt handler
 void USART3_IRQHandler(void) {
   // If the interrupt was triggered by a received byte
@@ -136,19 +103,3 @@ void USART3_IRQHandler(void) {
   // Clear the ORE interrupt flag
   USART3->ICR = USART_ICR_ORECF;
 }
-#endif
-
-#ifdef USE_UART4
-// LPUART1 interrupt handler
-void LPUART1_IRQHandler(void) {
-  // If the interrupt was triggered by a received byte
-  if (LPUART1->ISR & USART_ISR_RXNE) {
-    // Read the received byte
-    uint8_t received = LPUART1->RDR;
-    // Send the character to the MSP module for processing
-    msp_process_char(received);
-  }
-  // Clear the ORE interrupt flag
-  LPUART1->ICR = USART_ICR_ORECF;
-}
-#endif
