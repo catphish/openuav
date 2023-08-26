@@ -1,11 +1,11 @@
 #include "gpio.h"
 
-#define LED1_PORT GPIOA
-#define LED1_PIN 14
+#define LED1_PORT GPIOB
+#define LED1_PIN 9
 #define LED2_PORT GPIOA
-#define LED2_PIN 13
-#define NINEVOLT_PORT GPIOB
-#define NINEVOLT_PIN 9
+#define LED2_PIN 10
+//#define NINEVOLT_PORT GPIOB
+//#define NINEVOLT_PIN 9
 
 void led_init() {
   // LED1
