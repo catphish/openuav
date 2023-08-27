@@ -111,6 +111,7 @@ void SystemInit(void) {
   imu_init();
   adc_init();
   flash_init();
+  blackbox_init();
 }
 
 // This struct contains the data that will be output to the four motors.

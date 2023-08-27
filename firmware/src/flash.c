@@ -130,7 +130,7 @@ void flash_page_read(uint16_t page_address) {
   // Set CS high (A15)
   GPIOA->BSRR = GPIO_BSRR_BS_15;
   // Wait for page read to complete
-  usleep(60);
+  busy_wait();
 }
 
 void flash_read(uint8_t * data, uint16_t length, uint16_t offset) {

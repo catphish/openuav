@@ -1,5 +1,6 @@
 {
   "files.associations": {
-    "libusb.h": "c"
+    "libusb.h": "c",
+    "random": "c"
   }
 }

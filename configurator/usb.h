@@ -31,3 +31,12 @@
 
 #define USB_SETTING_BATT_ADC_COEFFICIENT 0x01
 #define USB_SETTING_BATT_CHEMISTRY       0x02
+
+int usb_init();
+uint32_t get_setting(uint8_t category, uint8_t index);
+void set_setting(uint8_t category, uint8_t index, uint32_t value);
+void save_settings();
+void load_settings();
+void read_flash(uint32_t address, uint8_t *data);
+void erase_flash(uint16_t block);
+void usb_close();

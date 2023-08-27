@@ -32,6 +32,9 @@ fp-info-cache
 *.dfu
 *.o
 
+# Compiled configurator
+configurator/configurator
+
 # Production files
 production/
 
