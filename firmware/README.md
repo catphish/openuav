@@ -11,7 +11,6 @@ firmware. It is now flyable in acro and angle mode with configurable PIDs.
 * Blackbox
 * USB configuration
 * Canvas OSD
-* 40V SMPS with 9V 2A output
 
 # Dependencies
 
