@@ -549,7 +549,7 @@
     (at 149.272738 75.143202)
     (descr "LGA, 14 Pin (https://www.st.com/resource/en/datasheet/lsm6ds3tr-c.pdf), generated with kicad-footprint-generator ipc_noLead_generator.py")
     (tags "LGA NoLead")
-    (property "LCSC" "C2655100")
+    (property "LCSC" "C784817")
     (property "Sheetfile" "openuav.kicad_sch")
     (property "Sheetname" "")
     (path "/136821f2-24f1-4403-a3eb-bc2c17531434")
