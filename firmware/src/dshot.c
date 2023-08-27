@@ -8,6 +8,11 @@ volatile uint16_t dma_data[17 * 4];
 void dshot_init(void) {
     // Enable GPIOA clock
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+    // Enable DMAMUX1 clock
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMAMUX1EN;
+    // Enable DMA1 clock
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
+
     // Configure PA0 as AF1 (TIM2_CH1)
     gpio_pin_mode(GPIOA, 0, GPIO_MODE_AF, 1, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
     // Configure PA1 as AF1 (TIM2_CH2)
@@ -66,13 +71,9 @@ void dshot_init(void) {
     // Set TIM2 DMA base address to CCR1
     TIM2->DCR |= 0xD;
 
-    // Enable DMAMUX1 clock
-    RCC->AHB1ENR |= RCC_AHB1ENR_DMAMUX1EN;
     // Configure DMAMUX1 channel 1 to TIM2_UP
     DMAMUX1_Channel0->CCR |= 60;
 
-    // Enable DMA1 clock
-    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
     // Set DMA1 channel 1 peripheral address to TIM2_CCR1
     DMA1_Channel1->CPAR = (uint32_t) &TIM2->DMAR;
     // Disable DMA1 channel 1

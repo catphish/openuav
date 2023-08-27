@@ -176,7 +176,7 @@ void usb_handle_ep1() {
   uint8_t len = usb_read(1, (char*)request);
   if(len) {
     if(request[0] == USB_COMMAND_SETTING_GET) {
-      uint32_t value;
+      uint32_t value = 0;
       if(request[1] == USB_SETTING_CAT_TUNE) {
         if(request[2] == USB_SETTING_TUNE_P) {
           value = settings->p;
