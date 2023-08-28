@@ -7,6 +7,53 @@
 
 #include "usb.h"
 
+void get_all(void) {
+  int value;
+  printf("            TUNING\n");
+  value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_P);
+  printf("            P: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_I);
+  printf("            I: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_D);
+  printf("            D: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_P);
+  printf("        Yaw P: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_I);
+  printf("        Yaw I: %d\n", value);
+
+  printf("\n           CONTROL\n");
+  value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ACRO_RATE);
+  printf("    Acro Rate: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ANGLE_RATE);
+  printf("   Angle Rate: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_EXPO);
+  printf("         Expo: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_YAW_EXPO);
+  printf("     Yaw Expo: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_GAIN);
+  printf("Throttle Gain: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_MIN);
+  printf(" Throttle Min: %d\n", value);
+
+  printf("\n            MOTOR\n");
+  value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_DIRECTION);
+  printf("    Direction: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_1);
+  printf("       Motor1: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_2);
+  printf("       Motor2: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_3);
+  printf("       Motor3: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_4);
+  printf("       Motor4: %d\n", value);
+
+  printf("\n            BATTERY\n");
+  value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC_COEFFICIENT);
+  printf("    ADC Coeff: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CHEMISTRY);
+  printf("    Chemistry: %d\n", value);
+}
+
 int main(int argc, char *argv[])
 {
   if (usb_init()) return 1;
@@ -24,14 +71,14 @@ int main(int argc, char *argv[])
   }
 
   if(strcmp(argv[1], "get") == 0) {
-    if(argc != 4) {
-      printf("Usage: %s get <category> <index>\n", argv[0]);
-      return 1;
+    if(argc == 4) {
+      uint8_t category = atoi(argv[2]);
+      uint8_t index = atoi(argv[3]);
+      uint32_t value = get_setting(category, index);
+      printf("%d\n", value);
+    } else {
+      get_all();
     }
-    uint8_t category = atoi(argv[2]);
-    uint8_t index = atoi(argv[3]);
-    uint32_t value = get_setting(category, index);
-    printf("%d\n", value);
   } else if(strcmp(argv[1], "set") == 0) {
     if(argc != 5) {
       printf("Usage: %s set <category> <index> <value>\n", argv[0]);
@@ -110,63 +157,6 @@ int main(int argc, char *argv[])
   // set_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CHEMISTRY, 0);
 
   // save_settings();
-
-  // int value;
-
-  // printf("            TUNING\n");
-  // value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_P);
-  // printf("            P: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_I);
-  // printf("            I: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_D);
-  // printf("            D: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_P);
-  // printf("        Yaw P: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_I);
-  // printf("        Yaw I: %d\n", value);
-
-  // printf("\n           CONTROL\n");
-  // value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ACRO_RATE);
-  // printf("    Acro Rate: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ANGLE_RATE);
-  // printf("   Angle Rate: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_EXPO);
-  // printf("         Expo: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_YAW_EXPO);
-  // printf("     Yaw Expo: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_GAIN);
-  // printf("Throttle Gain: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_MIN);
-  // printf(" Throttle Min: %d\n", value);
-
-  // printf("\n            MOTOR\n");
-  // value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_DIRECTION);
-  // printf("    Direction: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_1);
-  // printf("       Motor1: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_2);
-  // printf("       Motor2: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_3);
-  // printf("       Motor3: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_4);
-  // printf("       Motor4: %d\n", value);
-
-  // printf("\n            BATTERY\n");
-  // value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC_COEFFICIENT);
-  // printf("    ADC Coeff: %d\n", value);
-  // value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CHEMISTRY);
-  // printf("    Chemistry: %d\n", value);
-
-  // printf("\nFLASH\n");
-  // printf("=====\n");
-  // uint8_t flash_data[32];
-  // for(int n=0; n<256; n+=32) {
-  //   read_flash(n, flash_data);
-  //   printf("%06X: ", n);
-  //   for(int i=0;  i<16; i++) printf("%02X ", flash_data[i]); printf("\n");
-  //   printf("%06X: ", n + 0x10);
-  //   for(int i=16; i<32; i++) printf("%02X ", flash_data[i]); printf("\n");
-  // }
 
   usb_close();
 }
