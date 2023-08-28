@@ -4,6 +4,8 @@
 #include "gyro.h"
 
 struct gyro_data gyro_offset;
+int32_t gyro_calibration_total[3];
+int32_t gyro_calibration_count;
 
 static void gyro_spi_write_register(uint8_t reg, uint8_t value) {
     // Set CS low
@@ -43,7 +45,25 @@ uint8_t gyro_ready(void)
 }
 
 void gyro_zero(void) {
-    gyro_read_raw(&gyro_offset);
+    gyro_calibration_count = 0;
+    gyro_calibration_total[0] = 0;
+    gyro_calibration_total[1] = 0;
+    gyro_calibration_total[2] = 0;
+    gyro_offset.x = 0;
+    gyro_offset.y = 0;
+    gyro_offset.z = 0;
+}
+
+void gyro_calibrate(void) {
+    gyro_calibration_count++;
+    struct gyro_data d;
+    gyro_read_raw(&d);
+    gyro_calibration_total[0] += d.x;
+    gyro_calibration_total[1] += d.y;
+    gyro_calibration_total[2] += d.z;
+    gyro_offset.x = gyro_calibration_total[0] / gyro_calibration_count;
+    gyro_offset.y = gyro_calibration_total[1] / gyro_calibration_count;
+    gyro_offset.z = gyro_calibration_total[2] / gyro_calibration_count;
 }
 
 void gyro_read_raw(struct gyro_data * d)

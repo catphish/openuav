@@ -23,3 +23,4 @@ void gyro_zero(void);
 void gyro_read_raw(struct gyro_data * d);
 void gyro_read(struct gyro_data * d);
 void accel_read(struct gyro_data * d);
+void gyro_calibrate(void);

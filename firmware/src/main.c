@@ -60,6 +60,9 @@ float i_pitch = 0;
 float i_roll  = 0;
 float i_yaw   = 0;
 
+// A counter to keep track of the number of frames since arming. Used only by the gyro calibration routine.
+uint32_t arm_counter = 0;
+
 // A continuously increasing counter that is used to timestamp blackbox frames.
 uint32_t frame_count = 0;
 
@@ -103,15 +106,22 @@ int main(void) {
 
       // If we have valid ELRS data, and the arming switch is set, arm the motors.
       if(elrs_valid() && elrs_channel(4) > 0 && arming_allowed) {
-        dshot.armed = 1;
         // LED1 indicated the arming state.
         led1_on();
+        if(arm_counter < 200) {
+          gyro_calibrate();
+          arm_counter++;
+          dshot.armed = 0;
+        } else {
+          dshot.armed = 1;
+        }
       } else {
         // If we are not armed, reset the integral terms.
         dshot.armed = 0;
         i_pitch = 0;
         i_roll  = 0;
         i_yaw   = 0;
+        arm_counter = 0;
         // Zero the gyro and recalibrate the IMU wenever we're not armed.
         gyro_zero();
         imu_init();
