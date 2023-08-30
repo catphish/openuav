@@ -109,11 +109,12 @@ int main(int argc, char *argv[])
       read_flash(address+32, data+32);
       uint32_t time = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
       if(time == 0xFFFFFFFF) break;
-      if(time == prev_time + 1) {
+      if(time == prev_time + 1 || time == prev_time + 2) {
         printf("%u", time);
         for(int n=0; n<19;n++) {
           int16_t value = data[2*n+4] | (data[2*n+5] << 8);
           if(n<3) value *= -1;
+          if(n>=7 && n<=10) value *= 10;
           if(n>9) value *= 10;
           printf(",%i", value);
         }
