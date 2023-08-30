@@ -28,8 +28,15 @@ uint16_t blackbox_find_free_page() {
   return low;
 }
 
+int skip_next_frame = 0;
 void blackbox_write(struct blackbox_frame * frame) {
   if(page == 0xffff) return;
+
+  // Skip writing the frame immediately after a page commit.
+  if(skip_next_frame) {
+    skip_next_frame = 0;
+    return;
+  }
 
   // Write the frame to the flash chip
   flash_program_load((uint8_t*)frame, page_offset, sizeof(struct blackbox_frame));
@@ -40,5 +47,6 @@ void blackbox_write(struct blackbox_frame * frame) {
     flash_program_execute(page);
     page++;
     page_offset = 0;
+    skip_next_frame = 1;
   }
 }
