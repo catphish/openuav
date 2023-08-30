@@ -46,11 +46,9 @@ struct dshot_data dshot;
 // Used by msp.c
 int main_get_armed_state() { return dshot.armed; }
 
-// These structs contain the raw gyro and accelerometer data.
-struct gyro_data gyro;
-struct gyro_data accel;
-// This struct contains the gyro data from the previous loop, which is used to calculate the D term.
-float prev_gyro[3];
+// This struct contains the D filtered gyro data from the previous loop.
+// We use this to calculate the D term.
+struct gyro_data prev_gyro_d;
 
 // This flag is set when it's safe to arm and inhibits arming at power-on.
 uint8_t arming_allowed = 0;
@@ -88,7 +86,7 @@ int main(void) {
       struct blackbox_frame blackbox_data;
 
       // Fetch settings and scale them to the appropriate units.
-      struct settings *settings = settings_get(); // convenience
+      struct settings *settings = settings_get();
       float angle_rate    = 0.01f     * settings->angle_rate;
       float acro_rate     = 0.01f     * settings->acro_rate;
       float p             = 0.001f    * settings->p;
@@ -135,6 +133,10 @@ int main(void) {
       // timer to implement failsafe behavior if no ELRS data is received.
       elrs_tick();
 
+      // These structs contain the raw gyro and accelerometer data.
+      struct gyro_data gyro;
+      struct gyro_data accel;
+
       // Read the raw gyro and accelerometer data.
       gyro_read(&gyro);
       accel_read(&accel);
@@ -144,34 +146,16 @@ int main(void) {
       blackbox_data.gyro_data[1] = gyro.y;
       blackbox_data.gyro_data[2] = gyro.z;
 
-      // Update the IMU using the gyro and accelerometer data.
+      // Update the IMU using the raw gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
 
-      // Filter the gyro data.
-      filter[frame_count % FILTER_LEN][0] = gyro.x;
-      filter[frame_count % FILTER_LEN][1] = gyro.y;
-      filter[frame_count % FILTER_LEN][2] = gyro.z;
-      float gyro_filter_p[3] = {0, 0, 0};
-      for(int i=0; i<FILTER_LEN; i++) {
-        gyro_filter_p[0] += coeffs[i] * filter[(frame_count + i) % FILTER_LEN][0];
-        gyro_filter_p[1] += coeffs[i] * filter[(frame_count + i) % FILTER_LEN][1];
-        gyro_filter_p[2] += coeffs[i] * filter[(frame_count + i) % FILTER_LEN][2];
-      }
-
-      // Filter the gyro data again to get the D term.
-      filter_d[frame_count % FILTER_LEN_D][0] = gyro.x;
-      filter_d[frame_count % FILTER_LEN_D][1] = gyro.y;
-      float gyro_filter_d[2] = {0, 0};
-      for(int i=0; i<FILTER_LEN_D; i++) {
-        gyro_filter_d[0] += coeffs_d[i] * filter_d[(frame_count + i) % FILTER_LEN_D][0];
-        gyro_filter_d[1] += coeffs_d[i] * filter_d[(frame_count + i) % FILTER_LEN_D][1];
-      }
-
-      // Copy the P term filtered gyro data back into the gyro struct.
-      gyro.x = gyro_filter_p[0];
-      gyro.y = gyro_filter_p[1];
-      gyro.z = gyro_filter_p[2];
+      // Filter the gyro data. We apply two filters to the raw gyro data, one with a short
+      // time constant for the P term, and one with a longer time constant for the D term.
+      struct gyro_data gyro_filtered_p;
+      struct gyro_data gyro_filtered_d;
+      filter_gyro_p(&gyro, &gyro_filtered_p);
+      filter_gyro_d(&gyro, &gyro_filtered_d);
 
       // These variables will store the requested rotation rate for each axis.
       int32_t rotation_request_pitch = 0;
@@ -224,22 +208,21 @@ int main(void) {
 
       // Calculate the error in angular velocity by adding the (negative) gyro
       // readings from the requested angular velocity.
-      int32_t error_pitch = p     * (gyro.x + rotation_request_pitch);
-      int32_t error_roll  = p     * (gyro.y + rotation_request_roll);
-      int32_t error_yaw   = yaw_p * (gyro.z + rotation_request_yaw);
+      int32_t error_pitch = p     * (gyro_filtered_p.x + rotation_request_pitch);
+      int32_t error_roll  = p     * (gyro_filtered_p.y + rotation_request_roll);
+      int32_t error_yaw   = yaw_p * (gyro_filtered_p.z + rotation_request_yaw);
 
-      // Integrate the error in each axis.
-      i_pitch += i     * (gyro.x + rotation_request_pitch);
-      i_roll  += i     * (gyro.y + rotation_request_roll);
-      i_yaw   += yaw_i * (gyro.z + rotation_request_yaw);
+      // Integrate the error in each axis. We use the P filtered gyro data for the integral term.
+      i_pitch += i     * (gyro_filtered_p.x + rotation_request_pitch);
+      i_roll  += i     * (gyro_filtered_p.y + rotation_request_roll);
+      i_yaw   += yaw_i * (gyro_filtered_p.z + rotation_request_yaw);
 
       // Multiply the filtered change in angular velocity by the D gain to get the D term.
-      float d_pitch = d * (gyro_filter_d[0] - prev_gyro[0]);
-      float d_roll  = d * (gyro_filter_d[1] - prev_gyro[1]);
+      float d_pitch = d * (gyro_filtered_p.x - prev_gyro_d.x);
+      float d_roll  = d * (gyro_filtered_p.y - prev_gyro_d.y);
 
       // Store the current gyro readings for the next loop.
-      prev_gyro[0] = gyro_filter_d[0];
-      prev_gyro[1] = gyro_filter_d[1];
+      prev_gyro_d = gyro_filtered_d;
 
       // Calculate the motor outputs. The motor_outputs array contains the following elements.
       // 0: no output

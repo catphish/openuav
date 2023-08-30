@@ -12,9 +12,9 @@
 #define GYRO_REG_OUTX_L_A 0x28
 
 struct gyro_data {
-    int16_t x;
-    int16_t y;
-    int16_t z;
+  float x;
+  float y;
+  float z;
 };
 
 void gyro_init(void);
