@@ -84,6 +84,9 @@ int main(void) {
 
     // Each time the gyro has new data, we run the main control loop.
     if(gyro_ready()) {
+      // Prepare a blackbox data frame to log the data for this loop iteration.
+      struct blackbox_frame blackbox_data;
+
       // Fetch settings and scale them to the appropriate units.
       struct settings *settings = settings_get(); // convenience
       float angle_rate    = 0.01f     * settings->angle_rate;
@@ -136,11 +139,16 @@ int main(void) {
       gyro_read(&gyro);
       accel_read(&accel);
 
+      // Log raw gyro data to the blackbox.
+      blackbox_data.gyro_data[0] = gyro.x;
+      blackbox_data.gyro_data[1] = gyro.y;
+      blackbox_data.gyro_data[2] = gyro.z;
+
       // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
 
-      // Filter the gyro data
+      // Filter the gyro data.
       filter[frame_count % FILTER_LEN][0] = gyro.x;
       filter[frame_count % FILTER_LEN][1] = gyro.y;
       filter[frame_count % FILTER_LEN][2] = gyro.z;
@@ -269,31 +277,27 @@ int main(void) {
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
 
-      // Populate a blackbox frame with current data.
-      struct blackbox_frame frame;
-      frame.timestamp = frame_count;
-      frame.gyro_data[0] = gyro.x;
-      frame.gyro_data[1] = gyro.y;
-      frame.gyro_data[2] = gyro.z;
-      frame.setpoint[0] = rotation_request_pitch;
-      frame.setpoint[1] = rotation_request_roll;
-      frame.setpoint[2] = rotation_request_yaw;
-      frame.p[0] = error_pitch;
-      frame.p[1] = error_roll;
-      frame.p[2] = error_yaw;
-      frame.i[0] = i_pitch;
-      frame.i[1] = i_roll;
-      frame.i[2] = i_yaw;
-      frame.d[0] = d_pitch;
-      frame.d[1] = d_roll;
-      frame.d[2] = 0;
-      frame.motor[0] = dshot.motor1;
-      frame.motor[1] = dshot.motor2;
-      frame.motor[2] = dshot.motor3;
-      frame.motor[3] = dshot.motor4;
+      // Finish populating the blackbox data
+      blackbox_data.timestamp = frame_count;
+      blackbox_data.setpoint[0] = rotation_request_pitch;
+      blackbox_data.setpoint[1] = rotation_request_roll;
+      blackbox_data.setpoint[2] = rotation_request_yaw;
+      blackbox_data.p[0] = error_pitch;
+      blackbox_data.p[1] = error_roll;
+      blackbox_data.p[2] = error_yaw;
+      blackbox_data.i[0] = i_pitch;
+      blackbox_data.i[1] = i_roll;
+      blackbox_data.i[2] = i_yaw;
+      blackbox_data.d[0] = d_pitch;
+      blackbox_data.d[1] = d_roll;
+      blackbox_data.d[2] = 0;
+      blackbox_data.motor[0] = dshot.motor1;
+      blackbox_data.motor[1] = dshot.motor2;
+      blackbox_data.motor[2] = dshot.motor3;
+      blackbox_data.motor[3] = dshot.motor4;
 
       // If we're armed, write the log data to the blackbox.
-      if(dshot.armed) blackbox_write(&frame);
+      if(dshot.armed) blackbox_write(&blackbox_data);
 
       // Increment the loop counter
       frame_count++;
