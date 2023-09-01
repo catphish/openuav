@@ -218,8 +218,8 @@ int main(void) {
       i_yaw   += yaw_i * (gyro_filtered_p.z + rotation_request_yaw);
 
       // Multiply the filtered change in angular velocity by the D gain to get the D term.
-      float d_pitch = d * (gyro_filtered_p.x - prev_gyro_d.x);
-      float d_roll  = d * (gyro_filtered_p.y - prev_gyro_d.y);
+      float d_pitch = d * (gyro_filtered_d.x - prev_gyro_d.x);
+      float d_roll  = d * (gyro_filtered_d.y - prev_gyro_d.y);
 
       // Store the current gyro readings for the next loop.
       prev_gyro_d = gyro_filtered_d;

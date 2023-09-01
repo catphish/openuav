@@ -95,8 +95,10 @@ void accel_read(struct gyro_data * d)
     for(int i=0; i<6; i++) {
         data[i] = gyro_spi_read_register(GYRO_REG_OUTX_L_A+i);
     }
-
-    d->x = (data[1]<<8)|data[0];
-    d->y = (data[3]<<8)|data[2];
-    d->z = (data[5]<<8)|data[4];
+    int16_t x = (data[1]<<8)|data[0];
+    int16_t y = (data[3]<<8)|data[2];
+    int16_t z = (data[5]<<8)|data[4];
+    d->x = x;
+    d->y = y;
+    d->z = z;
 }
