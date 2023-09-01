@@ -50,8 +50,8 @@ void get_all(void) {
   printf("\n            BATTERY\n");
   value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC_COEFFICIENT);
   printf("    ADC Coeff: %d\n", value);
-  value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CHEMISTRY);
-  printf("    Chemistry: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CELL_COUNT);
+  printf("   Cell Count: %d\n", value);
 }
 
 int main(int argc, char *argv[])
@@ -134,30 +134,6 @@ int main(int argc, char *argv[])
     printf("Unknown command: %s\n", argv[1]);
     return 1;
   }
-
-  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_P, 100);
-  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_I, 100);
-  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_D, 200);
-  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_P, 200);
-  // set_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_I, 200);
-
-  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ACRO_RATE, 1200);
-  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ANGLE_RATE, 1200);
-  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_EXPO, 60);
-  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_YAW_EXPO, 60);
-  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_GAIN, 80);
-  // set_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_MIN, 200);
-
-  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_DIRECTION, 1);
-  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_1, 1);
-  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_2, 3);
-  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_3, 4);
-  // set_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_4, 2);
-
-  // set_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC_COEFFICIENT, 1778);
-  // set_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CHEMISTRY, 0);
-
-  // save_settings();
 
   usb_close();
 }

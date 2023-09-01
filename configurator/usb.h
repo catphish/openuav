@@ -30,7 +30,7 @@
 #define USB_SETTING_MOTOR_4         0x05
 
 #define USB_SETTING_BATT_ADC_COEFFICIENT 0x01
-#define USB_SETTING_BATT_CHEMISTRY       0x02
+#define USB_SETTING_BATT_CELL_COUNT      0x02
 
 int usb_init();
 uint32_t get_setting(uint8_t category, uint8_t index);
