@@ -21,7 +21,6 @@
 #include "blackbox.h"
 #include "airmode.h"
 #include "main.h"
-#include "filter.h"
 
 // Set up all the hardware. Each devide has its own init function.
 void SystemInit(void) {
@@ -63,6 +62,12 @@ uint32_t arm_counter = 0;
 
 // A continuously increasing counter that is used to timestamp blackbox frames.
 uint32_t frame_count = 0;
+
+// Create a ring buffer of the last GYRO_BUFFER_SIZE gyro readings.
+// This will be used to calculate the D term.
+#define GYRO_BUFFER_SIZE 15
+static struct gyro_data gyro_buffer[GYRO_BUFFER_SIZE];
+static uint8_t gyro_buffer_index = 0;
 
 int main(void) {
   // LED2 is the power LED, turn it on before we do anything else.
@@ -150,13 +155,6 @@ int main(void) {
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
 
-      // Filter the gyro data. We apply two filters to the raw gyro data, one with a short
-      // time constant for the P term, and one with a longer time constant for the D term.
-      struct gyro_data gyro_filtered_p;
-      struct gyro_data gyro_filtered_d;
-      filter_gyro_p(&gyro, &gyro_filtered_p);
-      filter_gyro_d(&gyro, &gyro_filtered_d);
-
       // These variables will store the requested rotation rate for each axis.
       int32_t rotation_request_pitch = 0;
       int32_t rotation_request_roll  = 0;
@@ -208,21 +206,23 @@ int main(void) {
 
       // Calculate the error in angular velocity by adding the (negative) gyro
       // readings from the requested angular velocity.
-      int32_t error_pitch = p     * (gyro_filtered_p.x + rotation_request_pitch);
-      int32_t error_roll  = p     * (gyro_filtered_p.y + rotation_request_roll);
-      int32_t error_yaw   = yaw_p * (gyro_filtered_p.z + rotation_request_yaw);
+      int32_t error_pitch = p     * (gyro.x + rotation_request_pitch);
+      int32_t error_roll  = p     * (gyro.y + rotation_request_roll);
+      int32_t error_yaw   = yaw_p * (gyro.z + rotation_request_yaw);
 
       // Integrate the error in each axis. We use the P filtered gyro data for the integral term.
-      i_pitch += i     * (gyro_filtered_p.x + rotation_request_pitch);
-      i_roll  += i     * (gyro_filtered_p.y + rotation_request_roll);
-      i_yaw   += yaw_i * (gyro_filtered_p.z + rotation_request_yaw);
+      i_pitch += i     * (gyro.x + rotation_request_pitch);
+      i_roll  += i     * (gyro.y + rotation_request_roll);
+      i_yaw   += yaw_i * (gyro.z + rotation_request_yaw);
 
-      // Multiply the filtered change in angular velocity by the D gain to get the D term.
-      float d_pitch = d * (gyro_filtered_d.x - prev_gyro_d.x);
-      float d_roll  = d * (gyro_filtered_d.y - prev_gyro_d.y);
+      // Put the current gyro value into the ring buffer.
+      gyro_buffer[gyro_buffer_index] = gyro;
+      gyro_buffer_index++; if(gyro_buffer_index >= GYRO_BUFFER_SIZE) gyro_buffer_index = 0;
 
-      // Store the current gyro readings for the next loop.
-      prev_gyro_d = gyro_filtered_d;
+      // Calculate the difference between the current gyro value and the value from GYRO_BUFFER_SIZE loops
+      // ago and multiply by the D gain to get the D term.
+      float d_pitch = (gyro.x - gyro_buffer[gyro_buffer_index].x) * d;
+      float d_roll  = (gyro.y - gyro_buffer[gyro_buffer_index].y) * d;
 
       // Calculate the motor outputs. The motor_outputs array contains the following elements.
       // 0: no output
