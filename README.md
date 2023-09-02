@@ -38,6 +38,24 @@ The commands to set configuration are a little cryptic. Use command `configurato
 categry number, `y` is the specific entry number, and `z` is the value to set. Please refer to the following file
 for the category and entry numbers: https://github.com/catphish/openuav/blob/master/configurator/usb.h
 
+## Motor configuration
+
+The motor configuration is also not very intuitive, but works as follows. First select "props in" `configurator set 3 5 0`
+or "props out" `configurator set 3 5 1`.
+
+Next, map the motor outputs using the command: `configurator set 3 x y`, where `x` is the motor output pin (1-4), and `y` is
+a corner of the quad according to the following table:
+
+```
+0: no output
+1: rear left
+2: front right
+3: front left
+4: rear right
+```
+
+* NOTE: Due to the way air mode currently works, motors set to zero outout will still spin at minimum RPM. This needs fixing.
+
 ## Black Box
 
 Data will be recorded to the black box any time the quad is armed and will continue until the memory

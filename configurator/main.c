@@ -36,8 +36,6 @@ void get_all(void) {
   printf(" Throttle Min: %d\n", value);
 
   printf("\n            MOTOR\n");
-  value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_DIRECTION);
-  printf("    Direction: %d\n", value);
   value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_1);
   printf("       Motor1: %d\n", value);
   value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_2);
@@ -46,6 +44,8 @@ void get_all(void) {
   printf("       Motor3: %d\n", value);
   value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_4);
   printf("       Motor4: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_DIRECTION);
+  printf("    Direction: %d\n", value);
 
   printf("\n            BATTERY\n");
   value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC_COEFFICIENT);

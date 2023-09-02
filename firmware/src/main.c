@@ -255,6 +255,7 @@ int main(void) {
       dshot.motor4 = motor_outputs[settings->motor4];
 
       // Activate air mode to keep motor outputs within a good range while maintaining differential.
+      // TODO: This needs to be applies to motor outputs BEFORE they're mapped to DSHOT channels.
       air_mode(&dshot);
 
       // Write the motor outputs to the ESCs.
