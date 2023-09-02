@@ -36,9 +36,9 @@ Starting from the default values in, increase _P_  and keep increasing it until 
 THIS TUNE IS STILL UNDERGOING TESTING!
 
 ```
-Angle rate: 1200
-Acro rate: 1200 (861 dps)
-P: 150
+Angle rate: 1500
+Acro rate: 1500
+P: 120
 I: 50
 D: 150
 Yaw P: 200
