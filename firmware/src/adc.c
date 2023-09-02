@@ -4,6 +4,7 @@
 #include "led.h"
 #include "settings.h"
 
+// Configure the analog to digital converter
 void adc_init() {
   // Set ADC12 clock source to sysclk
   RCC->CCIPR |= RCC_CCIPR_ADC12SEL_1;
@@ -65,6 +66,7 @@ void adc_init() {
   ADC2->CR |= ADC_CR_ADSTART;
 }
 
+// Read ADC2 and return the value in millivolts
 uint32_t adc_read_mv() {
   volatile struct settings *settings = settings_get();
   uint32_t adc = 0;

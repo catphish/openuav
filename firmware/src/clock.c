@@ -1,6 +1,7 @@
 #include <stm32g4xx.h>
 #include "led.h"
 
+// Initialize the system clock to 160MHz.
 void clock_init(void) {
     // Enable FPU
     SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */

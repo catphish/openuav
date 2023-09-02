@@ -5,6 +5,7 @@
 
 volatile uint16_t dma_data[17 * 4];
 
+// Configure TIM2, DMA1, and DMAMUX1 to output DSHOT signals.
 void dshot_init(void) {
     // Enable GPIOA clock
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
@@ -93,6 +94,7 @@ void dshot_init(void) {
 
 }
 
+// Write the output for a specific motor into the DMA buffer
 static void set_dma_data(int n, uint8_t armed, int32_t data) {
     if(data > 2047) {
         data = 2047;
