@@ -25,7 +25,7 @@ void settings_default() {
     settings.motor2          = 0;     // Default disabled
     settings.motor3          = 0;     // Default disabled
     settings.motor4          = 0;     // Default disabled
-    settings.adc_coefficient = 1778;  // 1778 as calibrated by @sixtyfive
+    settings.adc_coefficient = 840;   // 840 as calibrated by catphish
     settings.cell_count      = 0;
     settings.checksum        = 0;
 }

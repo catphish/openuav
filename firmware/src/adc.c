@@ -72,5 +72,5 @@ uint32_t adc_read_mv() {
   uint32_t adc = 0;
   adc = ADC2->DR;
   if(settings->adc_coefficient == 0) return 0;
-  return adc / settings->adc_coefficient;
+  return adc * settings->adc_coefficient / 1000;
 }
