@@ -86,7 +86,7 @@ int main(void) {
       struct blackbox_frame blackbox_data;
 
       // Fetch settings and scale them to the appropriate units.
-      struct settings *settings = settings_get();
+      volatile struct settings *settings = settings_get();
       float angle_rate    = 0.01f     * settings->angle_rate;
       float acro_rate     = 0.01f     * settings->acro_rate;
       float p             = 0.001f    * settings->p;

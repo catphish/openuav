@@ -22,7 +22,7 @@ struct settings {
   uint32_t motor3; // 16
   uint32_t motor4;
   uint32_t adc_coefficient; // 18
-  uint32_t chemistry;
+  uint32_t cell_count;
   // MUST be the last value, and MUST be even
   uint32_t checksum; // 20
 };
@@ -35,4 +35,4 @@ struct setting_name {
 void settings_read();
 void settings_save();
 void settings_default();
-struct settings *settings_get();
+volatile struct settings *settings_get();

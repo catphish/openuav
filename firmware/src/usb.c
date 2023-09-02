@@ -170,7 +170,7 @@ void usb_handle_ep0() {
 volatile uint8_t usb_enabled = 0;
 
 void usb_handle_ep1() {
-  struct settings *settings = settings_get();
+  volatile struct settings *settings = settings_get();
   uint8_t request[64];
   uint8_t response[64];
   uint8_t len = usb_read(1, (char*)request);
@@ -218,8 +218,8 @@ void usb_handle_ep1() {
       } else if(request[1] == USB_SETTING_CAT_BATT) {
         if(request[2] == USB_SETTING_BATT_ADC_COEFFICIENT) {
           value = settings->adc_coefficient;
-        } else if(request[2] == USB_SETTING_BATT_CHEMISTRY) {
-          value = settings->chemistry;
+        } else if(request[2] == USB_SETTING_BATT_CELL_COUNT) {
+          value = settings->cell_count;
         }
       }
       response[0] = USB_COMMAND_SETTING_GET;
@@ -273,8 +273,8 @@ void usb_handle_ep1() {
       } else if(request[1] == USB_SETTING_CAT_BATT) {
         if(request[2] == USB_SETTING_BATT_ADC_COEFFICIENT) {
           settings->adc_coefficient = value;
-        } else if(request[2] == USB_SETTING_BATT_CHEMISTRY) {
-          settings->chemistry = value;
+        } else if(request[2] == USB_SETTING_BATT_CELL_COUNT) {
+          settings->cell_count = value;
         }
       }
       response[0] = USB_COMMAND_SETTING_SET;

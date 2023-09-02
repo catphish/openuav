@@ -8,14 +8,6 @@
 #include "stdio.h"
 #include "elrs.h"
 
-// As-yet unset
-// Will either be set from settings or guessed
-static int8_t cell_count = -1;
-// LiPo
-static uint8_t chemistry = 0;
-static float v_cell_min = 3.2f;
-static float v_cell_max = 4.20f;
-
 void send_msp(uint8_t command, uint8_t *payload, uint8_t length) {
   uint8_t checksum = 0;
   // Send the address
@@ -51,28 +43,6 @@ void send_msp_displayport_clear() {
   payload[0] = 2;
   // Send the payload
   send_msp(182, payload, 1);
-}
-
-// Parts of this are borrowed from the QuickSilver firmware's source code
-uint8_t guess_battery_cell_count(uint8_t chemistry) {
-  // A best-effort guess is best done from the midpoint of the
-  // cell's voltage range, which depends on battery chemistry
-  switch(chemistry) {
-    case 1: v_cell_min = 3.2f; v_cell_max = 4.35f; break; // LiHV
-    case 2: v_cell_min = 2.5f; v_cell_max = 4.20f; break; // good-quality Li-Ion
-  }
-  float v_cell_mid = (v_cell_min+((v_cell_max-v_cell_min)/2));
-
-  // Using average cell voltage and voltage range midpoint,
-  // we're now able to make our guess with some confidence
-  uint32_t v_batt_curr = adc_read_mV();
-  for(int i=6; i>0; i--) {
-    if((v_batt_curr / i) > (uint32_t)(v_cell_mid*1000)) {
-      return i;
-    }
-  }
-
-  return 0; // no clue...
 }
 
 void send_msp_displayport_write() {
@@ -111,33 +81,29 @@ void send_msp_displayport_write() {
    // Attributes
   payload[3] = 0;
   // Set cell count, but only once
-  struct settings *settings = settings_get(); // convenience
-  if (cell_count == -1) {
-    chemistry = settings->chemistry;
-    cell_count = guess_battery_cell_count(chemistry);
-  }
+  volatile struct settings *settings = settings_get();
   // (Anything else would result in meaningless output)
-  if (cell_count > 0) {
+  if (settings->cell_count > 0) {
     // String
-    uint16_t vbatt = adc_read_mV() / cell_count;
+    uint16_t vbatt = adc_read_mv() / settings->cell_count;
     uint8_t v = vbatt / 1000;
     uint16_t mv = (vbatt % 1000) / 10; // For 2 decimal places
-    snprintf((char*)payload+4, 16, "%iS %d.%02dV", (uint8_t)cell_count, v, mv);
+    snprintf((char*)payload+4, 16, "%iS %d.%02dV", (uint8_t)settings->cell_count, v, mv);
     // Send the payload
     send_msp(182, payload, 20);
 
-    // Prepare another MSP_DISPLAYPORT payload
-    memset(payload, 0, 20);
-    // Send the write string subcommand
-    payload[0] = 3;
-    // Middle row
-    payload[1] = 7;
-    // Column
-    // (mid-point on older HDZ VRX firmware)
-    payload[2] = 13;
-    // Attributes
-    payload[3] = 0;
-    if(vbatt < (uint16_t)(v_cell_min*1000)) {
+    if(vbatt < 3500) {
+      // Prepare another MSP_DISPLAYPORT payload
+      memset(payload, 0, 20);
+      // Send the write string subcommand
+      payload[0] = 3;
+      // Middle row
+      payload[1] = 7;
+      // Column
+      // (mid-point on older HDZ VRX firmware)
+      payload[2] = 13;
+      // Attributes
+      payload[3] = 0;
       // Another string
       snprintf((char*)payload+4, 10, "BATTERY!");
       // Send the payload again

@@ -5,7 +5,7 @@
 
 #define VERSION 2
 
-struct settings settings;
+volatile struct settings settings;
 
 void settings_default() {
     settings.version         = VERSION;
@@ -26,7 +26,7 @@ void settings_default() {
     settings.motor3          = 0;     // Default disabled
     settings.motor4          = 0;     // Default disabled
     settings.adc_coefficient = 1778;  // 1778 as calibrated by @sixtyfive
-    settings.chemistry       = 0;
+    settings.cell_count      = 0;
     settings.checksum        = 0;
 }
 
@@ -82,6 +82,6 @@ void settings_save() {
   __enable_irq();
 }
 
-struct settings *settings_get() {
+volatile struct settings *settings_get() {
   return &settings;
 }

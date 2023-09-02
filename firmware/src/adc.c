@@ -65,18 +65,10 @@ void adc_init() {
   ADC2->CR |= ADC_CR_ADSTART;
 }
 
-uint32_t adc_read_mV() {
-  struct settings *settings = settings_get(); // convenience
+uint32_t adc_read_mv() {
+  volatile struct settings *settings = settings_get();
   uint32_t adc = 0;
-
-  // Wait for ADC to be ready
-  // The above message was mindread by a LLaMA, wow!
-  do {
-    // Read from the ADC data register
-    adc = ADC2->DR;
-  } while (adc < 1);
-
-  // Divide ADC reading by ADC coefficient, which is itself
-  // divided by 1000 since it needs to be stored as an integer
-  return adc / (settings->adc_coefficient / 1000.0f);
+  adc = ADC2->DR;
+  if(settings->adc_coefficient == 0) return 0;
+  return adc / settings->adc_coefficient;
 }
