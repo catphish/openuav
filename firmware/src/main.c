@@ -96,7 +96,7 @@ int main(void) {
       float acro_rate     = 0.01f     * settings->acro_rate;
       float p             = 0.001f    * settings->p;
       float i             = 0.000001f * settings->i;
-      float d             = 0.01f     * settings->d;
+      float d             = 0.001f    * settings->d;
       float yaw_p         = 0.001f    * settings->yaw_p;
       float yaw_i         = 0.000001f * settings->yaw_i;
       float expo          = 0.01f     * settings->expo;
