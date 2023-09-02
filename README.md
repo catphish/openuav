@@ -27,13 +27,38 @@ sudo pacman -Sy arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-newlib \
 
 # Basic Tuning Guide
 
-Starting from the default values in, increase _P_  and keep increasing it until either (1) it feels right, in which case, stop here. Or (2), it starts to oscillate fast, in which case back it off. Once you've done that, try flying in some wind. If it drifts in the wind, increase _I_  as much as is necessary.
+Tuning should be done in acro mode at a rate you are comfortable with. I use a rate
+of 1200 (840 dps) for this process.
+
+## Part 1 - P term
+
+Set the I and D terms to zero so that they don't interfere. Start with a low value (P=50).
+Increase P until the quad is sufficiently responsive to stick inputs. You can expect a
+little bounceback.
+In the 5 inch development quad, the P value is 120.
+
+## Part 2 - D term
+
+Increase the D term only as much as is required to prevent the bounceback.
+In the 5 inch development quad, the D value is 150.
+
+## Part 3 - I term
+
+Increase the I term only as much as is required to prevent drift. You may find that this
+needs to be increased more when flying in strong wind. Higher values will make the quad
+more stable but will introduce some bouncenback when performing flips.
+In the 5 inch development quad, the I value is 50.
+
+## Part 4 - Z rates
+
+There is currently no specific process for tuning the Z rates. Values of 200 and 200
+for P and I seem to work in most cases. If there is yaw drift then it may be necessary
+to increase one or the other. Increase the I term in the case of slow drift or the P
+term in the case of sudden yaw disruption.
 
 # Tuning Examples
 
-## TBS Source One V5 5" - 2206 Motors at 4S
-
-THIS TUNE IS STILL UNDERGOING TESTING!
+## TBS Source One V5 5" - 2306/2555KV Motors at 4S
 
 ```
 Angle rate: 1500
