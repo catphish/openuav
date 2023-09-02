@@ -25,6 +25,27 @@ sudo pacman -Sy arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-newlib \
                 stlink
 ```
 
+# Configurator
+
+The USB configurator can be used to configure the quad, and also to download blackbox
+logs.
+
+## Configuration
+
+You can view the current configuration by running `configurator get`.
+
+The commands to set configuration are a little cryptic. Use command `configurator set x y z`, where `x` is the
+categry number, `y` is the specific entry number, and `z` is the value to set. Please refer to the following file
+for the category and entry numbers: https://github.com/catphish/openuav/blob/master/configurator/usb.h
+
+## Black Box
+
+Data will be recorded to the black box any time the quad is armed and will continue until the memory
+is full (approx 10 minutes flight time). You can erase the black box with `configurator erase`.
+
+You can download the blackbox data with `configurator read > data.csv`. The CSV can be processed
+with any tool of your choosing but I find kst2 to be the best.
+
 # Basic Tuning Guide
 
 Tuning should be done in acro mode at a rate you are comfortable with. I use a rate
