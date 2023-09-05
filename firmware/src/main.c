@@ -45,10 +45,6 @@ struct dshot_data dshot;
 // Used by msp.c
 int main_get_armed_state() { return dshot.armed; }
 
-// This struct contains the D filtered gyro data from the previous loop.
-// We use this to calculate the D term.
-struct gyro_data prev_gyro_d;
-
 // This flag is set when it's safe to arm and inhibits arming at power-on.
 uint8_t arming_allowed = 0;
 
@@ -65,7 +61,7 @@ uint32_t frame_count = 0;
 
 // Create a ring buffer of the last GYRO_BUFFER_SIZE gyro readings.
 // This will be used to calculate the D term.
-#define GYRO_BUFFER_SIZE 15
+#define GYRO_BUFFER_SIZE 30
 static struct gyro_data gyro_buffer[GYRO_BUFFER_SIZE];
 static uint8_t gyro_buffer_index = 0;
 
@@ -210,11 +206,6 @@ int main(void) {
       int32_t error_roll  = p     * (gyro.y + rotation_request_roll);
       int32_t error_yaw   = yaw_p * (gyro.z + rotation_request_yaw);
 
-      // Integrate the error in each axis. We use the P filtered gyro data for the integral term.
-      i_pitch += i     * (gyro.x + rotation_request_pitch);
-      i_roll  += i     * (gyro.y + rotation_request_roll);
-      i_yaw   += yaw_i * (gyro.z + rotation_request_yaw);
-
       // Put the current gyro value into the ring buffer.
       gyro_buffer[gyro_buffer_index] = gyro;
       gyro_buffer_index++; if(gyro_buffer_index >= GYRO_BUFFER_SIZE) gyro_buffer_index = 0;
@@ -223,6 +214,16 @@ int main(void) {
       // ago and multiply by the D gain to get the D term.
       float d_pitch = (gyro.x - gyro_buffer[gyro_buffer_index].x) * d;
       float d_roll  = (gyro.y - gyro_buffer[gyro_buffer_index].y) * d;
+
+      // Integrate the error in each axis. We use the P filtered gyro data for the integral term.
+      // Don't integrate pitch and roll if the D term exceeds a specified limit
+      if(d_pitch < 100 && d_pitch > -100)
+        i_pitch += i * (gyro.x + rotation_request_pitch);
+
+      if(d_roll < 100 && d_roll > -100)
+        i_roll  += i     * (gyro.y + rotation_request_roll);
+
+      i_yaw   += yaw_i * (gyro.z + rotation_request_yaw);
 
       // Calculate the motor outputs. The motor_outputs array contains the following elements.
       // 0: no output
