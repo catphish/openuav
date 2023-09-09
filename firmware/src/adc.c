@@ -4,6 +4,54 @@
 #include "led.h"
 #include "settings.h"
 
+// Configure ADC1 or ADC2
+void adc_configure(ADC_TypeDef * adc) {
+  // Disable the Deep Power Down mode
+  adc->CR &= ~ADC_CR_DEEPPWD;
+  msleep(10);
+  // Enable the internal ADC voltage regulator
+  adc->CR |= ADC_CR_ADVREGEN;
+  msleep(10);
+
+  // Ensure adc is disabled
+  adc->CR &= ~ADC_CR_ADEN;
+
+  // Calibrate adc
+  adc->CR |= ADC_CR_ADCAL;
+  while(adc->CR & ADC_CR_ADCAL) {}
+
+  // Enable adc
+  adc->ISR |= ADC_ISR_ADRDY;
+  adc->CR |= ADC_CR_ADEN;
+  while(!(adc->ISR & ADC_ISR_ADRDY)) {}
+
+  // Set adc to continuous mode and overrun mode
+  adc->CFGR = ADC_CFGR_OVRMOD | ADC_CFGR_CONT;
+
+  // Instruct adc to oversample
+  adc->CFGR2 = ADC_CFGR2_ROVSE;
+
+  // Set adc to 256x oversampling, this results in 20 bit total resolution
+  adc->CFGR2 |= ADC_CFGR2_OVSR_0 | ADC_CFGR2_OVSR_1 | ADC_CFGR2_OVSR_2;
+
+  // Set adc to 4-bit right shift, this results in 20-bit output, the lowest 4 bits are discarded
+  // Otherwise, at 20 bits of resolution, the output would always be clipped to 65535, because the
+  // DR register is only 16 bits wide
+  adc->CFGR2 |= ADC_CFGR2_OVSS_2;
+
+  // Set adc to 640.5 + 12.5 cycles sampling time
+  adc->SMPR1 |= ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2;
+  adc->SMPR1 |= ADC_SMPR1_SMP1_0 | ADC_SMPR1_SMP1_1 | ADC_SMPR1_SMP1_2;
+  // Set the sequence. One conversion, channel 10.
+  adc->SQR1 = 0 | ADC_SQR1_SQ1_3 | ADC_SQR1_SQ1_1;
+
+  // At 5Mhz, this is 640.5 + 12.5 cycles = 130us per sample
+  // With 256x oversampling, this is 33ms per sample
+
+  // Start adc
+  adc->CR |= ADC_CR_ADSTART;
+}
+
 // Configure the analog to digital converter
 void adc_init() {
   // Set ADC12 clock source to sysclk
@@ -20,50 +68,9 @@ void adc_init() {
   // Set PF1 to analog mode
   gpio_pin_mode(GPIOF, 1, GPIO_MODE_ANALOG, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
 
-  // Disable the Deep Power Down mode
-  ADC2->CR &= ~ADC_CR_DEEPPWD;
-  msleep(10);
-  // Enable the internal ADC voltage regulator
-  ADC2->CR |= ADC_CR_ADVREGEN;
-  msleep(10);
-
-  // Ensure ADC2 is disabled
-  ADC2->CR &= ~ADC_CR_ADEN;
-
-  // Calibrate ADC2
-  ADC2->CR |= ADC_CR_ADCAL;
-  while(ADC2->CR & ADC_CR_ADCAL) {}
-
-  // Enable ADC2
-  ADC2->ISR |= ADC_ISR_ADRDY;
-  ADC2->CR |= ADC_CR_ADEN;
-  while(!(ADC2->ISR & ADC_ISR_ADRDY)) {}
-
-  // Set ADC2 to continuous mode and overrun mode
-  ADC2->CFGR = ADC_CFGR_OVRMOD | ADC_CFGR_CONT;
-
-  // Instruct ADC2 to oversample
-  ADC2->CFGR2 = ADC_CFGR2_ROVSE;
-
-  // Set ADC2 to 256x oversampling, this results in 20 bit total resolution
-  ADC2->CFGR2 |= ADC_CFGR2_OVSR_0 | ADC_CFGR2_OVSR_1 | ADC_CFGR2_OVSR_2;
-
-  // Set ADC2 to 4-bit right shift, this results in 20-bit output, the lowest 4 bits are discarded
-  // Otherwise, at 20 bits of resolution, the output would always be clipped to 65535, because the
-  // DR register is only 16 bits wide
-  ADC2->CFGR2 |= ADC_CFGR2_OVSS_2;
-
-  // Set ADC2 to 640.5 + 12.5 cycles sampling time
-  ADC2->SMPR1 |= ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2;
-  ADC2->SMPR1 |= ADC_SMPR1_SMP1_0 | ADC_SMPR1_SMP1_1 | ADC_SMPR1_SMP1_2;
-  // Set the sequence. One conversion, channel 10.
-  ADC2->SQR1 = 0 | ADC_SQR1_SQ1_3 | ADC_SQR1_SQ1_1;
-
-  // At 5Mhz, this is 640.5 + 12.5 cycles = 130us per sample
-  // With 256x oversampling, this is 33ms per sample
-
-  // Start ADC2
-  ADC2->CR |= ADC_CR_ADSTART;
+  // Configure ADC1 and ADC2
+  adc_configure(ADC1);
+  adc_configure(ADC2);
 }
 
 // Read ADC2 and return the value in millivolts
@@ -73,4 +80,10 @@ uint32_t adc_read_mv() {
   adc = ADC2->DR;
   if(settings->adc_coefficient == 0) return 0;
   return adc * settings->adc_coefficient / 1000;
+}
+
+// Read ADC1 and return the raw value
+// TODO: This should scale the data to milliamps
+uint32_t adc_read_ma() {
+ return ADC1->DR;
 }

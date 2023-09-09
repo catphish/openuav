@@ -69,21 +69,21 @@ void send_msp_displayport_write() {
   // Send the payload
   send_msp(182, payload, 14);
   
-  // Prepare a MSP_DISPLAYPORT payload
-  memset(payload, 0, 20);
-  // Send the write string subcommand
-  payload[0] = 3;
-   // Bottom row
-  payload[1] = 15;
-  // Column
-  // (right third on older HDZ VRX firmware)
-  payload[2] = 20;
-   // Attributes
-  payload[3] = 0;
   // Set cell count, but only once
   volatile struct settings *settings = settings_get();
   // (Anything else would result in meaningless output)
   if (settings->cell_count > 0) {
+    // Prepare a MSP_DISPLAYPORT payload
+    memset(payload, 0, 20);
+    // Send the write string subcommand
+    payload[0] = 3;
+    // Bottom row
+    payload[1] = 15;
+    // Column
+    // (right third on older HDZ VRX firmware)
+    payload[2] = 20;
+    // Attributes
+    payload[3] = 0;
     // String
     uint16_t vbatt = adc_read_mv() / settings->cell_count;
     uint8_t v = vbatt / 1000;
@@ -110,6 +110,22 @@ void send_msp_displayport_write() {
       send_msp(182, payload, 14);
     }
   }
+  // Prepare a MSP_DISPLAYPORT payload
+  memset(payload, 0, 20);
+  // Send the write string subcommand
+  payload[0] = 3;
+  // Near bottom
+  payload[1] = 13;
+  // Column
+  // (right third on older HDZ VRX firmware)
+  payload[2] = 20;
+  // Attributes
+  payload[3] = 0;
+  // String
+  uint16_t current = adc_read_ma();
+  snprintf((char*)payload+4, 16, "CUR: %05d", current);
+  // Send the payload
+  send_msp(182, payload, 20);
 }
 
 void send_msp_displayport_draw() {
