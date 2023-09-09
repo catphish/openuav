@@ -67,21 +67,23 @@ static void spi3_init() {
   // Enable SPI3 clock
   RCC->APB1ENR1 |= RCC_APB1ENR1_SPI3EN;
   // Set CS high
-  GPIOA->BSRR = GPIO_BSRR_BS_15;
+  GPIOB->BSRR = GPIO_BSRR_BS_9;
   // Set PB3 to AF6 (SPI3_SCK)
   gpio_pin_mode(GPIOB, 3, GPIO_MODE_AF, 6, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
   // Set PB4 to AF6 (SPI3_MISO)
   gpio_pin_mode(GPIOB, 4, GPIO_MODE_AF, 6, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
   // Set PB5 to AF6 (SPI3_MOSI)
   gpio_pin_mode(GPIOB, 5, GPIO_MODE_AF, 6, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
-  // Set PA15 to output (SPI3_CS)
-  gpio_pin_mode(GPIOA, 15, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
+  // Set PB9 to output (SPI3_CS)
+  gpio_pin_mode(GPIOB, 9, GPIO_MODE_OUTPUT, 0, GPIO_PUPD_NONE, GPIO_OTYPE_PP);
   // Set PB3 to very high speed
   GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED3;
   // Set PB4 to very high speed
   GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED4;
   // Set PB5 to very high speed
   GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED5;
+  // Set PB9 to very high speed
+  GPIOB->OSPEEDR |= GPIO_OSPEEDR_OSPEED9;
 
 
   // Disable SPI3

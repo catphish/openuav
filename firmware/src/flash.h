@@ -5,7 +5,6 @@
 void flash_init(void);
 void write_enable(void);
 void flash_erase_block(uint16_t block);
-void flash_erase(void);
 void flash_program_load(uint8_t * buffer, uint32_t offset, uint32_t length);
 void flash_program_execute(uint32_t page_address);
 void flash_page_read(uint16_t page_address);
