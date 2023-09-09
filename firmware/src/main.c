@@ -61,7 +61,7 @@ uint32_t frame_count = 0;
 
 // Create a ring buffer of the last GYRO_BUFFER_SIZE gyro readings.
 // This will be used to calculate the D term.
-#define GYRO_BUFFER_SIZE 30
+#define GYRO_BUFFER_SIZE 21
 static struct gyro_data gyro_buffer[GYRO_BUFFER_SIZE];
 static uint8_t gyro_buffer_index = 0;
 

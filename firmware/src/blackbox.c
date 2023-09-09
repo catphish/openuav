@@ -31,20 +31,10 @@ uint16_t blackbox_find_free_page() {
   return low;
 }
 
-int skip_next_frame = 0;
 // Write a 64 byte frame to the flash chip. If the page is full, commit it to
 // the flash and increment the page number.
 void blackbox_write(struct blackbox_frame * frame) {
   if(page == 0xffff) return;
-
-  // If the skip next frame flag is set, skip this frame and clear the flag.
-  // This allows us to skip the next write after each commit as a workaround
-  // for not being able to write to the flash while it is busy committing the
-  // previous page.
-  if(skip_next_frame) {
-    skip_next_frame = 0;
-    return;
-  }
 
   // Write the frame to the flash chip.
   flash_program_load((uint8_t*)frame, page_offset, sizeof(struct blackbox_frame));
@@ -55,7 +45,5 @@ void blackbox_write(struct blackbox_frame * frame) {
     flash_program_execute(page);
     page++;
     page_offset = 0;
-    // Set the skip next frame flag to skip the next frame write.
-    skip_next_frame = 1;
   }
 }
