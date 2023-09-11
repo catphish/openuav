@@ -110,7 +110,9 @@ int main(int argc, char *argv[])
       uint32_t time = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
       if(time == 0xFFFFFFFF) break;
       if(time == prev_time + 1 || time == prev_time + 2) {
-        printf("%u", time);
+        float timef = time;
+        time /= 833.f;
+        printf("%f", timef);
         for(int n=0; n<19;n++) {
           int16_t v = data[2*n+4] | (data[2*n+5] << 8);
           int32_t value = v;
