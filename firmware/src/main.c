@@ -136,11 +136,11 @@ int main(void) {
 
       // These structs contain the raw gyro and accelerometer data.
       struct gyro_data gyro;
-      struct gyro_data accel;
+      // struct gyro_data accel;
 
       // Read the raw gyro and accelerometer data.
       gyro_read(&gyro);
-      accel_read(&accel);
+      // accel_read(&accel);
 
       // Log raw gyro data to the blackbox.
       blackbox_data.gyro_data[0] = gyro.x;
@@ -149,7 +149,7 @@ int main(void) {
 
       // Update the IMU using the raw gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
-      imu_update_from_accel(&accel);
+      // imu_update_from_accel(&accel);
 
       // These variables will store the requested rotation rate for each axis.
       int32_t rotation_request_pitch = 0;

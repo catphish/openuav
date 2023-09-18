@@ -2,6 +2,7 @@
 #include "gpio.h"
 #include "spi.h"
 #include "gyro.h"
+#include "util.h"
 
 struct gyro_data gyro_offset;
 float gyro_calibration_total[3];
@@ -26,16 +27,30 @@ static uint8_t gyro_spi_read_register(uint8_t reg) {
     return value;
 }
 
+static void gyro_bank_select(uint8_t bank) {
+    gyro_spi_write_register(0x76, bank);
+}
+
 void gyro_init(void)
 {
     gpio_init();
     // Set PA4 as input.
     gpio_pin_mode(GPIOA, 4, GPIO_MODE_INPUT, 0, GPIO_PUPD_NONE, 0);
-    // Set up gyroscope.
-    gyro_spi_write_register(GYRO_REG_CTRL2_G, (7<<4)|(3<<2)); // Enable gyro, 2000 dps, 833Hz
-    gyro_spi_write_register(GYRO_REG_INT1_CTRL, (1<<1));      // Enable Gyro data ready interrupt
-    // Set up accelerometer.
-    gyro_spi_write_register(GYRO_REG_CTRL1_XL, (7<<4));       // Enable accelerometer, 833 Hz
+
+    // Configure registers in bank 0
+    gyro_bank_select(0);
+    // Deassert reset on interrupt system
+    gyro_spi_write_register(0x64, 0);
+    // Set INT1 to push-pull, active high, latching
+    gyro_spi_write_register(0x14, (1<<0) | (1<<1) | (1<<2));
+    // Set DRDY to clear on data read
+    gyro_spi_write_register(0x63, (2<<4));
+    // Enable EN1 on DRDY
+    gyro_spi_write_register(0x65, (1<<3));
+    // Enable gyro
+    gyro_spi_write_register(0x4E, (3<<2));
+    // Wait for gyro to be ready
+    msleep(1);
 }
 
 // The gyro is ready when PA4 is high
@@ -72,9 +87,9 @@ void gyro_read_raw(struct gyro_data * d)
     for(int i=0; i<6; i++) {
         data[i] = gyro_spi_read_register(GYRO_REG_OUTX_L_G+i);
     }
-    int16_t x = (data[1]<<8)|data[0];
-    int16_t y = (data[3]<<8)|data[2];
-    int16_t z = (data[5]<<8)|data[4];
+    int16_t x = (data[0]<<8)|data[1];
+    int16_t y = (data[2]<<8)|data[3];
+    int16_t z = (data[4]<<8)|data[5];
     d->x =  x;
     d->y = -y;
     d->z =  z;
@@ -95,9 +110,9 @@ void accel_read(struct gyro_data * d)
     for(int i=0; i<6; i++) {
         data[i] = gyro_spi_read_register(GYRO_REG_OUTX_L_A+i);
     }
-    int16_t x = (data[1]<<8)|data[0];
-    int16_t y = (data[3]<<8)|data[2];
-    int16_t z = (data[5]<<8)|data[4];
+    int16_t x = (data[0]<<8)|data[1];
+    int16_t y = (data[2]<<8)|data[3];
+    int16_t z = (data[4]<<8)|data[5];
     d->x = x;
     d->y = y;
     d->z = z;
