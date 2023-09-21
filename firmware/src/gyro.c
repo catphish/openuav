@@ -49,12 +49,14 @@ void gyro_init(void)
     gyro_spi_write_register(0x65, (1<<3));
     // Disable gyro UI filter
     gyro_spi_write_register(0x52, (15<<4) | (15<<0));
-    // Enable gyro
-    gyro_spi_write_register(0x4E, (3<<2));
-    // Wait for gyro to be ready
+    // Enable gyro and accel
+    gyro_spi_write_register(0x4E, (3<<2) | (3<<0));
+    // Wait for gyro and accel to be ready
     msleep(1);
     // Set gyro ODR to 8kHz
     gyro_spi_write_register(0x4F, (3<<0));
+    // Set accel ODR to 8kHz
+    gyro_spi_write_register(0x50, (3<<0));
 }
 
 // The gyro is ready when PA4 is high
