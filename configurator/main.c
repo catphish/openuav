@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
       if(time == 0xFFFFFFFF) break;
       if(time > prev_time) {
         float timef = time;
-        timef /= 4000.f;
+        timef /= 8000.f;
         printf("%f", timef);
         for(int n=0; n<19;n++) {
           int16_t v = data[2*n+4] | (data[2*n+5] << 8);
