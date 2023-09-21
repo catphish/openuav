@@ -22,10 +22,10 @@ void get_all(void) {
   printf("        Yaw I: %d\n", value);
 
   printf("\n           CONTROL\n");
-  value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ACRO_RATE);
-  printf("    Acro Rate: %d\n", value);
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ANGLE_RATE);
   printf("   Angle Rate: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ACRO_RATE);
+  printf("    Acro Rate: %d\n", value);
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_EXPO);
   printf("         Expo: %d\n", value);
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_YAW_EXPO);
