@@ -8,26 +8,26 @@
 volatile struct settings settings;
 
 void settings_default() {
-    settings.version         = VERSION;
-    settings.angle_rate      = 800;   // 8.0
-    settings.acro_rate       = 800;   // 8.0
-    settings.p               = 100;   // 0.1
-    settings.i               = 200;   // 0.0002
-    settings.d               = 100;   // 0.1
-    settings.yaw_p           = 100;   // 0.1
-    settings.yaw_i           = 200;   // 0.0001
-    settings.expo            = 50;    // 0.5
-    settings.yaw_expo        = 50;    // 0.5
-    settings.throttle_gain   = 80;    // 0.8
-    settings.throttle_min    = 200;   // 200
-    settings.motor_direction = 0;     // Props IN
-    settings.motor1          = 0;     // Default disabled
-    settings.motor2          = 0;     // Default disabled
-    settings.motor3          = 0;     // Default disabled
-    settings.motor4          = 0;     // Default disabled
-    settings.adc_coefficient = 565;   // 565 as calibrated by catphish on v3 board
-    settings.cell_count      = 0;
-    settings.checksum        = 0;
+  settings.version         = VERSION;
+  settings.angle_rate      = 800;   // 8.0
+  settings.acro_rate       = 800;   // 8.0
+  settings.p               = 100;   // 0.1
+  settings.i               = 200;   // 0.0002
+  settings.d               = 100;   // 0.1
+  settings.yaw_p           = 100;   // 0.1
+  settings.yaw_i           = 200;   // 0.0001
+  settings.expo            = 50;    // 0.5
+  settings.yaw_expo        = 50;    // 0.5
+  settings.throttle_gain   = 80;    // 0.8
+  settings.throttle_min    = 200;   // 200
+  settings.motor_direction = 0;     // Props IN
+  settings.motor1          = 0;     // Default disabled
+  settings.motor2          = 0;     // Default disabled
+  settings.motor3          = 0;     // Default disabled
+  settings.motor4          = 0;     // Default disabled
+  settings.adc_coefficient = 565;   // 565 as calibrated by catphish on v3 board
+  settings.cell_count      = 0;
+  settings.checksum        = 0;
 }
 
 void settings_read() {

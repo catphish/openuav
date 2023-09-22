@@ -34,48 +34,48 @@ void uart_tx(void) {
 }
 
 void uart_init() {
-    // Enable GPIOA clock
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
-    // Enable GPIOB clock
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
-    // Enable GPIOC clock
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+  // Enable GPIOA clock
+  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+  // Enable GPIOB clock
+  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+  // Enable GPIOC clock
+  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
 
-    // Enable UART1 clock
-    RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
-    // Configure PB6 as USART1_TX
-    gpio_pin_mode(GPIOB, 6, GPIO_MODE_AF, 7, GPIO_PUPD_NONE, 0);
-    // Configure PB7 as USART1_RX
-    gpio_pin_mode(GPIOB, 7, GPIO_MODE_AF, 7, GPIO_PUPD_NONE, 0);
-    // Configure USART1 for 420000 baud for ELRS (160MHz / 420000 = 380.952)
-    USART1->CR1 = 0;
-    USART1->CR2 = 0;
-    USART1->CR3 = 0;
-    USART1->BRR = 381;
-    // Enable USART1 receiver
-    USART1->CR1 = USART_CR1_UE | USART_CR1_RE;
-    // Enable USART1 interrupt
-    USART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE;
-    // Enable USART1 interrupt in NVIC
-    NVIC_EnableIRQ(USART1_IRQn);
+  // Enable UART1 clock
+  RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+  // Configure PB6 as USART1_TX
+  gpio_pin_mode(GPIOB, 6, GPIO_MODE_AF, 7, GPIO_PUPD_NONE, 0);
+  // Configure PB7 as USART1_RX
+  gpio_pin_mode(GPIOB, 7, GPIO_MODE_AF, 7, GPIO_PUPD_NONE, 0);
+  // Configure USART1 for 420000 baud for ELRS (160MHz / 420000 = 380.952)
+  USART1->CR1 = 0;
+  USART1->CR2 = 0;
+  USART1->CR3 = 0;
+  USART1->BRR = 381;
+  // Enable USART1 receiver
+  USART1->CR1 = USART_CR1_UE | USART_CR1_RE;
+  // Enable USART1 interrupt
+  USART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE;
+  // Enable USART1 interrupt in NVIC
+  NVIC_EnableIRQ(USART1_IRQn);
 
-    // Enable LPUART1 clock
-    RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
-    // Configure PB10 as LPUART1_RX
-    gpio_pin_mode(GPIOB, 10, GPIO_MODE_AF, 8, GPIO_PUPD_NONE, 0);
-    // Configure PB11 as LPUART1_TX
-    gpio_pin_mode(GPIOB, 11, GPIO_MODE_AF, 8, GPIO_PUPD_NONE, 0);
-    // Configure LPUART1 for 115200 baud for GPS (160MHz * 256 / 115200 = 355555.55556)
-    LPUART1->CR1 = 0;
-    LPUART1->CR2 = 0;
-    LPUART1->CR3 = 0;
-    LPUART1->BRR = 355556;
-    // Enable LPUART1 receiver and transmitter
-    LPUART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_TE;
-    // Enable LPUART1 interrupt
-    LPUART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_TE | USART_CR1_RXNEIE;
-    // Enable LPUART1 interrupt in NVIC
-    NVIC_EnableIRQ(LPUART1_IRQn);
+  // Enable LPUART1 clock
+  RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
+  // Configure PB10 as LPUART1_RX
+  gpio_pin_mode(GPIOB, 10, GPIO_MODE_AF, 8, GPIO_PUPD_NONE, 0);
+  // Configure PB11 as LPUART1_TX
+  gpio_pin_mode(GPIOB, 11, GPIO_MODE_AF, 8, GPIO_PUPD_NONE, 0);
+  // Configure LPUART1 for 115200 baud for GPS (160MHz * 256 / 115200 = 355555.55556)
+  LPUART1->CR1 = 0;
+  LPUART1->CR2 = 0;
+  LPUART1->CR3 = 0;
+  LPUART1->BRR = 355556;
+  // Enable LPUART1 receiver and transmitter
+  LPUART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_TE;
+  // Enable LPUART1 interrupt
+  LPUART1->CR1 = USART_CR1_UE | USART_CR1_RE | USART_CR1_TE | USART_CR1_RXNEIE;
+  // Enable LPUART1 interrupt in NVIC
+  NVIC_EnableIRQ(LPUART1_IRQn);
 }
 
 // UART1 interrupt handler
