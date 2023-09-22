@@ -22,7 +22,8 @@
 #include "airmode.h"
 #include "main.h"
 
-// Set up all the hardware. Each devide has its own init function.
+// Set up all the hardware. Each part of the hardware has its own
+// module of code with its own init function.
 void SystemInit(void) {
   clock_init();
   msleep(200);
@@ -33,31 +34,14 @@ void SystemInit(void) {
   spi_init();
   uart_init();
   gyro_init();
-  imu_init();
+  imu_zero();
   adc_init();
   flash_init();
   blackbox_init();
 }
 
 // This struct contains the data that will be output to the four motors.
-struct dshot_data dshot;
-
-// Used by msp.c
-int main_get_armed_state() { return dshot.armed; }
-
-// This flag is set when it's safe to arm and inhibits arming at power-on.
-uint8_t arming_allowed = 0;
-
-// These variables are used to store the accumulated integral terms for each axis.
-float i_pitch = 0;
-float i_roll  = 0;
-float i_yaw   = 0;
-
-// A counter to keep track of the number of frames since arming. Used only by the gyro calibration routine.
-uint32_t arm_counter = 0;
-
-// A continuously increasing counter that is used to timestamp blackbox frames.
-uint32_t frame_count = 0;
+static struct dshot_data dshot;
 
 // Create a ring buffer of the last GYRO_BUFFER_SIZE gyro readings.
 // This will be used to calculate the D term.
@@ -66,8 +50,23 @@ static struct gyro_data gyro_buffer[GYRO_BUFFER_SIZE];
 static uint8_t gyro_buffer_index = 0;
 
 int main(void) {
+  // This flag inhibits arming at power-on, and is set to 1 when it's safe to arm.
+  uint8_t arming_allowed = 0;
+
+  // These variables are used to store the accumulated integral term for each axis.
+  float i_pitch = 0;
+  float i_roll  = 0;
+  float i_yaw   = 0;
+
+  // A counter to keep track of the number of frames since arming. Used only by the gyro calibration routine.
+  uint32_t arm_counter = 0;
+
+  // A continuously increasing counter that is used to timestamp blackbox frames.
+  uint32_t frame_count = 0;
+
   // LED2 is the power LED, turn it on before we do anything else.
   led2_on();
+
   // Load settings from flash.
   settings_read();
 
@@ -76,16 +75,13 @@ int main(void) {
   while(1) {
     // Poll the USB peripheral to transmit and receive data as needed.
     usb_main();
-    // Poll the UART peripheral to transmit pending data. Receive data is handled by interrupts.
+    // Poll the UART peripheral to transmit pending data. Receiving of data is handled by interrupts.
     uart_tx();
-    // Process MSP requests and transmit responses. This also transmits unsolicited canvas updates.
+    // Process MSP requests and transmit responses. This also transmits OSD data.
     msp_send_response();
 
     // Each time the gyro has new data, we run the main control loop.
     if(gyro_ready()) {
-      // Prepare a blackbox data frame to log the data for this loop iteration.
-      struct blackbox_frame blackbox_data;
-
       // Fetch settings and scale them to the appropriate units.
       volatile struct settings *settings = settings_get();
       float angle_rate    = 0.01f     * settings->angle_rate;
@@ -100,58 +96,64 @@ int main(void) {
       float throttle_gain = 0.01f     * settings->throttle_gain;
       float throttle_min  =             settings->throttle_min;
 
-      // If we have valid ELRS data and it indicated that we're currently disarmed, then we
+      // If we have valid ELRS data and it indicates that we're currently disarmed, then we
       // set a flag to allow arming. This prevents accidental arming at power-on.
       if(elrs_valid() && elrs_channel(4) < 0) {
         arming_allowed = 1;
       }
 
-      // If we have valid ELRS data, and the arming switch is set, arm the motors.
+      // If we have valid ELRS data, and the arming switch is set,
+      // and we've prevously disarmed, go ahead and start the motors.
       if(elrs_valid() && elrs_channel(4) > 0 && arming_allowed) {
-        // LED1 indicated the arming state.
+        // LED1 indicates the arming state.
         led1_on();
+        // If we've been armed for less than 200 cycles, don't actually arm the
+        // motors yet. Instead, spend a a short time calibrating the gyro.
         if(arm_counter < 200) {
           gyro_calibrate();
           arm_counter++;
           dshot.armed = 0;
         } else {
+          // Gyro calibration is finished.
+          // Set the armed flag in the DSHOT output to 1.
           dshot.armed = 1;
         }
       } else {
-        // If we are not armed, reset the integral terms.
+        // LED1 indicates the arming state.
+        led1_off();
+        // Set the armed flag in the DSHOT output to 0.
         dshot.armed = 0;
+        // If we are not armed, reset the integral terms.
         i_pitch = 0;
         i_roll  = 0;
         i_yaw   = 0;
+        // Reset the arm counter and gyro calibration.
         arm_counter = 0;
-        // Zero the gyro and recalibrate the IMU wenever we're not armed.
         gyro_zero();
-        imu_init();
-        led1_off();
+        // Zero the IMU orientation.
+        // We assume that when we're disarmed, we're sitting on a level surface.
+        imu_zero();
       }
 
       // Call elrs_tick() at regular intervals. This allows it to count down an internal
       // timer to implement failsafe behavior if no ELRS data is received.
       elrs_tick();
 
-      // These structs contain the raw gyro and accelerometer data.
+      // These structs will contain the gyro and accelerometer data.
       struct gyro_data gyro;
       struct gyro_data accel;
 
-      // Read the raw gyro and accelerometer data.
+      // Read the gyro and accelerometer data.
       gyro_read(&gyro);
       accel_read(&accel);
 
-      // Log raw gyro data to the blackbox.
-      blackbox_data.gyro_data[0] = gyro.x;
-      blackbox_data.gyro_data[1] = gyro.y;
-      blackbox_data.gyro_data[2] = gyro.z;
-
-      // Update the IMU using the raw gyro and accelerometer data.
+      // The IMU uses input from both the gyro and accelerometer to estimate the orientation.
+      // Update the IMU using the gyro and accelerometer data.
       imu_update_from_gyro(&gyro);
       imu_update_from_accel(&accel);
 
       // These variables will store the requested rotation rate for each axis.
+      // The units of these variables are gyro units. 16.4 units = 1 degree per second.
       int32_t rotation_request_pitch = 0;
       int32_t rotation_request_roll  = 0;
       int32_t rotation_request_yaw   = 0;
@@ -164,12 +166,12 @@ int main(void) {
       // AUX2 is the mode switch. If it's high, we're in angle mode, otherwise we're in rate mode.
       if(elrs_channel(5) > 0) {
         // Angle mode
-        // Get the current X and Y tilt angles, and the z rotation offset from the IMU.
+        // Get the current X and Y tilt angles from the IMU.
         float tilt_pitch, tilt_roll;
         imu_get_xy_tilt(&tilt_pitch, &tilt_roll);
         // Subtract the tilt angle from the requested angle to get the angle error.
-        // The units here are arbitrary, but 600 permits a good range of motion.
-        // This max angle should probably be configurable.
+        // ELRS input is +/- 820, and the tilt angles are in radians.
+        // TODO: reorgznize this to allow a configurable max angle in degrees.
         int32_t angle_error_pitch = elrs_channel(1) - tilt_pitch * 600.f;
         int32_t angle_error_roll  = elrs_channel(0) - tilt_roll  * 600.f;
 
@@ -178,8 +180,9 @@ int main(void) {
         rotation_request_roll  = angle_error_roll  * angle_rate;
         rotation_request_yaw   = elrs_channel(3)   * acro_rate;
       } else {
-        // Rate mode. TODO: split expo into a separate function.
+        // Rate mode.
         // Apply expo to roll input.
+        // TODO: split expo into a separate function.
         float transmitter_roll = elrs_channel(0);
         if(transmitter_roll >  820) transmitter_roll =  820;
         if(transmitter_roll < -820) transmitter_roll = -820;
@@ -194,29 +197,32 @@ int main(void) {
         if(transmitter_yaw >  820) transmitter_yaw =  820;
         if(transmitter_yaw < -820) transmitter_yaw = -820;
         transmitter_yaw = yaw_expo * transmitter_yaw * transmitter_yaw * transmitter_yaw / 820.f / 820.f + (1.f - yaw_expo) * transmitter_yaw;
-        // Apply the requested rotation rate.
+
+        // Multiply the transmitter input by the configured acro rate to get the final rotation rate.
         rotation_request_pitch = transmitter_pitch * acro_rate;
         rotation_request_roll  = transmitter_roll  * acro_rate;
         rotation_request_yaw   = transmitter_yaw   * acro_rate;
       }
 
-      // Calculate the error in angular velocity by adding the (negative) gyro
-      // readings from the requested angular velocity.
+      // Calculate the error in angular velocity by subtracting the gyro readings from the requested
+      // angular velocity. It looks like an additon but the gyro values are negative.
       int32_t error_pitch = p     * (gyro.x + rotation_request_pitch);
       int32_t error_roll  = p     * (gyro.y + rotation_request_roll);
       int32_t error_yaw   = yaw_p * (gyro.z + rotation_request_yaw);
 
-      // Put the current gyro value into the ring buffer.
+      // Put the current gyro value into the ring buffer. This allows us to compare
+      // it with previous gyro values to calculate the D term below.
       gyro_buffer[gyro_buffer_index] = gyro;
+      // Increment the ring buffer index, and wrap it around if necessary.
       gyro_buffer_index++; if(gyro_buffer_index >= GYRO_BUFFER_SIZE) gyro_buffer_index = 0;
 
       // Calculate the difference between the current gyro value and the value from GYRO_BUFFER_SIZE loops
-      // ago and multiply by the D gain to get the D term.
+      // ago to find the rate of change in the gyro data, and multiply by the D gain to get the D term.
       float d_pitch = (gyro.x - gyro_buffer[gyro_buffer_index].x) * d;
       float d_roll  = (gyro.y - gyro_buffer[gyro_buffer_index].y) * d;
 
-      // Integrate the error in each axis. We use the P filtered gyro data for the integral term.
-      // Don't integrate pitch and roll if the D term exceeds a specified limit
+      // Integrate the error in each axis.
+      // Don't integrate pitch and roll if the D term exceeds a specified limit.
       if(d_pitch < 100 && d_pitch > -100)
         i_pitch += i * (gyro.x + rotation_request_pitch);
 
@@ -232,7 +238,7 @@ int main(void) {
       // 3: front left
       // 4: rear right
       int32_t motor_outputs[5];
-      // Motor zero is always off. This provides a convenient way to disable a motor.
+      // Motor zero is always off. This provides a convenient way to disable motors during configuration and testing.
       motor_outputs[0] = 0;
       // The yaw calculations need to be different for a props-in configuration vs a props-out configuration.
       if(settings->motor_direction) {
@@ -249,24 +255,27 @@ int main(void) {
         motor_outputs[4] = throttle + error_pitch - error_roll - error_yaw + i_pitch - i_roll - i_yaw + d_pitch - d_roll;
       }
 
+      // Activate air mode to keep motor outputs within a good range while maintaining differential.
+      air_mode(motor_outputs);
+
       // Map the appropriate motor output to each DSHOT channel.
       dshot.motor1 = motor_outputs[settings->motor1];
       dshot.motor2 = motor_outputs[settings->motor2];
       dshot.motor3 = motor_outputs[settings->motor3];
       dshot.motor4 = motor_outputs[settings->motor4];
 
-      // Activate air mode to keep motor outputs within a good range while maintaining differential.
-      // TODO: This needs to be applies to motor outputs BEFORE they're mapped to DSHOT channels.
-      air_mode(&dshot);
-
       // Write the motor outputs to the ESCs.
       dshot_write(&dshot);
 
-      // Finish populating the blackbox data
+      // Prepare a blackbox data frame to log the data for this loop iteration.
+      struct blackbox_frame blackbox_data;
       blackbox_data.timestamp = frame_count;
       blackbox_data.setpoint[0] = rotation_request_pitch;
       blackbox_data.setpoint[1] = rotation_request_roll;
       blackbox_data.setpoint[2] = rotation_request_yaw;
+      blackbox_data.gyro_data[0] = gyro.x;
+      blackbox_data.gyro_data[1] = gyro.y;
+      blackbox_data.gyro_data[2] = gyro.z;
       blackbox_data.p[0] = error_pitch;
       blackbox_data.p[1] = error_roll;
       blackbox_data.p[2] = error_yaw;
@@ -288,5 +297,11 @@ int main(void) {
       frame_count++;
     }
   }
+  // This should never be reached.
   return 0;
+}
+
+// Return whether the quad is currently armed.
+int main_get_armed_state() {
+  return dshot.armed;
 }

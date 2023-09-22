@@ -1,4 +1,4 @@
 #include <stdint.h>
 #include "dshot.h"
 
-void air_mode(struct dshot_data *dshot);
+void air_mode(int32_t *motor_outputs);

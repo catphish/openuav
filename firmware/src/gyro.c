@@ -40,23 +40,23 @@ void gyro_init(void)
     // Configure registers in bank 0
     gyro_bank_select(0);
     // Deassert reset on interrupt system
-    gyro_spi_write_register(0x64, 0);
+    gyro_spi_write_register(GYRO_REG_INT_CONFIG1, 0);
     // Set INT1 to push-pull, active high, latching
-    gyro_spi_write_register(0x14, (1<<0) | (1<<1) | (1<<2));
+    gyro_spi_write_register(GYRO_REG_INT_CONFIG, (1<<0) | (1<<1) | (1<<2));
     // Set DRDY to clear on data read
-    gyro_spi_write_register(0x63, (2<<4));
+    gyro_spi_write_register(GYRO_REG_INT_CONFIG0, (2<<4));
     // Enable EN1 on DRDY
-    gyro_spi_write_register(0x65, (1<<3));
+    gyro_spi_write_register(GYRO_REG_INT_SOURCE0, (1<<3));
     // Disable gyro UI filter
-    gyro_spi_write_register(0x52, (15<<4) | (15<<0));
+    gyro_spi_write_register(GYRO_REG_GYRO_ACCEL_CONFIG0, (15<<4) | (15<<0));
     // Enable gyro and accel
-    gyro_spi_write_register(0x4E, (3<<2) | (3<<0));
+    gyro_spi_write_register(GYRO_REG_PWR_MGMT0, (3<<2) | (3<<0));
     // Wait for gyro and accel to be ready
     msleep(1);
     // Set gyro ODR to 8kHz
-    gyro_spi_write_register(0x4F, (3<<0));
+    gyro_spi_write_register(GYRO_REG_GYRO_CONFIG0, (3<<0));
     // Set accel ODR to 8kHz
-    gyro_spi_write_register(0x50, (3<<0));
+    gyro_spi_write_register(GYRO_REG_ACCEL_CONFIG0, (3<<0));
 }
 
 // The gyro is ready when PA4 is high
@@ -91,7 +91,7 @@ void gyro_read_raw(struct gyro_data * d)
 {
     uint8_t data[6];
     for(int i=0; i<6; i++) {
-        data[i] = gyro_spi_read_register(GYRO_REG_OUTX_L_G+i);
+        data[i] = gyro_spi_read_register(GYRO_REG_GYRO_DATA+i);
     }
     int16_t x = (data[0]<<8)|data[1];
     int16_t y = (data[2]<<8)|data[3];
@@ -114,7 +114,7 @@ void accel_read(struct gyro_data * d)
 {
     uint8_t data[6];
     for(int i=0; i<6; i++) {
-        data[i] = gyro_spi_read_register(GYRO_REG_OUTX_L_A+i);
+        data[i] = gyro_spi_read_register(GYRO_REG_ACCEL_DATA+i);
     }
     int16_t x = (data[0]<<8)|data[1];
     int16_t y = (data[2]<<8)|data[3];

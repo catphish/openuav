@@ -10,9 +10,8 @@ Quaternion q;
 float mag_offset[3] = {0, 0, 0};
 float heading_offset = 0;
 
-// Initialize the IMU and calibrate the gyro.
-// This currently uses only a single gyro reading to calibrate.
-void imu_init(void)
+// Set the IMU orientation to zero. We assume the IMU starts level.
+void imu_zero(void)
 {
   // Zero the orientation
   Quaternion_setIdentity(&q);

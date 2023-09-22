@@ -47,7 +47,7 @@ void elrs_process_char(uint8_t received) {
       channel[5] = (int)channels->ch5 - 992;
       channel[6] = (int)channels->ch6 - 992;
       channel[7] = (int)channels->ch7 - 992;
-      channels_valid = 100;
+      channels_valid = 1000;
     }
     // uint8_t crc8 = received;
     buffer_index = 0;
