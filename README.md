@@ -100,13 +100,13 @@ term in the case of sudden yaw disruption.
 ## TBS Source One V5 5" - 2306/2555KV Motors at 4S
 
 ```
-Angle rate: 1500
-Acro rate: 1500
-P: 120
-I: 50
-D: 150
+Angle rate: 1000
+Acro rate: 1000
+P: 100
+I: 80
+D: 100
 Yaw P: 200
-Yaw I: 200
+Yaw I: 100
 Expo: 60
 Yaw expo: 60
 Throttle gain: 80
