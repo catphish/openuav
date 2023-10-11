@@ -41,3 +41,7 @@ void gpio_set_pin(GPIO_TypeDef * port, uint32_t pin, uint32_t value) {
 uint8_t gpio_get_pin(GPIO_TypeDef * port, uint32_t pin) {
   return (port->IDR & (1<<pin)) ? 1 : 0;
 }
+
+void gpio_toggle_pin(GPIO_TypeDef * port, uint32_t pin) {
+  port->ODR ^= (1<<pin);
+}

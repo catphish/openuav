@@ -23,10 +23,18 @@ void led1_off() {
   gpio_set_pin(LED1_PORT, LED1_PIN, 0);
 }
 
+void led1_toggle() {
+  gpio_toggle_pin(LED1_PORT, LED1_PIN);
+}
+
 void led2_on() {
   gpio_set_pin(LED2_PORT, LED2_PIN, 1);
 }
 
 void led2_off() {
   gpio_set_pin(LED2_PORT, LED2_PIN, 0);
+}
+
+void led2_toggle() {
+  gpio_toggle_pin(LED2_PORT, LED2_PIN);
 }

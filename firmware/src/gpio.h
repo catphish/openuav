@@ -17,3 +17,4 @@ void gpio_init();
 void gpio_pin_mode(GPIO_TypeDef * port, uint32_t pin, uint32_t mode, uint32_t af, uint32_t pupdr, uint32_t otyper);
 void gpio_set_pin(GPIO_TypeDef * port, uint32_t pin, uint32_t value);
 uint8_t gpio_get_pin(GPIO_TypeDef * port, uint32_t pin);
+void gpio_toggle_pin(GPIO_TypeDef * port, uint32_t pin);
