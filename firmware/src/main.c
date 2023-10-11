@@ -21,6 +21,7 @@
 #include "blackbox.h"
 #include "airmode.h"
 #include "main.h"
+#include "barometer.h"
 
 // Set up all the hardware. Each part of the hardware has its own
 // module of code with its own init function.
@@ -35,6 +36,7 @@ void SystemInit(void) {
   uart_init();
   gyro_init();
   imu_zero();
+  baro_init();
   adc_init();
   flash_init();
   blackbox_init();
