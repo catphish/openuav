@@ -86,7 +86,7 @@ int main(void) {
     if(gyro_ready()) {
       // Fetch settings and scale them to the appropriate units.
       volatile struct settings *settings = settings_get();
-      float angle_rate    = 0.01f     * settings->angle_rate;
+      float angle_rate    = 10.f      * settings->angle_rate;
       float acro_rate     = 0.01f     * settings->acro_rate;
       float p             = 0.001f    * settings->p;
       float i             = 0.000001f * settings->i;
@@ -168,14 +168,30 @@ int main(void) {
       // AUX2 is the mode switch. If it's high, we're in angle mode, otherwise we're in rate mode.
       if(elrs_channel(5) > 0) {
         // Angle mode
+
         // Get the current X and Y tilt angles from the IMU.
         float tilt_pitch, tilt_roll;
         imu_get_xy_tilt(&tilt_pitch, &tilt_roll);
+
+        // Normalise the elrs input to +/- 1.
+        float target_pitch = elrs_channel(1) / 820.f;
+        float target_roll  = elrs_channel(0) / 820.f;
+        if(target_pitch >  1.f) target_pitch =  1.f;
+        if(target_pitch < -1.f) target_pitch = -1.f;
+        if(target_roll  >  1.f) target_roll  =  1.f;
+        if(target_roll  < -1.f) target_roll  = -1.f;
+
+        // Map the input angles from a square to a circle.
+        target_pitch = target_pitch * sqrtf(1.f - target_roll * target_roll / 2.f);
+        target_roll  = target_roll  * sqrtf(1.f - target_pitch * target_pitch / 2.f);
+
+        // Multiply the input angles by the configured angle limit to get the target angles.
+        target_pitch *= 1.f;
+        target_roll  *= 1.f;
+
         // Subtract the tilt angle from the requested angle to get the angle error.
-        // ELRS input is +/- 820, and the tilt angles are in radians.
-        // TODO: reorgznize this to allow a configurable max angle in degrees.
-        int32_t angle_error_pitch = elrs_channel(1) - tilt_pitch * 600.f;
-        int32_t angle_error_roll  = elrs_channel(0) - tilt_roll  * 600.f;
+        float angle_error_pitch = target_pitch - tilt_pitch;
+        float angle_error_roll  = target_roll  - tilt_roll;
 
         // Multiply the angle error by the configured angle rate to get the required rotation rate.
         rotation_request_pitch = angle_error_pitch * angle_rate;
