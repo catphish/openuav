@@ -169,11 +169,11 @@ int main(void) {
       if(elrs_channel(5) > 0) {
         // Angle mode
 
-        // Get the current X and Y tilt angles from the IMU.
+        // Get the current X and Y tilt angles from the IMU in radians.
         float tilt_pitch, tilt_roll;
         imu_get_xy_tilt(&tilt_pitch, &tilt_roll);
 
-        // Normalise the elrs input to +/- 1.
+        // Normalize and limit the elrs input to +/- 1.
         float target_pitch = elrs_channel(1) / 820.f;
         float target_roll  = elrs_channel(0) / 820.f;
         if(target_pitch >  1.f) target_pitch =  1.f;
@@ -181,11 +181,12 @@ int main(void) {
         if(target_roll  >  1.f) target_roll  =  1.f;
         if(target_roll  < -1.f) target_roll  = -1.f;
 
-        // Map the input angles from a square to a circle.
+        // Map the input values from a square to a circle.
         target_pitch = target_pitch * sqrtf(1.f - target_roll * target_roll / 2.f);
         target_roll  = target_roll  * sqrtf(1.f - target_pitch * target_pitch / 2.f);
 
         // Multiply the input angles by the configured angle limit to get the target angles.
+        // Currently the limit is hardcoded to 1 radian.
         target_pitch *= 1.f;
         target_roll  *= 1.f;
 
