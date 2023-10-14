@@ -61,11 +61,11 @@ void send_msp_displayport_write() {
   // Attributes
   payload[3] = 0;
   // String (all letters must be uppercase, lowercase letters map to symbols)
-  char mode_chars[3] = {'D', 'C', '\0'};
-  if(1 == main_get_armed_state() ) mode_chars[0] = 'A';
-  if(elrs_channel(5) > 0) mode_chars[1] = 'A';
+  // Indicate flight mode followed by an asterisk if armed
+  char mode_chars[7] = "ACRO ";
+  if(elrs_channel(5) > 0) snprintf(mode_chars, 6, "ANGL ");
+  if(1 == main_get_armed_state()) mode_chars[4] = '*';
   snprintf((char*)payload+4, 10, "%s", mode_chars);
-
   // Send the payload
   send_msp(182, payload, 14);
   
