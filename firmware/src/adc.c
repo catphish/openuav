@@ -78,12 +78,15 @@ uint32_t adc_read_mv() {
   volatile struct settings *settings = settings_get();
   uint32_t adc = 0;
   adc = ADC2->DR;
-  if(settings->adc_coefficient == 0) return 0;
-  return adc * settings->adc_coefficient / 1000;
+  if(settings->adc2_coefficient == 0) return 0;
+  return adc * settings->adc2_coefficient / 1000;
 }
 
-// Read ADC1 and return the raw value
-// TODO: This should scale the data to milliamps
+// Read ADC1 and return the value in milliamperes
 uint32_t adc_read_ma() {
- return ADC1->DR;
+  volatile struct settings *settings = settings_get();
+  uint32_t adc = 0;
+  adc = ADC1->DR;
+  if(settings->adc1_coefficient == 0) return 0;
+  return adc * settings->adc2_coefficient / 1000;
 }

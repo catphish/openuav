@@ -216,10 +216,16 @@ void usb_handle_ep1() {
           value = settings->motor4;
         }
       } else if(request[1] == USB_SETTING_CAT_BATT) {
-        if(request[2] == USB_SETTING_BATT_ADC_COEFFICIENT) {
-          value = settings->adc_coefficient;
-        } else if(request[2] == USB_SETTING_BATT_CELL_COUNT) {
+        if(request[2] == USB_SETTING_BATT_CELL_COUNT) {
           value = settings->cell_count;
+        } else if(request[2] == USB_SETTING_BATT_ADC1_COEFFICIENT) {
+          value = settings->adc1_coefficient;
+        } else if(request[2] == USB_VALUE_ADC1_RAW) {
+          value = ADC1->DR;
+        } else if(request[2] == USB_SETTING_BATT_ADC2_COEFFICIENT) {
+          value = settings->adc2_coefficient;
+        } else if(request[2] == USB_VALUE_ADC2_RAW) {
+          value = ADC2->DR;
         }
       }
       response[0] = USB_COMMAND_SETTING_GET;
@@ -271,10 +277,12 @@ void usb_handle_ep1() {
           settings->motor4 = value;
         }
       } else if(request[1] == USB_SETTING_CAT_BATT) {
-        if(request[2] == USB_SETTING_BATT_ADC_COEFFICIENT) {
-          settings->adc_coefficient = value;
-        } else if(request[2] == USB_SETTING_BATT_CELL_COUNT) {
+        if(request[2] == USB_SETTING_BATT_CELL_COUNT) {
           settings->cell_count = value;
+        } else if(request[2] == USB_SETTING_BATT_ADC1_COEFFICIENT) {
+          settings->adc1_coefficient = value;
+        } else if(request[2] == USB_SETTING_BATT_ADC2_COEFFICIENT) {
+          settings->adc2_coefficient = value;
         }
       }
       response[0] = USB_COMMAND_SETTING_SET;

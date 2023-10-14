@@ -115,7 +115,7 @@ void send_msp_displayport_write() {
   // Send the write string subcommand
   payload[0] = 3;
   // Near bottom
-  payload[1] = 13;
+  payload[1] = 14;
   // Column
   // (right third on older HDZ VRX firmware)
   payload[2] = 20;
@@ -123,7 +123,9 @@ void send_msp_displayport_write() {
   payload[3] = 0;
   // String
   uint16_t current = adc_read_ma();
-  snprintf((char*)payload+4, 16, "CUR: %05d", current);
+  uint16_t a = current / 1000;
+  uint16_t ma = (current % 1000) / 10; // For 2 decimal places
+  snprintf((char*)payload+4, 16, "%d.%02dA", a, ma);
   // Send the payload
   send_msp(182, payload, 20);
 }
