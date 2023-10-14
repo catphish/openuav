@@ -41,3 +41,9 @@ production/
 # SDK / flashing
 STM32Cube
 elf2dfuse
+
+# Foreign files
+*.tar
+*.gz
+*.bz2
+*.dump

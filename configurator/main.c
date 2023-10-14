@@ -8,7 +8,8 @@
 #include "usb.h"
 
 void get_all(void) {
-  int value;
+  int value, raw_value;
+
   printf("            TUNING\n");
   value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_P);
   printf("            P: %d\n", value);
@@ -52,6 +53,13 @@ void get_all(void) {
   printf("    ADC Coeff: %d\n", value);
   value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CELL_COUNT);
   printf("   Cell Count: %d\n", value);
+  value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC1_COEFFICIENT);
+  raw_value = get_setting(USB_SETTING_CAT_BATT, USB_VALUE_ADC1_RAW);
+  printf("   ADC1 coeff: %d (current raw value: %d)\n", value, raw_value);
+  value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC2_COEFFICIENT);
+  raw_value = get_setting(USB_SETTING_CAT_BATT, USB_VALUE_ADC2_RAW);
+  printf("   ADC2 coeff: %d (current raw value: %d)\n", value, raw_value);
+  printf("(raw value * coefficient / 1000 will give the mV/mA figure)");
 }
 
 int main(int argc, char *argv[])
