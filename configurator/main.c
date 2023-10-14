@@ -10,7 +10,7 @@
 void get_all(void) {
   int value, raw_value;
 
-  printf("            TUNING\n");
+  printf("          1. TUNING\n");
   value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_P);
   printf("            P: %d\n", value);
   value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_I);
@@ -22,21 +22,22 @@ void get_all(void) {
   value = get_setting(USB_SETTING_CAT_TUNE, USB_SETTING_TUNE_YAW_I);
   printf("        Yaw I: %d\n", value);
 
-  printf("\n           CONTROL\n");
+  printf("\n          2. CONTROL\n");
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ANGLE_RATE);
-  printf("   Angle Rate: %d\n", value);
+  printf("    Angle Rate: %d\n", value);
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_ACRO_RATE);
-  printf("    Acro Rate: %d\n", value);
+  printf("     Acro Rate: %d\n", value);
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_EXPO);
-  printf("         Expo: %d\n", value);
+  printf("          Expo: %d\n", value);
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_YAW_EXPO);
-  printf("     Yaw Expo: %d\n", value);
+  printf("      Yaw Expo: %d\n", value);
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_GAIN);
-  printf("Throttle Gain: %d\n", value);
+  printf(" Throttle Gain: %d\n", value);
   value = get_setting(USB_SETTING_CAT_CONTROL, USB_SETTING_CONTROL_THROTTLE_MIN);
-  printf(" Throttle Min: %d\n", value);
+  printf("  Throttle Min: %d\n", value);
+  printf("(1 rate unit = 0.6097561 DPS, so DPS*(1/0.6097561) will give desired value)\n");
 
-  printf("\n            MOTOR\n");
+  printf("\n          3. MOTOR\n");
   value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_1);
   printf("       Motor1: %d\n", value);
   value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_2);
@@ -47,10 +48,9 @@ void get_all(void) {
   printf("       Motor4: %d\n", value);
   value = get_setting(USB_SETTING_CAT_MOTOR, USB_SETTING_MOTOR_DIRECTION);
   printf("    Direction: %d\n", value);
+  printf("(1: rear left, 2: front right, 3: front left, 4: rear right)\n");
 
-  printf("\n            BATTERY\n");
-  value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC_COEFFICIENT);
-  printf("    ADC Coeff: %d\n", value);
+  printf("\n          4. BATTERY\n");
   value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_CELL_COUNT);
   printf("   Cell Count: %d\n", value);
   value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC1_COEFFICIENT);
