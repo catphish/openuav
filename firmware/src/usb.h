@@ -39,5 +39,8 @@ void usb_write(uint8_t ep, char * buffer, uint32_t len);
 #define USB_SETTING_MOTOR_4         0x04
 #define USB_SETTING_MOTOR_DIRECTION 0x05
 
-#define USB_SETTING_BATT_ADC_COEFFICIENT 0x01
-#define USB_SETTING_BATT_CELL_COUNT      0x02
+#define USB_SETTING_BATT_CELL_COUNT       0x01
+#define USB_SETTING_BATT_ADC1_COEFFICIENT 0x02
+#define USB_VALUE_ADC1_RAW                0x03
+#define USB_SETTING_BATT_ADC2_COEFFICIENT 0x04
+#define USB_VALUE_ADC2_RAW                0x05

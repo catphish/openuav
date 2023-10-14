@@ -21,10 +21,12 @@ struct settings {
   uint32_t motor2;
   uint32_t motor3; // 16
   uint32_t motor4;
-  uint32_t adc_coefficient; // 18
-  uint32_t cell_count;
+  uint32_t adc1_coefficient; // 18
+  uint32_t adc2_coefficient;
+  uint32_t cell_count; // 20
+  uint32_t the_equalizer; // to have something uneven
   // MUST be the last value, and MUST be even
-  uint32_t checksum; // 20
+  uint32_t checksum; // 22
 };
 
 struct setting_name {
