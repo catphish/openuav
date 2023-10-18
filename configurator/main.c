@@ -59,7 +59,7 @@ void get_all(void) {
   value = get_setting(USB_SETTING_CAT_BATT, USB_SETTING_BATT_ADC2_COEFFICIENT);
   raw_value = get_setting(USB_SETTING_CAT_BATT, USB_VALUE_ADC2_RAW);
   printf("   ADC2 coeff: %d (current raw value: %d)\n", value, raw_value);
-  printf("(raw value * coefficient / 1000 will give the mV/mA figure)");
+  printf("(raw value * coefficient / 1000 will give the mV/mA figure)\n");
 }
 
 int main(int argc, char *argv[])
